@@ -4925,7 +4925,33 @@
 
   let exportAudioCtx = null;
 
+  function blobToBase64(blob){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   async function saveOrShareBlob(blob, filename){
+    const cap = window.Capacitor;
+    if(cap && cap.isNativePlatform && cap.isNativePlatform()){
+      // Inside the packaged app: no browser download manager, and no share-sheet detour either
+      // — write the export straight into the device's gallery/Movies via MediaStore, the same
+      // way CapCut/FlipaClip do it, so it just appears there with no dialog.
+      try{
+        const base64 = await blobToBase64(blob);
+        const { Filesystem, Directory, Media } = cap.Plugins;
+        // Media.saveVideo needs a real file path to copy from, not a blob, so stage it in the
+        // app's own private cache first — this part never touches public storage.
+        const staged = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
+        await Media.saveVideo({ path: staged.uri, album: 'DG Dynamics' });
+      }catch(err){
+        alert("Couldn't save the video: " + (err && err.message ? err.message : err));
+      }
+      return;
+    }
     const file = new File([blob], filename, { type: blob.type });
     if(navigator.canShare && navigator.canShare({ files: [file] })){
       try{ await navigator.share({ files: [file], title: filename }); return; }
