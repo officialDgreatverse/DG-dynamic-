@@ -1,0 +1,8 @@
+{
+  "appId": "com.great.projects",
+  "appName": "Projects",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  }
+}
