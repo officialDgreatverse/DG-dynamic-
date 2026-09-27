@@ -4942,10 +4942,16 @@
       // way CapCut/FlipaClip do it, so it just appears there with no dialog.
       try{
         const base64 = await blobToBase64(blob);
-        const { Filesystem, Directory, Media } = cap.Plugins;
+        const { Filesystem, Media } = cap.Plugins;
+        if(!Filesystem || !Media){
+          throw new Error('Filesystem/Media plugin not available — check they are installed and synced into the native project.');
+        }
+        // "Directory" is a plain JS constant from the @capacitor/filesystem npm package, not a
+        // registered native plugin, so cap.Plugins.Directory is always undefined. Use the raw
+        // string the enum resolves to instead.
         // Media.saveVideo needs a real file path to copy from, not a blob, so stage it in the
         // app's own private cache first — this part never touches public storage.
-        const staged = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
+        const staged = await Filesystem.writeFile({ path: filename, data: base64, directory: 'CACHE' });
         await Media.saveVideo({ path: staged.uri, album: 'DG Dynamics' });
       }catch(err){
         alert("Couldn't save the video: " + (err && err.message ? err.message : err));
