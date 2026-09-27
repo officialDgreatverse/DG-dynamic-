@@ -1,6 +1,6 @@
 {
-  "appId": "com.great.Dg dynamic",
-  "appName": "Dg Dynamics",
+  "appId": "com.great.dgdynamic",
+  "appName": "DG Dynamics",
   "webDir": "www",
   "android": {
     "allowMixedContent": true
