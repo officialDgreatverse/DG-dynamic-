@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'www/**'
+      - 'assets/**'
       - 'capacitor.config.json'
       - 'package.json'
       - 'version.json'
@@ -47,6 +48,11 @@ jobs:
 
       - name: Sync web assets into the Android project
         run: npx cap sync android
+
+      - name: Generate app icons
+        run: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --android
 
       - name: Set versionCode / versionName in build.gradle
         run: |
