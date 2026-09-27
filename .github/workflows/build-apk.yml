@@ -41,7 +41,9 @@ jobs:
           echo "code=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       - name: Install JS dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install @capacitor/filesystem @capacitor-community/media
 
       - name: Add Android platform (fresh each build, from capacitor.config.json)
         run: npx cap add android
