@@ -43,7 +43,7 @@ jobs:
       - name: Install JS dependencies
         run: |
           npm install
-          npm install @capacitor/filesystem @capacitor-community/media
+          npm install @capacitor/filesystem@6 @capacitor-community/media@7
 
       - name: Add Android platform (fresh each build, from capacitor.config.json)
         run: npx cap add android
