@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Projects</title>
+<title>DG Dynamics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -528,6 +528,7 @@
     -webkit-user-select:none;
     user-select:none;
     -webkit-touch-callout:none;
+    will-change:transform;
   }
   /* one transparent canvas per layer, stacked inside the canvas surface */
   .layer-canvas{
@@ -571,17 +572,6 @@
     display:block;
     pointer-events:none;
     z-index:50;
-  }
-  /* live preview of a stroke that's being confined by a lock-pencil wall — see beginDraw() */
-  .lock-stroke-overlay{
-    position:absolute;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
-    display:none;
-    pointer-events:none;
-    z-index:45;
   }
 
   /* floating "Copied" toast, shown briefly over the canvas when Copy is tapped */
@@ -924,6 +914,12 @@
     border-radius:4px;
   }
   .frame-thumb.selected{border-color:var(--accent-1);}
+  /* thumb being long-press-dragged to a new position in the strip */
+  .frame-thumb.dragging{
+    z-index:3;
+    box-shadow:0 6px 16px rgba(0,0,0,0.5);
+    cursor:grabbing;
+  }
   .frame-badge{
     position:absolute;
     top:-6px;
@@ -1825,16 +1821,63 @@
   .mc-title{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:17px;}
   .mc-export{border:none;border-radius:20px;padding:9px 16px;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));cursor:pointer;}
   .mc-export:disabled{opacity:0.4;}
-  .mc-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 14px;}
-  #mc-canvas{max-width:100%;max-height:100%;border-radius:8px;touch-action:manipulation;
+  .mc-stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 14px;overflow:hidden;}
+  #mc-canvas{max-width:100%;max-height:100%;border-radius:8px;touch-action:none;
     background-color:#f4f4f7;
     background-image:conic-gradient(#d6d6dc 25%, transparent 0 50%, #d6d6dc 0 75%, transparent 0);
     background-size:18px 18px;}
   .mc-hint{text-align:center;font-size:12px;color:var(--muted);padding:2px 18px 8px;min-height:22px;}
   .mc-controls{padding:8px 18px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--line);}
+  .mc-modes{display:flex;gap:8px;margin-bottom:10px;}
+  .mc-mode-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;}
+  .mc-mode-btn svg{width:16px;height:16px;}
+  .mc-mode-btn.active{border-color:var(--accent-1);color:var(--accent-1);background:rgba(255,79,139,0.08);}
   .mc-btns{display:flex;gap:8px;margin-top:6px;}
   .mc-btns button{flex:1;padding:11px 6px;border:none;border-radius:12px;background:#2c2c31;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;}
   .mc-btns button:disabled{opacity:0.35;}
+
+  /* ================= MAGIC CUT IMAGES (saved cut-outs library) ================= */
+  .mci-grid{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:14px 20px 20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(76px, 1fr));
+    gap:10px;
+  }
+  .mci-thumb{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:8px;
+    border:1px solid var(--line);
+    overflow:hidden;
+    padding:0;
+    cursor:pointer;
+    background-color:#f4f4f7;
+    background-image:conic-gradient(#d6d6dc 25%, transparent 0 50%, #d6d6dc 0 75%, transparent 0);
+    background-size:14px 14px;
+  }
+  .mci-thumb img{display:block;width:100%;height:100%;object-fit:contain;}
+  .mci-thumb .mci-dl,
+  .mci-thumb .mci-del{
+    position:absolute;
+    width:22px;height:22px;
+    border-radius:50%;
+    border:none;
+    background:rgba(20,20,24,0.65);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;
+    padding:0;
+    cursor:pointer;
+  }
+  .mci-thumb .mci-dl svg,
+  .mci-thumb .mci-del svg{width:12px;height:12px;}
+  .mci-thumb .mci-dl{bottom:4px;right:4px;}
+  .mci-thumb .mci-del{top:4px;right:4px;}
+  .mci-empty{grid-column:1/-1;padding:44px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;}
 
 </style>
 </head>
@@ -1849,7 +1892,7 @@
       <button class="icon-btn" aria-label="Menu">
         <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
-      <div class="logo">YourApp</div>
+      <div class="logo">DG Dynamics</div>
       <div class="badge">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L2 9l10 13L22 9 12 2z" fill="#fff"/></svg>
       </div>
@@ -2017,7 +2060,9 @@
       <div class="toolbar-landscape">
         <div class="tool-grip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg></div>
         <button class="tool-btn active" aria-label="Brush"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20c0-3 2-4 4-4s3 1 3-2-2-3-2-5a4 4 0 118 0c0 3-2 8-6 11-2 1.5-4.5 1.5-7 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+        <button class="tool-btn" aria-label="Picker"><svg viewBox="0 0 24 24" fill="none"><path d="M15.5 3.5l5 5-3 3-5-5 3-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15 6L5 16v3h3L18 9" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3.5 20.5l1.7-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
         <button class="tool-btn" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none"><path d="M17 3l4 4-11 11H6l-3-3L14 4a2 2 0 013 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 18h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        <button class="tool-btn" aria-label="Lock"><svg viewBox="0 0 24 24" fill="none"><path d="M7 10V7a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 15.5l6-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
         <button class="tool-btn" aria-label="Select"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c0-5 4-9 9-9s7 3 7 6-3 4-6 4 1 4-2 4-2-2-4-2-4 0-4-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="17.5" r="1.4" stroke="currentColor" stroke-width="1.6"/></svg></button>
         <button class="tool-btn" aria-label="Fill"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13l7-7 7 7-7 7-7-7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="17.5" cy="17.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg></button>
         <button class="tool-btn" aria-label="Text"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -2028,7 +2073,9 @@
       <div class="toolbar-portrait">
         <div class="tool-grip"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg></div>
         <button class="tool-btn active" aria-label="Brush"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20c0-3 2-4 4-4s3 1 3-2-2-3-2-5a4 4 0 118 0c0 3-2 8-6 11-2 1.5-4.5 1.5-7 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+        <button class="tool-btn" aria-label="Picker"><svg viewBox="0 0 24 24" fill="none"><path d="M15.5 3.5l5 5-3 3-5-5 3-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15 6L5 16v3h3L18 9" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3.5 20.5l1.7-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
         <button class="tool-btn" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none"><path d="M17 3l4 4-11 11H6l-3-3L14 4a2 2 0 013 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 18h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        <button class="tool-btn" aria-label="Lock"><svg viewBox="0 0 24 24" fill="none"><path d="M7 10V7a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 15.5l6-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
         <button class="tool-btn" aria-label="Select"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c0-5 4-9 9-9s7 3 7 6-3 4-6 4 1 4-2 4-2-2-4-2-4 0-4-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="17.5" r="1.4" stroke="currentColor" stroke-width="1.6"/></svg></button>
         <button class="tool-btn" aria-label="Fill"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13l7-7 7 7-7 7-7-7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="17.5" cy="17.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg></button>
         <button class="tool-btn" aria-label="Text"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -2039,7 +2086,6 @@
         <div class="canvas-surface" id="editor-canvas">
           <canvas class="onion-overlay" id="onion-overlay"></canvas>
           <canvas class="lasso-overlay" id="lasso-overlay"></canvas>
-          <canvas class="lock-stroke-overlay" id="lock-stroke-overlay"></canvas>
           <canvas class="grid-overlay" id="grid-overlay"></canvas>
           <svg class="ruler-guide-svg" id="ruler-guide-svg" preserveAspectRatio="none"></svg>
           <div class="ruler-guide-layer" id="ruler-guide-layer"></div>
@@ -2097,6 +2143,10 @@
             <span>Alpha</span>
           </button>
           <div class="bp-divider"></div>
+          <button class="util-btn bp-item" id="bp-lock" aria-label="Lock">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 10V7a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 15.5l6-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>Lock</span>
+          </button>
           <button class="util-btn bp-item" id="bp-ruler" aria-label="Ruler">
             <svg viewBox="0 0 24 24" fill="none"><g transform="rotate(-45 12 12)"><rect x="1.5" y="8" width="21" height="8" rx="1.6" stroke="currentColor" stroke-width="1.7"/><path d="M6 8v3M10 8v4.5M14 8v3M18 8v4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g></svg>
             <span>Ruler</span>
@@ -2243,6 +2293,10 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L9.5 14.5M6 18l3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="6.5" r="1.4" fill="currentColor"/><circle cx="18" cy="17.5" r="1.4" fill="currentColor"/></svg>
             <span class="more-row-label">Magic Cut</span>
           </button>
+          <button class="more-row" data-item="magic-cut-images">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 7V5.5A1.5 1.5 0 018.5 4h11A1.5 1.5 0 0121 5.5v11a1.5 1.5 0 01-1.5 1.5H18" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="13" r="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3 18l4-4 3 3 3.5-3.5L17 17" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <span class="more-row-label">Magic Cut Images</span>
+          </button>
           <button class="more-row" data-item="add-image">
             <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="9.5" r="1.6" stroke="currentColor" stroke-width="1.6"/><path d="M21 16l-5.5-5.5a2 2 0 00-2.8 0L4 19" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
             <span class="more-row-label">Add image</span>
@@ -2268,6 +2322,24 @@
           <div class="export-track"><div class="export-fill" id="export-fill"></div></div>
           <p class="export-pct" id="export-pct">0%</p>
           <button type="button" class="export-cancel" id="export-cancel-btn">Cancel</button>
+        </div>
+      </div>
+
+      <!-- ============ MOVIE FORMAT PICKER ============ -->
+      <div class="sheet-backdrop" id="movie-format-backdrop"></div>
+      <div class="more-sheet" id="movie-format-sheet" role="region" aria-label="Movie format">
+        <div class="more-handle" id="movie-format-handle" aria-label="Close menu"><span></span></div>
+        <div class="picker-header">
+          <button class="icon-btn" id="movie-format-back-btn" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="picker-title">Movie format</div>
+        </div>
+        <div class="picker-list" id="movie-format-list">
+          <!-- rows injected by JS -->
+        </div>
+        <div class="more-footer">
+          <button type="button" class="make-movie-btn" id="movie-format-export-btn">EXPORT</button>
         </div>
       </div>
 
@@ -2364,18 +2436,50 @@
       <div class="mc-title">Magic Cut</div>
       <button class="mc-export" id="mc-export">Add to frame</button>
     </div>
-    <div class="mc-stage"><canvas id="mc-canvas"></canvas></div>
+    <div class="mc-stage" id="mc-stage">
+      <canvas id="mc-canvas"></canvas>
+      <div class="zoom-badge" id="mc-zoom-badge" title="Tap to reset zoom">100%</div>
+    </div>
     <div class="mc-hint" id="mc-hint"></div>
     <div class="mc-controls">
-      <div class="opt-head"><span>Cut strength</span><b id="mc-tol-val">26</b></div>
-      <input class="opt-range" id="mc-tol" type="range" min="4" max="90" step="1" value="26" aria-label="Cut strength">
+      <div class="mc-modes">
+        <button type="button" class="mc-mode-btn active" id="mc-mode-magic" data-mode="magic">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 3v4M3 5h4M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Magic
+        </button>
+        <button type="button" class="mc-mode-btn" id="mc-mode-scissors" data-mode="scissors">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M8 7.5L19 18M8 16.5L19 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Scissors
+        </button>
+      </div>
+      <div id="mc-tol-row">
+        <div class="opt-head"><span>Cut strength</span><b id="mc-tol-val">26</b></div>
+        <input class="opt-range" id="mc-tol" type="range" min="4" max="90" step="1" value="26" aria-label="Cut strength">
+      </div>
+      <div id="mc-brush-row" style="display:none">
+        <div class="opt-head"><span>Scissors size</span><b id="mc-brush-val">24</b></div>
+        <input class="opt-range" id="mc-brush" type="range" min="6" max="70" step="1" value="24" aria-label="Scissors size">
+      </div>
       <div class="mc-btns">
-        <button type="button" id="mc-undo">Undo tap</button>
+        <button type="button" id="mc-undo">Undo</button>
         <button type="button" id="mc-reset">Reset</button>
         <button type="button" id="mc-other">Other photo</button>
       </div>
     </div>
     <input type="file" id="mc-input" accept="image/*" style="display:none">
+  </div>
+
+  <!-- ============ MAGIC CUT IMAGES (library of every saved cut-out) ============ -->
+  <div class="sheet-backdrop" id="mci-backdrop"></div>
+  <div class="more-sheet" id="mci-sheet" role="region" aria-label="Magic Cut Images">
+    <div class="more-handle" id="mci-handle" aria-label="Close Magic Cut Images"><span></span></div>
+    <div class="picker-header">
+      <button class="icon-btn" id="mci-back-btn" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="picker-title">Magic Cut Images</div>
+    </div>
+    <div class="mci-grid" id="mci-grid"></div>
   </div>
 
 </div>
@@ -2686,13 +2790,20 @@
       resetLayers();          // clean slate at the right canvas size (same as a new project)
       resetBrushUI();
       frames.length = 0;
+      // A layer at the same position in every frame's saved stack is the same layer — give
+      // each position one shared id up front so add/lock/opacity/reorder stay in sync on this
+      // project exactly like they do on a freshly-built one.
+      const maxLayerCount = data.frames.reduce((m, fd) => Math.max(m, fd.layers.length), 0);
+      const sharedIds = [];
+      for(let i = 0; i < maxLayerCount; i++) sharedIds.push(++layerUid);
       let bi = 0;
       for(let fi = 0; fi < data.frames.length; fi++){
         const fd = data.frames[fi];
         const f = { n: fi + 1, selected: false, layers: [], activeLayerId: null,
                     layerSeq: fd.layerSeq || 1, undoStack: [], redoStack: [] };
-        for(const ld of fd.layers){
-          const l = makeLayer(ld.name);
+        for(let li = 0; li < fd.layers.length; li++){
+          const ld = fd.layers[li];
+          const l = makeLayer(ld.name, sharedIds[li]);
           l.opacity = ld.opacity; l.visible = ld.visible !== false; l.locked = !!ld.locked;
           const blob = blobs[bi++];
           await drawBlobOnCanvas(blob, l.canvas);
@@ -2995,6 +3106,7 @@
       thumb.dataset.n = f.n;
       thumb.innerHTML = `<canvas class="frame-thumb-canvas"></canvas><span class="frame-badge">${f.n}</span>` + (f.type === 'video' ? '<span class="frame-video-badge">▶</span>' : '');
       thumb.onclick = () => {
+        if(performance.now() < suppressFrameClickUntil) return;   // a drag just ended, don't treat it as a tap
         if(f.selected){
           // tapping the frame you're already on opens its Copy / Delete / Paste menu
           if(frameMenuEl.classList.contains('open') && frameMenuTargetN === f.n) closeFrameMenu();
@@ -3008,12 +3120,94 @@
       el.appendChild(thumb);
       drawFrameThumb(thumb.querySelector('canvas'), f);
       if(f.selected) thumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      bindFrameDrag(el, thumb, f);
     });
     const add = document.createElement('button');
     add.className = 'frame-add';
     add.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
     add.onclick = () => { closeFrameMenu(); addFrame(); };
     el.appendChild(add);
+  }
+
+  // ---- reorder: long-press a frame thumbnail, then drag it left/right to a new spot in the strip ----
+  let suppressFrameClickUntil = 0;
+  function commitFrameOrder(el){
+    const byN = new Map(frames.map(f => [f.n, f]));
+    const newOrder = [...el.querySelectorAll('.frame-thumb')].map(t => byN.get(Number(t.dataset.n)));
+    if(newOrder.length !== frames.length || newOrder.some(f => !f)){ renderFrameStrips(); return; }
+    frames.length = 0;
+    frames.push(...newOrder);
+    frames.forEach((f, i) => f.n = i + 1);   // renumber left to right so badges stay 1, 2, 3...
+    closeFrameMenu();
+    renderFrameStrips();
+    updateOnionOverlay();
+  }
+  function bindFrameDrag(el, thumb, f){
+    let pressTimer = 0, dragging = false, startX = 0, startY = 0, lastX = 0, grabOffset = 0, moved = false, raf = 0;
+
+    function update(){
+      const rect = el.getBoundingClientRect();
+      const x = lastX - rect.left + el.scrollLeft;                 // finger position inside the strip
+      let left = x - grabOffset;
+      left = Math.max(0, Math.min(el.scrollWidth - thumb.offsetWidth, left));
+      let prev = thumb.previousElementSibling;
+      while(prev && prev.classList.contains('frame-thumb') && left < prev.offsetLeft + prev.offsetWidth / 2){
+        el.insertBefore(prev, thumb.nextSibling);                  // move the neighbour, not the dragged thumb
+        prev = thumb.previousElementSibling;
+      }
+      let next = thumb.nextElementSibling;
+      while(next && next.classList.contains('frame-thumb') && left + thumb.offsetWidth > next.offsetLeft + next.offsetWidth / 2){
+        el.insertBefore(next, thumb);
+        next = thumb.nextElementSibling;
+      }
+      thumb.style.transform = 'translateX(' + (left - thumb.offsetLeft) + 'px)';
+    }
+    function tick(){
+      if(!dragging) return;
+      const rect = el.getBoundingClientRect();
+      if(lastX < rect.left + 30) el.scrollLeft -= 8;                // auto-scroll near the edges
+      else if(lastX > rect.right - 30) el.scrollLeft += 8;
+      update();
+      raf = requestAnimationFrame(tick);
+    }
+    function beginDrag(e){
+      dragging = true; moved = false;
+      const rect = el.getBoundingClientRect();
+      grabOffset = (lastX - rect.left + el.scrollLeft) - thumb.offsetLeft;
+      thumb.classList.add('dragging');
+      thumb.style.transition = 'none';
+      closeFrameMenu();
+      try{ thumb.setPointerCapture(e.pointerId); }catch(err){}
+      raf = requestAnimationFrame(tick);
+    }
+    thumb.addEventListener('pointerdown', e => {
+      startX = lastX = e.clientX; startY = e.clientY;
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => beginDrag(e), 320);             // long-press to start dragging
+    });
+    thumb.addEventListener('pointermove', e => {
+      lastX = e.clientX;
+      if(!dragging){
+        if(Math.abs(e.clientX - startX) > 6 || Math.abs(e.clientY - startY) > 6) clearTimeout(pressTimer);
+        return;
+      }
+      if(Math.abs(lastX - startX) > 3) moved = true;
+      update();
+    });
+    function end(){
+      clearTimeout(pressTimer);
+      if(!dragging) return;
+      dragging = false;
+      cancelAnimationFrame(raf);
+      thumb.classList.remove('dragging');
+      thumb.style.transition = 'transform .12s ease';
+      thumb.style.transform = '';
+      setTimeout(() => { thumb.style.transition = ''; }, 140);
+      if(moved) suppressFrameClickUntil = performance.now() + 200;
+      commitFrameOrder(el);
+    }
+    thumb.addEventListener('pointerup', end);
+    thumb.addEventListener('pointercancel', end);
   }
   function renderFrameStrips(){
     frameStripEls.forEach(renderFrameStrip);
@@ -3041,9 +3235,10 @@
     const cur = currentFrame();
     const activeIdx = cur.layers.findIndex(l => l.id === cur.activeLayerId);
     const newLayers = cur.layers.map(l => {
-      const nl = makeLayer(l.name);
+      const nl = makeLayer(l.name, l.id);   // same layer identity, blank pixels for this frame
       nl.opacity = l.opacity;
       nl.visible = l.visible;
+      nl.locked = l.locked;
       return nl;
     });
     const insertAt = frames.indexOf(cur) + 1;
@@ -3089,7 +3284,7 @@
       const c = document.createElement('canvas');
       c.width = l.canvas.width; c.height = l.canvas.height;
       c.getContext('2d').drawImage(l.canvas, 0, 0);
-      return { name: l.name, opacity: l.opacity, visible: l.visible, canvas: c };
+      return { name: l.name, opacity: l.opacity, visible: l.visible, locked: l.locked, canvas: c };
     });
   }
 
@@ -3100,10 +3295,12 @@
     if(idx === -1) return;
     const cur = frames[idx];
     const activeIdx = cur.layers.findIndex(l => l.id === cur.activeLayerId);
-    const newLayers = frameClipboard.map(l => {
-      const nl = makeLayer(l.name);
+    const newLayers = frameClipboard.map((l, i) => {
+      const matchId = cur.layers[i] ? cur.layers[i].id : undefined;   // same layer identity as the current stack
+      const nl = makeLayer(l.name, matchId);
       nl.opacity = l.opacity;
       nl.visible = l.visible;
+      nl.locked = !!l.locked;
       nl.canvas.getContext('2d').drawImage(l.canvas, 0, 0);
       return nl;
     });
@@ -3183,9 +3380,11 @@
   }
   renderFpsLists();
   // ================= LAYERS =================
-  // Every frame owns its own stack of layers (index 0 = bottom, last = top).
-  // Each layer has its own <canvas> stacked inside #editor-canvas, so drawing or erasing
-  // on one layer never touches another. One layer is always the active (selected) one.
+  // Layers are a project-wide stack (index 0 = bottom, last = top), shared by every frame:
+  // create "Layer 2" and all frames — past, present, future — have a Layer 2, same name, same
+  // order, same opacity/visibility/lock. What's per-frame is only the pixels: each frame keeps
+  // its own blank-or-drawn <canvas> for each layer id, so drawing/erasing on one frame's copy
+  // of a layer never touches another frame's copy. One layer per frame is always active.
   let layerUid = 0;
 
   const layerPanelEl = document.getElementById('layer-panel');
@@ -3203,12 +3402,42 @@
     return f.layers.find(l => l.id === f.activeLayerId) || f.layers[f.layers.length - 1];
   }
 
-  function makeLayer(name){
+  // A layer's id is what makes it "the same layer" across every frame — pass an existing id
+  // to give a frame a blank canvas for a layer that already exists elsewhere (new frame, load),
+  // or omit it to mint a brand new layer id (only when the layer is genuinely new).
+  function makeLayer(name, id){
     const canvas = document.createElement('canvas');
     canvas.className = 'layer-canvas';
     canvas.width = currentCanvasSize.w;
     canvas.height = currentCanvasSize.h;
-    return { id: ++layerUid, name: name, opacity: 100, visible: true, locked: false, canvas: canvas };
+    if(id !== undefined && id > layerUid) layerUid = id;
+    return { id: id !== undefined ? id : ++layerUid, name: name, opacity: 100, visible: true, locked: false, canvas: canvas };
+  }
+
+  // Lock Pencil's barrier lines live on a hidden canvas of their own, one per frame -- separate
+  // from every layer -- so a wall it draws blocks painting on ANY layer, not just the one the
+  // Lock Pencil stroke happened to be drawn on. Created the first time it's needed; rebuilt (and
+  // its old lines scaled across) if the canvas size has since changed.
+  function getBarrierCanvas(frame){
+    if(!frame.barrier || frame.barrier.width !== currentCanvasSize.w || frame.barrier.height !== currentCanvasSize.h){
+      const c = document.createElement('canvas');
+      c.width = currentCanvasSize.w;
+      c.height = currentCanvasSize.h;
+      if(frame.barrier) c.getContext('2d').drawImage(frame.barrier, 0, 0, frame.barrier.width, frame.barrier.height, 0, 0, c.width, c.height);
+      frame.barrier = c;
+    }
+    return frame.barrier;
+  }
+
+  // Every frame keeps its own pixels per layer, but a layer's identity (id) is shared across
+  // every frame — so adding/locking/reordering/renaming a layer applies to the whole project,
+  // not just the frame you happen to be on. This runs fn(layerInstance, frame) for each frame
+  // that has a layer with this id.
+  function forEachFrameLayer(id, fn){
+    frames.forEach(fr => {
+      const l = fr.layers && fr.layers.find(x => x.id === id);
+      if(l) fn(l, fr);
+    });
   }
 
   // ================= UNDO / REDO =================
@@ -3223,43 +3452,29 @@
     const ctx = layer.canvas.getContext('2d');
     return { layer: layer, data: ctx.getImageData(0, 0, layer.canvas.width, layer.canvas.height) };
   }
-  // withBarrier: true only for a Lock Pencil stroke, so its snapshot also carries the frame's
-  // wall canvas as it was right before that stroke — undo/redo then revert the ink and the
-  // wall together, as one action, instead of leaving a wall behind with no way back to it.
-  function pushUndoSnapshot(layer, withBarrier){
+  // Each history entry is a GROUP of one-or-more canvas snapshots that undo/redo together as one
+  // step. Pass a single layer (the common case) or an array (e.g. a Lock Pencil stroke, whose
+  // visible ink and barrier line should un-draw together). Returns the group, so a caller that
+  // just needs the "before" pixels (see clip correction below) can reuse it instead of reading
+  // the canvas a second time.
+  function pushUndoSnapshot(layer){
     const f = currentFrame();
-    const entry = snapshotOf(layer);
-    if(withBarrier){
-      const b = ensureLockBarrier(f);
-      entry.barrier = b.getContext('2d').getImageData(0, 0, b.width, b.height);
-      entry.hadLocks = f.hasLocks;
-    }
-    f.undoStack.push(entry);
+    const group = (Array.isArray(layer) ? layer : [layer]).map(snapshotOf);
+    f.undoStack.push(group);
     if(f.undoStack.length > MAX_HISTORY) f.undoStack.shift();
     f.redoStack.length = 0;                 // a new action invalidates anything that could have been redone
     updateHistoryButtons();
+    return group;
   }
   function restoreSnapshot(entry){
-    entry.layer.canvas.getContext('2d').putImageData(entry.data, 0, 0);
-    if(entry.barrier){
-      const f = currentFrame();
-      const b = ensureLockBarrier(f);
-      b.getContext('2d').putImageData(entry.barrier, 0, 0);
-      f.hasLocks = entry.hadLocks;
-    }
+    entry.forEach(s => s.layer.canvas.getContext('2d').putImageData(s.data, 0, 0));
   }
   function undo(){
     const f = currentFrame();
     if(!f.undoStack.length) return;
     stopStroke();                         // don't undo out from under a stroke that's still in progress
     const entry = f.undoStack.pop();
-    const redoEntry = snapshotOf(entry.layer);
-    if(entry.barrier){
-      const b = ensureLockBarrier(f);
-      redoEntry.barrier = b.getContext('2d').getImageData(0, 0, b.width, b.height);
-      redoEntry.hadLocks = f.hasLocks;
-    }
-    f.redoStack.push(redoEntry);
+    f.redoStack.push(entry.map(s => snapshotOf(s.layer)));
     restoreSnapshot(entry);
     updateHistoryButtons();
     refreshThumbnails();
@@ -3269,13 +3484,7 @@
     if(!f.redoStack.length) return;
     stopStroke();
     const entry = f.redoStack.pop();
-    const undoEntry = snapshotOf(entry.layer);
-    if(entry.barrier){
-      const b = ensureLockBarrier(f);
-      undoEntry.barrier = b.getContext('2d').getImageData(0, 0, b.width, b.height);
-      undoEntry.hadLocks = f.hasLocks;
-    }
-    f.undoStack.push(undoEntry);
+    f.undoStack.push(entry.map(s => snapshotOf(s.layer)));
     restoreSnapshot(entry);
     updateHistoryButtons();
     refreshThumbnails();
@@ -3387,7 +3596,8 @@
       });
       row.querySelector('.layer-lock').addEventListener('click', e => {
         e.stopPropagation();                 // don't let this also select/deselect the row
-        l.locked = !l.locked;
+        const nowLocked = !l.locked;
+        forEachFrameLayer(l.id, ll => { ll.locked = nowLocked; });   // same layer, every frame
         suppressRowClickUntil = performance.now() + 200;
         renderLayerList();                   // simplest way to refresh this row + thumb badge + icon
       });
@@ -3409,7 +3619,11 @@
   function selectLayer(id){
     const f = currentFrame();
     if(!f.layers.some(l => l.id === id)) return;
-    f.activeLayerId = id;
+    // Which layer is "active" is a project-wide choice, not something each frame remembers on
+    // its own — so picking Layer 2 here means every frame that has a Layer 2 switches to it too.
+    // That's what keeps you on Layer 2 after hopping to another frame instead of snapping back
+    // to Layer 1.
+    forEachFrameLayer(id, (l, fr) => { fr.activeLayerId = id; });
     markProjectChanged();
     layerListEl.querySelectorAll('.layer-row').forEach(r => {
       const on = Number(r.dataset.id) === id;
@@ -3433,9 +3647,9 @@
       const dy = e.clientY - startY;                 // finger down = less opaque, finger up = more opaque
       if(Math.abs(dy) > 3) moved = true;
       const v = Math.round(Math.max(0, Math.min(100, startVal - dy / 1.5)));
-      layer.opacity = v;
       layer.canvas.style.opacity = v / 100;
       el.textContent = v + '%';
+      forEachFrameLayer(layer.id, ll => { ll.opacity = v; });   // same layer, every frame
     });
     function end(){
       if(startY === null) return;
@@ -3454,9 +3668,17 @@
   function commitLayerOrder(){
     const f = currentFrame();
     const byId = new Map(f.layers.map(l => [l.id, l]));
-    const topFirst = [...layerListEl.querySelectorAll('.layer-row')].map(r => byId.get(Number(r.dataset.id)));
+    const topFirstIds = [...layerListEl.querySelectorAll('.layer-row')].map(r => Number(r.dataset.id));
+    const topFirst = topFirstIds.map(id => byId.get(id));
     if(topFirst.length !== f.layers.length || topFirst.some(l => !l)){ renderLayers(); return; }
-    f.layers = topFirst.reverse();                   // list is top-first, data is bottom-first
+    const bottomFirstIds = topFirstIds.slice().reverse();   // list is top-first, data is bottom-first
+    // the stack order is a property of the layers themselves, so it applies to every frame
+    frames.forEach(fr => {
+      if(!fr.layers) return;
+      const frById = new Map(fr.layers.map(l => [l.id, l]));
+      const reordered = bottomFirstIds.map(id => frById.get(id)).filter(Boolean);
+      if(reordered.length === fr.layers.length) fr.layers = reordered;
+    });
     renderLayerCanvases();                           // updates the stacking order of the canvases
     markProjectChanged();
   }
@@ -3561,20 +3783,31 @@
   //    connected to the edge that stays close to that colour (so it follows a flat or gently
   //    shaded background and stops at the subject).
   // 2) "Cut strength" makes it bolder or gentler. Tap the picture to erase any leftover patch.
-  // 3) "Add to frame" adds a new frame after the current one and places the cut-out in it as a
+  // 3) "Scissors" switches off the auto-detect and lets you drag a finger straight over the
+  //    picture instead — it erases along exactly the path you trace, at the chosen size, so you
+  //    can cut precisely by hand wherever the automatic guess gets it wrong.
+  // 4) "Add to frame" adds a new frame after the current one and places the cut-out in it as a
   //    movable, resizable piece (tick to place it, X to drop the new frame again).
   const MC_MAX_SIDE = 1400;          // big phone photos are shrunk to this long side before cutting
   const MC_DEFAULT_TOL = 26;
-  const MC_HINT = 'Tap the picture to erase more background';
+  const MC_DEFAULT_BRUSH = 24;
+  const MC_HINT_MAGIC = 'Tap the picture to erase more background';
+  const MC_HINT_SCISSORS = 'Drag over the picture to cut with the scissors';
   const mcScreenEl = document.getElementById('mc-screen');
+  const mcStageEl = document.getElementById('mc-stage');
   const mcCanvasEl = document.getElementById('mc-canvas');
   const mcInputEl = document.getElementById('mc-input');
   const mcTolEl = document.getElementById('mc-tol');
   const mcTolValEl = document.getElementById('mc-tol-val');
+  const mcTolRowEl = document.getElementById('mc-tol-row');
+  const mcBrushEl = document.getElementById('mc-brush');
+  const mcBrushValEl = document.getElementById('mc-brush-val');
+  const mcBrushRowEl = document.getElementById('mc-brush-row');
   const mcHintEl = document.getElementById('mc-hint');
   const mcExportBtn = document.getElementById('mc-export');
   const mcUndoBtn = document.getElementById('mc-undo');
-  const mc = { w: 0, h: 0, src: null, img: null, auto: null, taps: null, stack: null, history: [], tol: MC_DEFAULT_TOL, raf: 0, autoCount: 0 };
+  const mc = { w: 0, h: 0, src: null, img: null, auto: null, taps: null, stack: null, history: [],
+               tol: MC_DEFAULT_TOL, brush: MC_DEFAULT_BRUSH, mode: 'magic', raf: 0, autoCount: 0 };
 
   function mcDist2(d, i, j){
     const a = d[i] - d[j], b = d[i + 1] - d[j + 1], c = d[i + 2] - d[j + 2];
@@ -3646,9 +3879,13 @@
     mcComputeAuto();
     mcRender();
     mcUndoBtn.disabled = mc.history.length === 0;
+    if(mc.mode === 'scissors'){
+      mcHintEl.textContent = MC_HINT_SCISSORS;
+      return;
+    }
     const removed = mc.autoCount / (mc.w * mc.h);
     if(removed < 0.01) mcHintEl.textContent = "Couldn't find a plain background — tap the background to erase it.";
-    else mcHintEl.textContent = MC_HINT;
+    else mcHintEl.textContent = MC_HINT_MAGIC;
   }
   function mcScheduleRefresh(){
     if(mc.raf) return;
@@ -3682,6 +3919,35 @@
     mcRender();
     mcUndoBtn.disabled = false;
   }
+
+  // Scissors: erase every pixel within the brush circle, ignoring colour entirely — this is
+  // the hand-drawn cut, independent of the Magic auto-detect and tap-fill above. `strokeSet` is
+  // shared across every stamp in one drag so the whole drag undoes as a single action.
+  function mcStampBrush(cx, cy, radius, strokeSet){
+    const w = mc.w, h = mc.h, r2 = radius * radius;
+    const x0 = Math.max(0, Math.floor(cx - radius)), x1 = Math.min(w - 1, Math.ceil(cx + radius));
+    const y0 = Math.max(0, Math.floor(cy - radius)), y1 = Math.min(h - 1, Math.ceil(cy + radius));
+    for(let y = y0; y <= y1; y++){
+      const dy = y - cy;
+      for(let x = x0; x <= x1; x++){
+        const dx = x - cx;
+        if(dx * dx + dy * dy > r2) continue;
+        const p = y * w + x;
+        if(mc.taps[p]) continue;
+        mc.taps[p] = 1;
+        strokeSet.push(p);
+      }
+    }
+  }
+  function mcScissorStroke(x0, y0, x1, y1, strokeSet){
+    const radius = mc.brush / 2;
+    const dist = Math.hypot(x1 - x0, y1 - y0);
+    const steps = Math.max(1, Math.ceil(dist / Math.max(2, radius / 2)));
+    for(let i = 0; i <= steps; i++){
+      const t = i / steps;
+      mcStampBrush(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, radius, strokeSet);
+    }
+  }
   function mcUndoTap(){
     const last = mc.history.pop();
     if(!last) return;
@@ -3695,7 +3961,18 @@
     mc.tol = MC_DEFAULT_TOL;
     mcTolEl.value = MC_DEFAULT_TOL;
     mcTolValEl.textContent = MC_DEFAULT_TOL;
+    mc.brush = MC_DEFAULT_BRUSH;
+    mcBrushEl.value = MC_DEFAULT_BRUSH;
+    mcBrushValEl.textContent = MC_DEFAULT_BRUSH;
     mcRefresh();
+  }
+  function mcSetMode(mode){
+    mc.mode = mode;
+    document.getElementById('mc-mode-magic').classList.toggle('active', mode === 'magic');
+    document.getElementById('mc-mode-scissors').classList.toggle('active', mode === 'scissors');
+    mcTolRowEl.style.display = mode === 'magic' ? '' : 'none';
+    mcBrushRowEl.style.display = mode === 'scissors' ? '' : 'none';
+    mcHintEl.textContent = mode === 'scissors' ? MC_HINT_SCISSORS : MC_HINT_MAGIC;
   }
 
   function mcLoadFile(file){
@@ -3719,6 +3996,8 @@
       mc.stack = new Int32Array(w * h);
       mc.history = [];
       mc.tol = Number(mcTolEl.value) || MC_DEFAULT_TOL;
+      mcSetMode('magic');
+      if(mc._resetZoom) mc._resetZoom();
       mcRefresh();
       mcScreenEl.classList.add('open');
     };
@@ -3750,6 +4029,7 @@
     out.getContext('2d').putImageData(mc.img, 0, 0);
     const trimmed = trimCanvas(out);                     // crop to the cut-out so its handles fit snugly
     if(!trimmed){ mcHintEl.textContent = 'Everything was erased — lower the cut strength or undo a tap.'; return; }
+    mciLibSave(trimmed.canvas);      // keep a transparent-background copy in the Magic Cut Images library for later reuse/export
     mcClose();
     if(pasteState) commitPasteTransform();
     if(videoPlaceState) commitVideoPlacement();
@@ -3777,21 +4057,299 @@
     mcTolValEl.textContent = mc.tol;
     if(mc.src) mcScheduleRefresh();
   });
-  (function wireMcTap(){
-    let down = null;
-    mcCanvasEl.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
-    mcCanvasEl.addEventListener('pointerup', e => {
-      if(!down || down.id !== e.pointerId || !mc.src) { down = null; return; }
-      const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
-      down = null;
-      if(moved > 8) return;
-      const r = mcCanvasEl.getBoundingClientRect();
-      const x = Math.floor((e.clientX - r.left) * mc.w / r.width);
-      const y = Math.floor((e.clientY - r.top) * mc.h / r.height);
-      if(x < 0 || y < 0 || x >= mc.w || y >= mc.h) return;
-      mcTapAt(x, y);
+  mcBrushEl.addEventListener('input', () => {
+    mc.brush = Number(mcBrushEl.value);
+    mcBrushValEl.textContent = mc.brush;
+  });
+  document.querySelectorAll('.mc-mode-btn').forEach(b => {
+    b.addEventListener('click', () => mcSetMode(b.dataset.mode));
+  });
+
+  // ---- Magic Cut Images: a library of every cut-out ever saved (as a transparent PNG),
+  // kept separately from any one project so it can be reused in another frame or re-exported
+  // later. Lives in its own IndexedDB database — nothing here is ever sent anywhere. ----
+  let _mciDbPromise = null;
+  function mciDbOpen(){
+    if(_mciDbPromise) return _mciDbPromise;
+    _mciDbPromise = new Promise((resolve, reject) => {
+      if(!window.indexedDB){ reject(new Error('IndexedDB unavailable')); return; }
+      const req = indexedDB.open('magic-cut-library', 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if(!db.objectStoreNames.contains('cutouts')) db.createObjectStore('cutouts', { keyPath: 'id' });
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
     });
-    mcCanvasEl.addEventListener('pointercancel', () => { down = null; });
+    return _mciDbPromise;
+  }
+  function mciLibSave(canvas){
+    // Best-effort: a save that fails (e.g. storage full) should never interrupt Magic Cut itself.
+    return canvasToBlob(canvas, 'image/png').then(blob => {
+      if(!blob) return null;
+      const rec = { id: uid(), blob: blob, w: canvas.width, h: canvas.height, created: Date.now() };
+      return mciDbOpen().then(db => new Promise(resolve => {
+        const tx = db.transaction('cutouts', 'readwrite');
+        tx.objectStore('cutouts').put(rec);
+        tx.oncomplete = () => resolve(rec);
+        tx.onerror = () => resolve(null);
+      }));
+    }).catch(() => null);
+  }
+  function mciLibList(){
+    return mciDbOpen().then(db => new Promise(resolve => {
+      const r = db.transaction('cutouts', 'readonly').objectStore('cutouts').getAll();
+      r.onsuccess = () => resolve((r.result || []).sort((a, b) => b.created - a.created));
+      r.onerror = () => resolve([]);
+    })).catch(() => []);
+  }
+  function mciLibDelete(id){
+    return mciDbOpen().then(db => new Promise(resolve => {
+      const tx = db.transaction('cutouts', 'readwrite');
+      tx.objectStore('cutouts').delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    })).catch(() => {});
+  }
+
+  const mciBackdropEl = document.getElementById('mci-backdrop');
+  const mciSheetEl = document.getElementById('mci-sheet');
+  const mciGridEl = document.getElementById('mci-grid');
+  let _mciUrls = [];
+  function setMciSheet(open){
+    mciSheetEl.classList.toggle('open', open);
+    mciBackdropEl.classList.toggle('open', open);
+  }
+  function renderMciGrid(){
+    _mciUrls.forEach(u => URL.revokeObjectURL(u));
+    _mciUrls = [];
+    mciGridEl.innerHTML = '<p class="mci-empty">Loading…</p>';
+    mciLibList().then(items => {
+      if(!items.length){
+        mciGridEl.innerHTML = '<p class="mci-empty">No cut-out images yet — anything you cut with Magic Cut is saved here automatically, as a transparent PNG you can reuse or export any time.</p>';
+        return;
+      }
+      mciGridEl.innerHTML = '';
+      items.forEach(rec => {
+        const url = URL.createObjectURL(rec.blob);
+        _mciUrls.push(url);
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'mci-thumb';
+        cell.setAttribute('aria-label', 'Saved cut-out');
+        cell.innerHTML =
+          '<img src="' + url + '" alt="Saved cut-out">' +
+          '<button type="button" class="mci-dl" aria-label="Export this image"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+          '<button type="button" class="mci-del" aria-label="Delete this image"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>';
+        cell.addEventListener('click', () => {
+          setMciSheet(false);
+          mciUseCutout(rec, url);
+        });
+        cell.querySelector('.mci-dl').addEventListener('click', e => {
+          e.stopPropagation();
+          saveOrShareBlob(rec.blob, 'magic-cut-' + rec.id + '.png');
+        });
+        cell.querySelector('.mci-del').addEventListener('click', e => {
+          e.stopPropagation();
+          if(!confirm('Delete this saved cut-out? This cannot be undone.')) return;
+          mciLibDelete(rec.id).then(renderMciGrid);
+        });
+        mciGridEl.appendChild(cell);
+      });
+    });
+  }
+  // Drops a saved cut-out back into a new frame, same placement flow as a fresh Magic Cut
+  // (tick to place it, X to drop the new frame again) — its transparent background comes along.
+  function mciUseCutout(rec, url){
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = rec.w; c.height = rec.h;
+      c.getContext('2d').drawImage(img, 0, 0);
+      if(pasteState) commitPasteTransform();
+      if(videoPlaceState) commitVideoPlacement();
+      addFrame();
+      const newFrame = currentFrame();
+      startPasteTransform({ canvas: c, w: rec.w, h: rec.h });
+      if(pasteState) pasteState.magicFrame = newFrame;
+    };
+    img.onerror = () => alert('Could not open that saved image.');
+    img.src = url;
+  }
+  document.querySelector('.more-row[data-item="magic-cut-images"]').addEventListener('click', () => {
+    setMoreSheet(false);
+    renderMciGrid();
+    setMciSheet(true);
+  });
+  mciBackdropEl.addEventListener('click', () => setMciSheet(false));
+  document.getElementById('mci-handle').addEventListener('click', () => setMciSheet(false));
+  document.getElementById('mci-back-btn').addEventListener('click', () => setMciSheet(false));
+
+  // Pointer handling for the picture itself: in Magic mode a tap flood-erases a colour patch;
+  // in Scissors mode the whole drag (down -> move -> up) paints an erase-stroke along the path,
+  // ignoring colour, so the person can cut exactly where they choose by hand. A second finger
+  // touching down always means "zoom", never "cut" — mcGestureLock (set by the pinch-zoom module
+  // right below) blocks a new tap/stroke from starting, and mcAbortGesture() throws away a
+  // stroke that a second finger interrupted just as it began.
+  let mcGestureLock = false;
+  const mcPointerState = { down: null, stroke: null };
+  function mcEndStroke(){
+    const stroke = mcPointerState.stroke;
+    if(!stroke) return;
+    if(stroke.set.length){
+      mc.history.push(Int32Array.from(stroke.set));
+      mcUndoBtn.disabled = false;
+    }
+    mcPointerState.stroke = null;
+  }
+  function mcAbortGesture(){
+    // a stroke just barely begun (a handful of stamps) reads as an accidental first-finger
+    // touch that immediately became a pinch — undo it rather than leaving a stray mark
+    const stroke = mcPointerState.stroke;
+    if(stroke){
+      for(let i = 0; i < stroke.set.length; i++) mc.taps[stroke.set[i]] = 0;
+      mcPointerState.stroke = null;
+      mcRender();
+    }
+    mcPointerState.down = null;
+  }
+  (function wireMcPointer(){
+    function toCanvasXY(e){
+      const r = mcCanvasEl.getBoundingClientRect();
+      return {
+        x: Math.floor((e.clientX - r.left) * mc.w / r.width),
+        y: Math.floor((e.clientY - r.top) * mc.h / r.height)
+      };
+    }
+    mcCanvasEl.addEventListener('pointerdown', e => {
+      if(!mc.src || mcGestureLock) return;
+      if(mc.mode === 'scissors'){
+        const p = toCanvasXY(e);
+        mcPointerState.stroke = { last: p, set: [], id: e.pointerId };
+        mcCanvasEl.setPointerCapture(e.pointerId);
+        mcScissorStroke(p.x, p.y, p.x, p.y, mcPointerState.stroke.set);
+        mcRender();
+      } else {
+        mcPointerState.down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      }
+    });
+    mcCanvasEl.addEventListener('pointermove', e => {
+      const stroke = mcPointerState.stroke;
+      if(mc.mode === 'scissors' && stroke && stroke.id === e.pointerId && !mcGestureLock){
+        e.preventDefault();
+        const p = toCanvasXY(e);
+        mcScissorStroke(stroke.last.x, stroke.last.y, p.x, p.y, stroke.set);
+        stroke.last = p;
+        mcRender();
+      }
+    });
+    mcCanvasEl.addEventListener('pointerup', e => {
+      if(mc.mode === 'scissors'){
+        if(mcPointerState.stroke && mcPointerState.stroke.id === e.pointerId) mcEndStroke();
+        return;
+      }
+      const down = mcPointerState.down;
+      if(!down || down.id !== e.pointerId || !mc.src || mcGestureLock){ mcPointerState.down = null; return; }
+      const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+      mcPointerState.down = null;
+      if(moved > 8) return;
+      const p = toCanvasXY(e);
+      if(p.x < 0 || p.y < 0 || p.x >= mc.w || p.y >= mc.h) return;
+      mcTapAt(p.x, p.y);
+    });
+    mcCanvasEl.addEventListener('pointercancel', e => {
+      mcPointerState.down = null;
+      if(mcPointerState.stroke && mcPointerState.stroke.id === e.pointerId) mcEndStroke();
+    });
+  })();
+
+  // ---- Magic Cut: pinch to zoom, drag with two fingers to pan. One finger always cuts (tap
+  // or scissors-drag); the moment a second finger lands, mcGestureLock flips on so the pointer
+  // handlers above stop cutting, and any cut that had just barely started is thrown away. ----
+  (function wireMcZoom(){
+    const badge = document.getElementById('mc-zoom-badge');
+    const MIN_SCALE = 1, MAX_SCALE = 8;
+    let scale = 1, tx = 0, ty = 0;
+    mcCanvasEl.style.transformOrigin = '0 0';
+
+    function apply(){
+      mcCanvasEl.style.transform = scale === 1 && tx === 0 && ty === 0
+        ? ''
+        : `translate(${tx}px, ${ty}px) scale(${scale})`;
+      if(scale > 1.01){
+        badge.textContent = Math.round(scale * 100) + '%';
+        badge.classList.add('show');
+      } else {
+        badge.classList.remove('show');
+      }
+    }
+    function resetZoom(){ scale = 1; tx = 0; ty = 0; apply(); }
+    badge.addEventListener('click', resetZoom);
+    window.addEventListener('resize', resetZoom);
+    window.addEventListener('orientationchange', () => setTimeout(resetZoom, 150));
+
+    const touches = new Map();
+    let pinch = null;
+    function mid(){ const p = [...touches.values()]; return { x:(p[0].x+p[1].x)/2, y:(p[0].y+p[1].y)/2 }; }
+    function dist(){ const p = [...touches.values()]; return Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y); }
+
+    mcStageEl.addEventListener('pointerdown', e => {
+      if(e.pointerType === 'mouse' || !mc.src) return;
+      touches.set(e.pointerId, { x:e.clientX, y:e.clientY });
+      if(touches.size >= 2){
+        mcGestureLock = true;                   // second finger down -> zoom, never cut
+        mcAbortGesture();
+      }
+      if(touches.size === 2){
+        const r = mcCanvasEl.getBoundingClientRect();
+        const m = mid();
+        pinch = {
+          startDist: dist(),
+          startScale: scale,
+          startLocalX: (m.x - r.left) / scale,
+          startLocalY: (m.y - r.top) / scale,
+          startStaticLeft: r.left - tx,
+          startStaticTop: r.top - ty
+        };
+      }
+    }, true);
+
+    mcStageEl.addEventListener('pointermove', e => {
+      if(!touches.has(e.pointerId)) return;
+      touches.set(e.pointerId, { x:e.clientX, y:e.clientY });
+      if(touches.size === 2 && pinch){
+        e.preventDefault();
+        const m = mid();
+        const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinch.startScale * (dist() / pinch.startDist)));
+        tx = m.x - pinch.startStaticLeft - newScale * pinch.startLocalX;
+        ty = m.y - pinch.startStaticTop - newScale * pinch.startLocalY;
+        scale = newScale;
+        apply();
+      }
+    }, true);
+
+    ['pointerup', 'pointercancel'].forEach(type => {
+      mcStageEl.addEventListener(type, e => {
+        touches.delete(e.pointerId);
+        if(touches.size < 2) pinch = null;
+        if(touches.size === 0) mcGestureLock = false;
+      }, true);
+    });
+
+    mcStageEl.addEventListener('wheel', e => {
+      if(!e.ctrlKey || !mc.src) return;
+      e.preventDefault();
+      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * (1 - e.deltaY * 0.01)));
+      const r = mcCanvasEl.getBoundingClientRect();
+      const localX = (e.clientX - r.left) / scale, localY = (e.clientY - r.top) / scale;
+      const staticLeft = r.left - tx, staticTop = r.top - ty;
+      tx = e.clientX - staticLeft - newScale * localX;
+      ty = e.clientY - staticTop - newScale * localY;
+      scale = newScale;
+      apply();
+    }, { passive:false });
+
+    mc._resetZoom = resetZoom;   // so loading a new photo can start at 100% again
   })();
 
   // ---- Add image: pick a photo from the device, then drop it on the canvas the same
@@ -4295,6 +4853,76 @@
     return 'video';
   }
 
+  // ---- Movie format picker: which of the formats THIS device can actually encode, offered as
+  // a real choice instead of always silently picking the "best" one for you. MP4 (H.264) is the
+  // most widely compatible option (plays everywhere, opens in any editor), so it's the default —
+  // HEVC and WebM are there for whoever specifically wants the smaller file or already knows why. ----
+  const MOVIE_FORMATS = [
+    { id: 'mp4-h264', label: 'MP4 (H.264)', hint: 'Most compatible — plays everywhere', ext: 'mp4',
+      mimes: ['video/mp4;codecs=h264,aac', 'video/mp4;codecs=avc1', 'video/mp4'] },
+    { id: 'mp4-hevc', label: 'MP4 (H.265 / HEVC)', hint: 'Smaller file, same quality', ext: 'mp4',
+      mimes: ['video/mp4;codecs=hvc1.1.6.L93.B0,mp4a.40.2', 'video/mp4;codecs=hvc1',
+               'video/mp4;codecs=hev1.1.6.L93.B0,mp4a.40.2', 'video/mp4;codecs=hev1'] },
+    { id: 'webm-vp9', label: 'WebM (VP9)', hint: 'Good for web use', ext: 'webm',
+      mimes: ['video/webm;codecs=vp9,opus'] },
+    { id: 'webm-vp8', label: 'WebM (VP8)', hint: '', ext: 'webm',
+      mimes: ['video/webm;codecs=vp8,opus', 'video/webm'] }
+  ];
+  let movieFormatOptions = null;   // resolved once per app session — device support doesn't change at runtime
+  let selectedMovieFormatId = null;
+  function getMovieFormatOptions(){
+    if(movieFormatOptions) return movieFormatOptions;
+    movieFormatOptions = MOVIE_FORMATS
+      .map(f => ({ ...f, mimeType: f.mimes.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || null }))
+      .filter(f => f.mimeType);
+    if(!selectedMovieFormatId){
+      const mp4 = movieFormatOptions.find(f => f.id === 'mp4-h264');
+      selectedMovieFormatId = (mp4 || movieFormatOptions[0] || {}).id || null;
+    }
+    return movieFormatOptions;
+  }
+
+  const movieFormatSheetEl = document.getElementById('movie-format-sheet');
+  const movieFormatBackdropEl = document.getElementById('movie-format-backdrop');
+  const movieFormatListEl = document.getElementById('movie-format-list');
+  const movieFormatExportBtn = document.getElementById('movie-format-export-btn');
+  function renderMovieFormatList(){
+    movieFormatListEl.innerHTML = '';
+    getMovieFormatOptions().forEach(f => {
+      const row = document.createElement('button');
+      row.className = 'picker-row' + (f.id === selectedMovieFormatId ? ' selected' : '');
+      row.innerHTML = `<span>${f.label}${f.hint ? '<br><span style="font-size:11px;font-weight:400;color:var(--muted);">' + f.hint + '</span>' : ''}</span>` +
+        `<span class="check-circle"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+      row.onclick = () => { selectedMovieFormatId = f.id; renderMovieFormatList(); };
+      movieFormatListEl.appendChild(row);
+    });
+  }
+  function setMovieFormatSheet(open){
+    movieFormatSheetEl.classList.toggle('open', open);
+    movieFormatBackdropEl.classList.toggle('open', open);
+  }
+  function openMovieFormatSheet(){
+    if(!window.MediaRecorder){
+      alert("This device can't export video. Try updating the app.");
+      return;
+    }
+    const options = getMovieFormatOptions();
+    if(!options.length){
+      alert("This device doesn't support any of the video formats needed to export.");
+      return;
+    }
+    renderMovieFormatList();
+    setMovieFormatSheet(true);
+  }
+  movieFormatBackdropEl.addEventListener('click', () => setMovieFormatSheet(false));
+  document.getElementById('movie-format-handle').addEventListener('click', () => setMovieFormatSheet(false));
+  document.getElementById('movie-format-back-btn').addEventListener('click', () => setMovieFormatSheet(false));
+  movieFormatExportBtn.addEventListener('click', () => {
+    const chosen = getMovieFormatOptions().find(f => f.id === selectedMovieFormatId);
+    setMovieFormatSheet(false);
+    exportMovie(chosen || null);
+  });
+
   let exportAudioCtx = null;
 
   async function saveOrShareBlob(blob, filename){
@@ -4312,18 +4940,21 @@
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
-  async function exportMovie(){
+  async function exportMovie(chosenFormat){
     if(isExporting || !frames.length) return;
     if(!window.MediaRecorder){
       alert("This device can't export video. Try updating the app.");
       return;
     }
-    const mimeType = pickExportMimeType();
+    // chosenFormat comes from the format picker sheet; fall back to auto-pick only if this ever
+    // gets called some other way without going through that sheet first.
+    const mimeType = (chosenFormat && chosenFormat.mimeType) || pickExportMimeType();
     if(!mimeType){
       alert("This device doesn't support any of the video formats needed to export.");
       return;
     }
-    const formatLabel = exportFormatLabel(mimeType);
+    const formatLabel = chosenFormat ? chosenFormat.label : exportFormatLabel(mimeType);
+    const ext = chosenFormat ? chosenFormat.ext : (mimeType.startsWith('video/mp4') ? 'mp4' : 'webm');
     const isHevc = /hvc1|hev1/.test(mimeType);
 
     isExporting = true;
@@ -4377,7 +5008,6 @@
 
     if(!exportCancelled){
       const blob = new Blob(chunks, { type: mimeType });
-      const ext = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
       await saveOrShareBlob(blob, 'movie.' + ext);
     }
 
@@ -4385,7 +5015,7 @@
     makeMovieBtn.disabled = false;
     hideExportOverlay();
   }
-  makeMovieBtn.addEventListener('click', () => { setMoreSheet(false); exportMovie(); });
+  makeMovieBtn.addEventListener('click', () => { setMoreSheet(false); openMovieFormatSheet(); });
 
   // ---- Frames viewer: a scrollable grid of every frame, with search-by-number ----
   const framesViewerEl = document.getElementById('frames-viewer-sheet');
@@ -4480,6 +5110,7 @@
   wireSheetHandleDrag(document.getElementById('more-handle'), moreSheetEl, () => setMoreSheet(false));
   wireSheetHandleDrag(document.getElementById('frames-viewer-handle'), framesViewerEl, () => setFramesViewer(false));
   wireSheetHandleDrag(document.getElementById('project-settings-handle'), projectSettingsEl, () => setProjectSettings(false));
+  wireSheetHandleDrag(document.getElementById('movie-format-handle'), movieFormatSheetEl, () => setMovieFormatSheet(false));
 
   // ---- add layer: tap + -> name it -> Save layer ----
   function onLayerNameInput(){
@@ -4496,14 +5127,23 @@
     layerModalEl.classList.remove('open');
     layerNameInput.blur();
   }
+  // A new layer is a project-wide layer: every frame — the one you're on, every frame before
+  // it, every frame after it — gets its own blank canvas for it, all sharing one id, all with
+  // the same name/order. Nothing is computed or duplicated later: each frame just already has
+  // it, so jumping around frames or playing the video never needs to work out what layers a
+  // frame "should" have.
   function saveLayer(){
     const name = layerNameInput.value.trim();
     if(!name) return;
     const f = currentFrame();
-    f.layerSeq++;
-    const layer = makeLayer(name);
-    f.layers.push(layer);          // new layer goes on top and becomes the selected one
-    f.activeLayerId = layer.id;
+    const newSeq = f.layerSeq + 1;
+    const sharedId = ++layerUid;
+    frames.forEach(fr => {
+      if(!fr.layers) return;
+      fr.layers.push(makeLayer(name, sharedId));   // new layer goes on top of every frame's stack
+      fr.layerSeq = newSeq;
+    });
+    f.activeLayerId = sharedId;                    // becomes selected only on the frame you're on
     closeLayerModal();
     renderLayers();
     layerListEl.scrollTop = 0;
@@ -4532,13 +5172,17 @@
     { id:'pencil',        name:'Pencil' },
     { id:'pencil-h',      name:'Pencil H' },
     { id:'pencil-hb',     name:'Pencil HB' },
-    { id:'lock-pen',      name:'Lock Pen' },
+    { id:'fineliner',     name:'Fineliner' },
+    { id:'gpen',          name:'Ink Brush (G-Pen)' },
+    { id:'marker',        name:'Flat Marker' },
+    { id:'charcoal',      name:'Charcoal' },
+    { id:'drybrush',      name:'Dry Brush' },
   ];
   const DEFAULT_BRUSH = 'pen';
   const DEFAULT_SIZE = 14;
   const DEFAULT_COLOR = '#000000';
   let selectedBrushId = DEFAULT_BRUSH;
-  let activeTool = 'Brush';        // 'Brush' or 'Eraser' — which one the pointer draws with right now
+  let activeTool = 'Brush';        // 'Brush', 'Eraser' or 'Lock' (Lock Pencil) — which one the pointer draws with right now
   let selectedEraserBrushId = 'eraser-light';   // 'eraser-light' (gentle, fades gradually) or 'eraser-full' (solid, clears in one pass)
   let eraserFade = 60;             // 0 = softest edge / lightest touch, 100 = fully hard-edged / complete erase
   let eraseToAlpha = true;         // true: erases to transparent. false: erases to solid white instead
@@ -4632,6 +5276,8 @@
     pencil:      { cell:1.05, dens:0.72, edge:3, alpha:0.22, dr:[0.4, 0.75] },
     'pencil-h':  { cell:0.8,  dens:0.78, edge:8, alpha:0.17, dr:[0.35, 0.6]  },
     'pencil-hb': { cell:1.35, dens:0.82, edge:2, alpha:0.3,  dr:[0.45, 0.9]  },
+    charcoal:    { cell:2.1,  dens:0.5,  edge:2, alpha:0.5,  dr:[0.3, 0.85]  },
+    drybrush:    { cell:0.65, dens:0.4,  edge:6, alpha:0.85, dr:[0.3, 0.55]  },
   };
   const SPRAY = {
     airbrush:        { flow:0.09, hard:0.0,  core:1.0,  dens:0.012, dotA:0.5 },
@@ -4749,13 +5395,47 @@
         e.grain(x, y, d * 0.5 * (0.65 + 0.35 * e.p), GRAIN['pencil-hb'], 0.5 + 0.5 * e.p, 1);
       }
     },
-    // Lock Pen: draws exactly like the regular Pen (see above) — crisp solid ink, no grain —
-    // but beginDraw/moveDraw also trace this same stroke onto the frame's invisible "wall"
-    // canvas in parallel. See the LOCK PENCIL WALLS section further down for how that wall
-    // then confines every tool.
-    'lock-pen': {
-      spacing: 0.07,
-      stamp(e, x, y){ e.disc(x, y, e.px * 0.5 * (0.55 + 0.45 * e.p)); }
+
+    // technical pen: crisp, near-constant width, barely reacts to pressure — for clean final
+    // linework and tight in-betweening rather than expressive sketching
+    'fineliner': {
+      spacing: 0.05,
+      stamp(e, x, y){ e.disc(x, y, e.px * 0.32 * (0.9 + 0.1 * e.p)); }
+    },
+
+    // classic manga/anime nib pen: thin on fast, light strokes and swells sharply under
+    // pressure — the tapered look used for professional clean-up linework
+    'gpen': {
+      spacing: 0.06,
+      stamp(e, x, y){ e.disc(x, y, e.px * 0.5 * (0.12 + 0.88 * Math.pow(e.p, 1.7))); }
+    },
+
+    // flat, semi-opaque marker: a hard-edged fill that darkens slightly where strokes overlap —
+    // built for cel-style flatting and color blocking, not painterly blending
+    'marker': {
+      spacing: 0.12,
+      stamp(e, x, y){ e.soft(x, y, e.px * (0.97 + 0.03 * e.p), 0.5 * (0.75 + 0.25 * e.p), 0.6); }
+    },
+
+    // charcoal: broad, smudgy and matte — a soft feathered base under a loose, uneven grain,
+    // for moodier concept and rough-layout work rather than a bright waxy line
+    'charcoal': {
+      spacing: 0.2, wf: 1,
+      stamp(e, x, y){
+        const d = e.px * 1.1;
+        e.soft(x, y, d * 0.9, 0.05 * (0.5 + 0.5 * e.p), 0);
+        e.grain(x, y, d * 0.55 * (0.85 + 0.15 * e.p), GRAIN.charcoal, 0.55 + 0.45 * e.p, 1);
+      }
+    },
+
+    // dry brush: scratchy, broken coverage with visible gaps — good for texture, action lines
+    // and weathered detail rather than a solid fill
+    'drybrush': {
+      spacing: 0.12, wf: 0.9,
+      stamp(e, x, y){
+        const d = e.px * (0.9 + 0.1 * e.p);
+        e.grain(x, y, d * 0.5, GRAIN.drybrush, 0.75 + 0.25 * e.p, 1);
+      }
     },
 
     // eraser: a soft-edged round stamp used with the canvas composite mode set to "destination-out",
@@ -4990,7 +5670,7 @@
     if(label !== 'Select' && typeof clearLassoSelection === 'function') clearLassoSelection();   // leaving Select drops the old marquee so it can't linger over other tools
     activeTool = label;
     const isFx = (label === 'Smudge' || label === 'Blur');
-    document.querySelectorAll('.tool-btn').forEach(b => {
+    document.querySelectorAll('.tool-btn, #bp-lock').forEach(b => {
       const n = b.getAttribute('aria-label');
       b.classList.toggle('active', n === label || (isFx && n === 'More'));
     });
@@ -5049,6 +5729,24 @@
     });
   });
 
+  // ---- lock pencil: draws ink like the current brush, and also lays down a permanent wall
+  // that no other stroke — on any layer — can be painted across. Same color/size panel as Brush.
+  document.querySelectorAll('.tool-btn[aria-label="Lock"]').forEach(b => {
+    b.addEventListener('click', () => {
+      const already = activeTool === 'Lock';
+      setActiveTool('Lock');
+      updateBrushPanelForTool();
+      setBrushPanel(already ? !brushPanelEl.classList.contains('open') : true);
+    });
+  });
+  // same tool switch, but as an item inside the Brush panel itself, so Lock Pencil can be
+  // picked without needing the separate main toolbar (e.g. while it's hidden via "Hide").
+  document.getElementById('bp-lock').addEventListener('click', () => {
+    setActiveTool('Lock');
+    updateBrushPanelForTool();
+    setBrushPanel(true);
+  });
+
   // drag the selector by its grip; it stays inside the canvas area
   (function(){
     const grip = document.getElementById('brush-grip');
@@ -5089,125 +5787,169 @@
   // live on-screen box every time, so it never matters how the canvas is scaled or rotated.
   const drawSurface = document.getElementById('editor-canvas');
   const drawEngine = new BrushEngine(null);
+  const barrierEngine = new BrushEngine(null);   // stamps Lock Pencil's barrier line in parallel with drawEngine's visible ink
   const lassoOverlay = document.getElementById('lasso-overlay');
-  const lockOverlay = document.getElementById('lock-stroke-overlay');
   let drawPointer = null;
   let strokeMode = null;      // 'draw' or 'lasso' — which behaviour the current pointer gesture is doing
   let holdRaf = 0;
+  let currentStrokeIsLock = false;   // true while the in-progress stroke is a Lock Pencil stroke
 
-  // ================= LOCK PENCIL WALLS =================
-  // The Lock Pencil draws its ink like a normal pencil, but at the same time it traces the
-  // same path onto the frame's own, invisible "wall" canvas (frame.lockBarrier) — one wall
-  // canvas per frame, so a wall blocks every layer in that frame, not just the one it was
-  // drawn on. From then on, any stroke (brush, eraser, fill, smudge, blur) that STARTS on one
-  // side of a wall gets confined to that enclosed area for its whole stroke: at stroke-begin
-  // we flood-fill out from the start point across the wall canvas (walls act as barriers) to
-  // get a mask of "everywhere reachable without crossing a wall", then paint into a throwaway
-  // scratch canvas and only graft the masked portion of it back onto the real layer once the
-  // stroke ends. New wall strokes are the one exception: the WALL itself is always recorded
-  // unmasked, so a new wall can be drawn right up against an old one and seal the joint with
-  // no gap — only that stroke's visible ink is confined like everything else.
-  // Note: like the rest of this app's drawing state, walls live only in memory for this
-  // session — they aren't written to the project file yet, so they won't survive a reload.
-  function ensureLockBarrier(frame){
-    if(!frame.lockBarrier){
-      const c = document.createElement('canvas');
-      c.width = currentCanvasSize.w;
-      c.height = currentCanvasSize.h;
-      frame.lockBarrier = c;
-      frame.hasLocks = false;
+  // ---- Lock Pencil clipping: while a non-Lock stroke is active inside a walled-off region,
+  // these hold the flood-filled region mask, the layer it applies to, the layer's pixels right
+  // before the stroke started (so anything painted outside the region can be reverted), and the
+  // screen-space bounding box touched so far this stroke (so the revert pass only has to touch
+  // the small area that actually changed, not the whole canvas).
+  let clipRegionMask = null;   // { mask: Uint8Array, w, h } or null when no barrier constrains this stroke
+  let clipLayer = null;
+  let clipPreStroke = null;    // ImageData
+  let clipBBox = null;         // { minX, minY, maxX, maxY } in canvas-pixel space
+  let lastClipCorrection = 0;
+
+  // Separable box max/min filter (dilate when useMax, erode when !useMax) over a 0/1 mask.
+  // Doing it as two 1-D passes (all rows, then all columns) is equivalent to a full square
+  // structuring element but stays O(w*h*r) instead of O(w*h*r^2), so it's cheap enough to run
+  // once per stroke start.
+  function boxPass(src, w, h, r, useMax){
+    const mid = new Uint8Array(w * h);
+    for(let y = 0; y < h; y++){
+      const row = y * w;
+      for(let x = 0; x < w; x++){
+        let v = useMax ? 0 : 1;
+        const xs = Math.max(0, x - r), xe = Math.min(w - 1, x + r);
+        for(let xx = xs; xx <= xe; xx++){
+          const s = src[row + xx];
+          if(useMax ? s > v : s < v) v = s;
+        }
+        mid[row + x] = v;
+      }
     }
-    return frame.lockBarrier;
+    const out = new Uint8Array(w * h);
+    for(let x = 0; x < w; x++){
+      for(let y = 0; y < h; y++){
+        let v = useMax ? 0 : 1;
+        const ys = Math.max(0, y - r), ye = Math.min(h - 1, y + r);
+        for(let yy = ys; yy <= ye; yy++){
+          const s = mid[yy * w + x];
+          if(useMax ? s > v : s < v) v = s;
+        }
+        out[y * w + x] = v;
+      }
+    }
+    return out;
   }
-  // Flood-fills out from (x,y) across the frame's wall canvas, stopping at any wall pixel.
-  // Returns a canvas (opaque where the stroke may paint, transparent elsewhere) or null if
-  // the point sits right on a wall (treated as unrestricted rather than trapping the stroke).
-  function computeRegionMask(frame, x, y){
-    const barrier = ensureLockBarrier(frame);
-    const w = barrier.width, h = barrier.height;
-    x = Math.max(0, Math.min(w - 1, Math.round(x)));
-    y = Math.max(0, Math.min(h - 1, Math.round(y)));
-    const wallData = barrier.getContext('2d').getImageData(0, 0, w, h).data;
-    const isWall = (p) => wallData[p * 4 + 3] > 40;
-    const startP = y * w + x;
-    if(isWall(startP)) return null;
-    const total = w * h;
-    const visited = new Uint8Array(total);
-    const stack = new Int32Array(total);
+  // Morphological closing (dilate then erode) on the wall mask, so a small gap where a hand-
+  // drawn Lock Pencil line didn't quite meet itself (e.g. a freehand circle's start/end point)
+  // still reads as a closed wall instead of leaking the fill straight through.
+  function closeWallGaps(wall, w, h, r){
+    if(r <= 0) return wall;
+    return boxPass(boxPass(wall, w, h, r, true), w, h, r, false);
+  }
+
+  // 4-connected flood fill from (sx,sy) across everything that ISN'T a Lock Pencil barrier
+  // pixel. Returns null if the start point sits directly on a barrier line (no side to pick),
+  // otherwise a same-size mask where 1 = reachable from the start point without crossing a wall.
+  function floodFillRegion(barrierCanvas, sx, sy, closeRadius){
+    const w = barrierCanvas.width, h = barrierCanvas.height;
+    if(!w || !h) return null;
+    sx = Math.max(0, Math.min(w - 1, Math.round(sx)));
+    sy = Math.max(0, Math.min(h - 1, Math.round(sy)));
+    const data = barrierCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+    const WALL_ALPHA = 64;
+    const n = w * h;
+    let wall = new Uint8Array(n);
+    for(let i = 0, p = 3; i < n; i++, p += 4) wall[i] = data[p] >= WALL_ALPHA ? 1 : 0;
+    if(closeRadius > 0) wall = closeWallGaps(wall, w, h, closeRadius);
+    const startIdx = sy * w + sx;
+    if(wall[startIdx]) return null;
+    const mask = new Uint8Array(n);
+    const stack = new Int32Array(n);
     let sp = 0;
-    stack[sp++] = startP;
-    visited[startP] = 1;
-    const tryPush = (p) => { if(!visited[p] && !isWall(p)){ visited[p] = 1; stack[sp++] = p; } };
+    stack[sp++] = startIdx;
+    mask[startIdx] = 1;
     while(sp > 0){
-      const p = stack[--sp];
-      const px = p % w, py = (p / w) | 0;
-      if(px > 0) tryPush(p - 1);
-      if(px < w - 1) tryPush(p + 1);
-      if(py > 0) tryPush(p - w);
-      if(py < h - 1) tryPush(p + w);
+      const idx = stack[--sp];
+      const x = idx % w;
+      if(x > 0 && !mask[idx - 1] && !wall[idx - 1]){ mask[idx - 1] = 1; stack[sp++] = idx - 1; }
+      if(x < w - 1 && !mask[idx + 1] && !wall[idx + 1]){ mask[idx + 1] = 1; stack[sp++] = idx + 1; }
+      if(idx >= w && !mask[idx - w] && !wall[idx - w]){ mask[idx - w] = 1; stack[sp++] = idx - w; }
+      if(idx < n - w && !mask[idx + w] && !wall[idx + w]){ mask[idx + w] = 1; stack[sp++] = idx + w; }
     }
-    const maskData = new ImageData(w, h);
-    const md = maskData.data;
-    for(let p = 0; p < total; p++){ if(visited[p]) md[p * 4 + 3] = 255; }
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = w; maskCanvas.height = h;
-    maskCanvas.getContext('2d').putImageData(maskData, 0, 0);
-    return maskCanvas;
+    return { mask, w, h };
   }
-  let strokeScratch = null;      // throwaway canvas a wall-confined stroke paints into instead of the real layer
-  let regionMask = null;         // this stroke's allowed area (see computeRegionMask), or null = unrestricted
-  let isLockPencilStroke = false;
-  let lockBarrierCtx = null;     // set only while the Lock Pencil itself is drawing, to record the wall
-  function maskedStrokeCtx(layer){
-    if(!strokeScratch) strokeScratch = document.createElement('canvas');
-    strokeScratch.width = layer.canvas.width;
-    strokeScratch.height = layer.canvas.height;
-    const c = strokeScratch.getContext('2d');
-    c.drawImage(layer.canvas, 0, 0);   // start as a copy of the real pixels so erase/lock-layer modes have something to act on
-    return c;
+  function expandClipBBox(px, py){
+    const rad = Math.ceil(brushSize * canvasK() * 0.6) + 3;
+    const x0 = Math.floor(px - rad), x1 = Math.ceil(px + rad);
+    const y0 = Math.floor(py - rad), y1 = Math.ceil(py + rad);
+    if(!clipBBox) clipBBox = { minX: x0, minY: y0, maxX: x1, maxY: y1 };
+    else {
+      clipBBox.minX = Math.min(clipBBox.minX, x0);
+      clipBBox.minY = Math.min(clipBBox.minY, y0);
+      clipBBox.maxX = Math.max(clipBBox.maxX, x1);
+      clipBBox.maxY = Math.max(clipBBox.maxY, y1);
+    }
   }
-  // Grafts just the masked area of the scratch buffer onto the real layer, leaving every
-  // other pixel on that layer exactly as it was before the stroke.
-  function mergeMaskedStroke(){
-    const layer = getActiveLayer();
-    if(!layer || !strokeScratch || !regionMask) return;
-    const sctx = strokeScratch.getContext('2d');
-    sctx.globalCompositeOperation = 'destination-in';
-    sctx.drawImage(regionMask, 0, 0);
-    sctx.globalCompositeOperation = 'source-over';
-    const ctx = layer.canvas.getContext('2d');
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.drawImage(regionMask, 0, 0);          // punch a hole exactly the shape of the allowed area
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.drawImage(strokeScratch, 0, 0);       // ...and fill it with the (now masked) scratch result
-    ctx.restore();
+  // Reverts every pixel touched so far this stroke that landed OUTSIDE the walled-off region
+  // back to what it was right before the stroke began — this is what actually stops paint from
+  // crossing a Lock Pencil line, no matter how jaggedly the stroke wanders.
+  function applyClipCorrection(){
+    if(!clipRegionMask || !clipBBox || !clipLayer) return;
+    const w = clipRegionMask.w, h = clipRegionMask.h;
+    const bx = Math.max(0, clipBBox.minX), by = Math.max(0, clipBBox.minY);
+    const bw = Math.min(w, clipBBox.maxX + 1) - bx, bh = Math.min(h, clipBBox.maxY + 1) - by;
+    if(bw <= 0 || bh <= 0) return;
+    const ctx = clipLayer.canvas.getContext('2d');
+    const cur = ctx.getImageData(bx, by, bw, bh);
+    const pre = clipPreStroke, mask = clipRegionMask.mask;
+    for(let y = 0; y < bh; y++){
+      const maskRow = (by + y) * w + bx;
+      const curRow = y * bw;
+      for(let x = 0; x < bw; x++){
+        if(!mask[maskRow + x]){
+          const ci = (curRow + x) * 4, pi = (maskRow + x) * 4;
+          cur.data[ci] = pre.data[pi]; cur.data[ci + 1] = pre.data[pi + 1];
+          cur.data[ci + 2] = pre.data[pi + 2]; cur.data[ci + 3] = pre.data[pi + 3];
+        }
+      }
+    }
+    ctx.putImageData(cur, bx, by);
   }
-  let lastLockOverlayUpdate = 0;
-  function updateLockOverlayLive(){
-    if(!regionMask || !strokeScratch) return;
-    const octx = lockOverlay.getContext('2d');
-    octx.clearRect(0, 0, lockOverlay.width, lockOverlay.height);
-    octx.drawImage(strokeScratch, 0, 0);
-    octx.globalCompositeOperation = 'destination-in';
-    octx.drawImage(regionMask, 0, 0);
-    octx.globalCompositeOperation = 'source-over';
-  }
-  function throttledLockOverlayUpdate(){
+  function throttledClipCorrection(){
     const now = performance.now();
-    if(now - lastLockOverlayUpdate < 60) return;
-    lastLockOverlayUpdate = now;
-    updateLockOverlayLive();
+    if(now - lastClipCorrection < 40) return;
+    lastClipCorrection = now;
+    applyClipCorrection();
   }
 
   function canvasK(){ return Math.max(currentCanvasSize.w, currentCanvasSize.h) / 1280; }
+
+  // ---- shared pan/zoom/rotate state + screen -> paper point mapping ----
+  // A bounding-box read (getBoundingClientRect) only reports an axis-aligned box, so it's only
+  // an accurate stand-in for the paper's real position/size when the paper isn't rotated. Once
+  // it's rotated, the box no longer matches the paper's actual edges, and mapping a finger
+  // position through it drifts further from the true point the more it's rotated — which is
+  // exactly the "curve bends away from my finger" symptom. These live in outer scope (not
+  // private to the zoom module below) so every consumer of a finger position uses the same,
+  // correct, rotation-aware math.
+  let stageScale = 1, stageTx = 0, stageTy = 0, stageRot = 0;
+  function stageBaseRect(){
+    const s = document.getElementById('canvas-stage').getBoundingClientRect();
+    return { left: s.left + drawSurface.offsetLeft, top: s.top + drawSurface.offsetTop };
+  }
+  // screen point -> point on the paper, in the paper's own untransformed CSS pixel space
+  function stageToLocal(px, py, base){
+    const b = base || stageBaseRect(), rad = stageRot * Math.PI / 180;
+    const relX = px - b.left - stageTx, relY = py - b.top - stageTy;
+    const cos = Math.cos(rad), sin = Math.sin(rad);
+    return { x: (relX * cos + relY * sin) / stageScale, y: (-relX * sin + relY * cos) / stageScale };
+  }
+  // screen point -> canvas-pixel point, for a canvas that exactly fills the paper surface
+  function canvasPointFromEvent(e, cw, ch){
+    const local = stageToLocal(e.clientX, e.clientY);
+    return { x: local.x * cw / drawSurface.offsetWidth, y: local.y * ch / drawSurface.offsetHeight };
+  }
   // shared pointer -> canvas-pixel mapping, used by both drawing and the lasso
   function canvasPoint(e){
-    const r = drawSurface.getBoundingClientRect();
-    return {
-      x: (e.clientX - r.left) * lassoOverlay.width / r.width,
-      y: (e.clientY - r.top) * lassoOverlay.height / r.height
-    };
+    return canvasPointFromEvent(e, lassoOverlay.width, lassoOverlay.height);
   }
 
   function holdTick(){
@@ -5215,23 +5957,23 @@
     if(drawEngine.def.hold && performance.now() - drawEngine.lastMoveWall > 45) drawEngine.hold();   // airbrush keeps spraying while held still
     holdRaf = requestAnimationFrame(holdTick);
   }
-  function stopStroke(){
+  function stopStroke(skipThumb){
     if(drawPointer === null) return;
     drawPointer = null;
     const wasFx = strokeMode === 'fx';
     strokeMode = null;
     cancelAnimationFrame(holdRaf);
-    if(wasFx) fx = null; else drawEngine.end();
-    if(regionMask) mergeMaskedStroke();
-    if(isLockPencilStroke) currentFrame().hasLocks = true;
-    if(lockOverlay.style.display !== 'none'){
-      lockOverlay.getContext('2d').clearRect(0, 0, lockOverlay.width, lockOverlay.height);
-      lockOverlay.style.display = 'none';
+    if(wasFx) fx = null;
+    else {
+      drawEngine.end();
+      if(currentStrokeIsLock) barrierEngine.end();
     }
-    regionMask = null;
-    isLockPencilStroke = false;
-    lockBarrierCtx = null;
-    refreshThumbnails();
+    if(clipRegionMask){    // final, unthrottled pass so the committed stroke never has a sliver past the line
+      applyClipCorrection();
+      clipRegionMask = null; clipLayer = null; clipPreStroke = null; clipBBox = null;
+    }
+    currentStrokeIsLock = false;
+    if(!skipThumb) refreshThumbnails();
   }
 
   // -- lasso: freehand-circle a region of the active layer, then Copy / Paste it --
@@ -5312,13 +6054,18 @@
     c.fillStyle = g; c.fillRect(0, 0, d, d);
     return m;
   }
-  function fxBegin(layer, name, x, y, ctxOverride){
-    const d = Math.max(6, Math.round(brushSize * canvasK() * 1.6));
+  // Hard cap on the stamp size in device pixels. Each stamp does several full d×d canvas
+  // composite draws (source-over / destination-in / destination-out / lighter), and that cost
+  // grows with d², so on a big canvas + big brush this used to balloon into hundreds of
+  // milliseconds per stamp — enough to freeze the whole layer mid-stroke. Capping d keeps every
+  // stamp's cost bounded no matter how large the canvas or brush is.
+  const FX_MAX_D = 220;
+  function fxBegin(layer, name, x, y){
+    const d = Math.min(FX_MAX_D, Math.max(6, Math.round(brushSize * canvasK() * 1.6)));
     const mk = () => { const c = document.createElement('canvas'); c.width = c.height = d; return c; };
-    const sampleCanvas = ctxOverride ? strokeScratch : layer.canvas;
-    fx = { name, layer, ctx: ctxOverride || layer.canvas.getContext('2d'), sampleCanvas, d, r: d / 2, mask: fxMask(d), carry: mk(), tmp: mk(), small: null, lx: x, ly: y };
+    fx = { name, layer, ctx: layer.canvas.getContext('2d'), d, r: d / 2, mask: fxMask(d), carry: mk(), tmp: mk(), small: null, lx: x, ly: y };
     if(name === 'Smudge'){
-      fx.carry.getContext('2d').drawImage(sampleCanvas, x - fx.r, y - fx.r, d, d, 0, 0, d, d);
+      fx.carry.getContext('2d').drawImage(layer.canvas, x - fx.r, y - fx.r, d, d, 0, 0, d, d);
     } else {
       const sd = Math.max(2, Math.round(d / 5));
       fx.small = document.createElement('canvas'); fx.small.width = fx.small.height = sd;
@@ -5340,11 +6087,11 @@
       ctx.restore();
       // pick up what's under the brush now, mixed into what we're carrying
       const c = f.carry.getContext('2d');
-      c.save(); c.globalAlpha = 0.4; c.drawImage(f.sampleCanvas, x - r, y - r, d, d, 0, 0, d, d); c.restore();
+      c.save(); c.globalAlpha = 0.4; c.drawImage(f.layer.canvas, x - r, y - r, d, d, 0, 0, d, d); c.restore();
     } else {
       const s2 = f.small.getContext('2d'), sd = f.small.width;
       s2.clearRect(0, 0, sd, sd);
-      s2.drawImage(f.sampleCanvas, x - r, y - r, d, d, 0, 0, sd, sd);
+      s2.drawImage(f.layer.canvas, x - r, y - r, d, d, 0, 0, sd, sd);
       t.drawImage(f.small, 0, 0, d, d);
       t.globalCompositeOperation = 'destination-in'; t.drawImage(f.mask, 0, 0);
       // result = original*(1-a) + blurred*a  (premultiplied maths: erase a bit, then add a bit)
@@ -5354,13 +6101,21 @@
       ctx.save(); ctx.globalAlpha = a; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(f.tmp, x - r, y - r); ctx.restore();
     }
   }
+  // Cap how many stamps one call can lay down. A fast flick across a zoomed-out canvas could
+  // otherwise ask for dozens of stamps synchronously in one go — each one a real cost (see
+  // FX_MAX_D above) — which is what turned into a freeze. Capping the count means a fast flick
+  // just skips ahead with fewer stamps along the way, instead of stalling the whole stroke.
+  const FX_MAX_STAMPS_PER_MOVE = 12;
   function fxMove(x, y){
     const f = fx; if(!f) return;
     const step = Math.max(1.5, f.r * 0.22);
     const dx = x - f.lx, dy = y - f.ly, len = Math.hypot(dx, dy);
-    const n = Math.floor(len / step);
-    for(let i = 1; i <= n; i++) fxStamp(f.lx + dx * i / n * (n * step / len), f.ly + dy * i / n * (n * step / len));
-    if(n > 0){ f.lx += dx / len * n * step; f.ly += dy / len * n * step; }
+    const n = Math.min(FX_MAX_STAMPS_PER_MOVE, Math.floor(len / step));
+    for(let i = 1; i <= n; i++) fxStamp(f.lx + dx * i / n, f.ly + dy * i / n);
+    // Snap the carry point to wherever the finger actually is now, even on a big jump where we
+    // capped the stamp count — the next move picks up cleanly from here instead of trying to
+    // "catch up" on the missed distance with a burst of stamps.
+    f.lx = x; f.ly = y;
   }
 
   // ---- touch handling: a finger only starts a stroke after a short "is a 2nd finger coming?" wait ----
@@ -5380,11 +6135,19 @@
     cancelPending();
     if(drawPointer === null) return;
     const young = performance.now() - strokeStartWall < 600;
-    stopStroke();
+    stopStroke(true);                 // skip the thumbnail repaint here — it's done once, below, deferred
     if(young){
       const f = currentFrame();
       const entry = f.undoStack.pop();
-      if(entry){ restoreSnapshot(entry); updateHistoryButtons(); refreshThumbnails(); }
+      if(entry){
+        restoreSnapshot(entry);
+        updateHistoryButtons();
+        // Push the thumbnail/onion repaint to the next frame instead of doing it synchronously
+        // right here. This is the exact moment the 2nd finger lands to start a pinch, so doing
+        // this work inline was blocking the gesture's first frame of movement — that's what
+        // made zoom/rotate visibly stutter, worse the more was drawn on the frame.
+        requestAnimationFrame(refreshThumbnails);
+      }
     }
   }
 
@@ -5392,43 +6155,26 @@
     const layer = getActiveLayer();
     if(!layer || !layer.visible) return;
     e.preventDefault();
+    const frame = currentFrame();
+    const isLock = activeTool === 'Lock';
+    currentStrokeIsLock = isLock;
+    const barrierCanvas = (isLock || frame.barrier) ? getBarrierCanvas(frame) : null;
+    // save this layer's (and, for Lock Pencil, the barrier's) pixels as they were, right before this stroke touches them
+    const undoGroup = pushUndoSnapshot(isLock ? [layer, { canvas: barrierCanvas }] : layer);
     strokeStartWall = performance.now();
     drawPointer = e.pointerId;
     try{ drawSurface.setPointerCapture(e.pointerId); }catch(_){}
-    const r = drawSurface.getBoundingClientRect();
-    let px0 = (e.clientX - r.left) * layer.canvas.width / r.width;
-    let py0 = (e.clientY - r.top) * layer.canvas.height / r.height;
-
-    const frame = currentFrame();
-    isLockPencilStroke = (activeTool === 'Brush' && selectedBrushId === 'lock-pen');
-    regionMask = frame.hasLocks ? computeRegionMask(frame, px0, py0) : null;
-    pushUndoSnapshot(layer, isLockPencilStroke);   // save this layer's pixels (and the wall, for a Lock Pencil stroke) as they were, right before this stroke touches them
-
-    if(regionMask || isLockPencilStroke){
-      lockOverlay.width = layer.canvas.width;
-      lockOverlay.height = layer.canvas.height;
-      lockOverlay.getContext('2d').clearRect(0, 0, lockOverlay.width, lockOverlay.height);
-      lockOverlay.style.display = 'block';
-    }
-    if(isLockPencilStroke){
-      lockBarrierCtx = ensureLockBarrier(frame).getContext('2d');
-      lockBarrierCtx.lineJoin = 'round';
-      lockBarrierCtx.lineCap = 'round';
-      lockBarrierCtx.strokeStyle = '#000';
-      lockBarrierCtx.lineWidth = Math.max(2, brushSize * canvasK() * 0.7);
-    } else {
-      lockBarrierCtx = null;
-    }
-
+    const p0start = canvasPointFromEvent(e, layer.canvas.width, layer.canvas.height);
+    let px0 = p0start.x, py0 = p0start.y;
     if(activeTool === 'Smudge' || activeTool === 'Blur'){
       strokeMode = 'fx';
-      fxBegin(layer, activeTool, px0, py0, regionMask ? maskedStrokeCtx(layer) : null);
+      fxBegin(layer, activeTool, px0, py0);
       return;
     }
     strokeMode = 'draw';
     const isErasing = activeTool === 'Eraser';
     const k = canvasK();
-    drawEngine.ctx = regionMask ? maskedStrokeCtx(layer) : layer.canvas.getContext('2d');
+    drawEngine.ctx = layer.canvas.getContext('2d');
     const paintsNewPixels = !(isErasing && eraseToAlpha);
     drawEngine.ctx.globalCompositeOperation = layer.locked && paintsNewPixels
       ? 'source-atop'
@@ -5444,37 +6190,66 @@
     } else {
       strokeRulerAnchor = null;
     }
+
+    // Lock Pencil: paints ink exactly like the current brush (via drawEngine, above/below as
+    // normal) AND, in parallel, stamps a solid opaque line onto this frame's barrier canvas.
+    // That barrier line is a permanent wall from here on — see the clip setup below. A Lock
+    // Pencil stroke is never itself clipped, so it can always be drawn or extended freely, even
+    // across an existing wall.
+    if(isLock){
+      barrierEngine.ctx = barrierCanvas.getContext('2d');
+      barrierEngine.ctx.globalCompositeOperation = 'source-over';
+      barrierEngine.k = k;
+      barrierEngine.px = Math.max(brushSize, 3) * k;   // never thinner than a few px, so flood fill below can't leak through a hairline gap
+      barrierEngine.def = { spacing: 0.25, stamp(e, x, y){ e.disc(x, y, e.px * 0.5); } };   // always a full, solid disc — a barrier can't afford pressure-thinned gaps the way visible ink can
+      barrierEngine.setColor('#000000');
+      barrierEngine.begin(px0, py0, e.pressure, e.pointerType === 'pen', e.timeStamp);
+      frame.barrierHasInk = true;
+    }
+
+    // Any OTHER stroke gets clipped to whichever walled-off region it started inside, so it
+    // can't cross a Lock Pencil line no matter what layer it's on or how it wanders.
+    clipRegionMask = null; clipLayer = null; clipPreStroke = null; clipBBox = null;
+    if(!isLock && frame.barrier && frame.barrierHasInk){
+      const region = floodFillRegion(frame.barrier, px0, py0, Math.max(2, Math.round(k * 2)));
+      if(region){
+        clipRegionMask = region;
+        clipLayer = layer;
+        clipPreStroke = undoGroup[0].data;   // this layer's pixels right before the stroke — reuse the undo snapshot instead of reading the canvas twice
+        expandClipBBox(px0, py0);
+      }
+    }
+
     drawEngine.begin(px0, py0, e.pressure, e.pointerType === 'pen', e.timeStamp);
-    if(lockBarrierCtx){ lockBarrierCtx.beginPath(); lockBarrierCtx.moveTo(px0, py0); }
     holdRaf = requestAnimationFrame(holdTick);
   }
 
   function moveDraw(e){
     if(strokeMode === 'lasso'){ moveLasso(e); return; }
-    const list = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
-    const r = drawSurface.getBoundingClientRect();
     if(strokeMode === 'fx'){
+      // Smudge/Blur is a soft, averaged effect — it doesn't need every coalesced sub-sample the
+      // way a pencil line does. Using just this move's own point (fxMove already interpolates
+      // between it and the last one) avoids re-running the fxStamp cost 5-10x per frame on
+      // devices that report a lot of coalesced touch events, which was the other big piece of
+      // the freeze.
       const cv = fx.layer.canvas;
-      for(const ev of list) fxMove((ev.clientX - r.left) * cv.width / r.width, (ev.clientY - r.top) * cv.height / r.height);
+      const pfx = canvasPointFromEvent(e, cv.width, cv.height);
+      fxMove(pfx.x, pfx.y);
       throttledRefreshThumbnails();
-      if(regionMask) throttledLockOverlayUpdate();
       return;
     }
+    const list = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
     const cv = drawEngine.ctx.canvas;
     for(const ev of list){
-      let px = (ev.clientX - r.left) * cv.width / r.width;
-      let py = (ev.clientY - r.top) * cv.height / r.height;
+      const pev = canvasPointFromEvent(ev, cv.width, cv.height);
+      let px = pev.x, py = pev.y;
       if(rulerType && rulerGuide){ const snapped = snapToRulerGuide(px, py, strokeRulerAnchor); px = snapped.x; py = snapped.y; }
       drawEngine.move(px, py, ev.pressure, e.pointerType === 'pen', ev.timeStamp || e.timeStamp);
-      if(lockBarrierCtx){
-        lockBarrierCtx.lineTo(px, py);
-        lockBarrierCtx.stroke();
-        lockBarrierCtx.beginPath();
-        lockBarrierCtx.moveTo(px, py);
-      }
+      if(currentStrokeIsLock) barrierEngine.move(px, py, ev.pressure, e.pointerType === 'pen', ev.timeStamp || e.timeStamp);
+      if(clipRegionMask) expandClipBBox(px, py);
     }
+    if(clipRegionMask) throttledClipCorrection();
     throttledRefreshThumbnails();
-    if(regionMask) throttledLockOverlayUpdate();
   }
 
   drawSurface.addEventListener('pointerdown', e => {
@@ -5486,6 +6261,7 @@
     if(popsOpen()){ closePops(); e.preventDefault(); return; }         // first tap only closes the size / colour box
     if(activeTool === 'Select'){ e.preventDefault(); beginLasso(e); return; }
     if(activeTool === 'Fill'){ e.preventDefault(); doFloodFill(e); return; }
+    if(activeTool === 'Picker'){ e.preventDefault(); doEyedropper(e); return; }
     if(e.pointerType === 'touch'){
       // hold the stroke back for a beat: if a 2nd finger lands, it was a zoom and nothing gets drawn
       e.preventDefault();
@@ -5536,15 +6312,20 @@
     const stage = document.getElementById('canvas-stage');
     const badge = document.getElementById('zoom-badge');
     const MIN_SCALE = 1, MAX_SCALE = 8;
-    let scale = 1, tx = 0, ty = 0;
+    // scale/tx/ty/rot live in outer scope now (stageScale/stageTx/stageTy/stageRot), shared with
+    // the drawing code above, so a finger's mapped canvas point always matches the transform
+    // that's actually on screen. rot is in degrees, completely free (can pass through 90/180/270
+    // — e.g. to draw upside down).
     drawSurface.style.transformOrigin = '0 0';
 
     function apply(){
-      drawSurface.style.transform = scale === 1 && tx === 0 && ty === 0
+      const idle = stageScale === 1 && stageTx === 0 && stageTy === 0 && stageRot === 0;
+      drawSurface.style.transform = idle
         ? ''
-        : `translate(${tx}px, ${ty}px) scale(${scale})`;
-      if(scale > 1.01){
-        badge.textContent = Math.round(scale * 100) + '%';
+        : `translate(${stageTx}px, ${stageTy}px) rotate(${stageRot}deg) scale(${stageScale})`;
+      const rotShown = Math.abs(((stageRot % 360) + 540) % 360 - 180) !== 180;  // true whenever rot isn't a multiple of 360
+      if(stageScale > 1.01 || rotShown){
+        badge.textContent = Math.round(stageScale * 100) + '%' + (rotShown ? ' · ' + Math.round(((stageRot % 360) + 360) % 360) + '°' : '');
         badge.classList.add('show');
       } else {
         badge.classList.remove('show');
@@ -5552,31 +6333,42 @@
       if(typeof syncPasteBox === 'function') syncPasteBox();
       if(typeof syncVideoBox === 'function') syncVideoBox();
     }
-    function resetZoom(){ scale = 1; tx = 0; ty = 0; apply(); }
+    function resetZoom(){ stageScale = 1; stageTx = 0; stageTy = 0; stageRot = 0; apply(); }
     badge.addEventListener('click', resetZoom);
-    // a resize/rotation changes the surface's laid-out size and position, which would throw off
-    // the math above — simplest safe behaviour is to just snap back to 100% when that happens
+    // a resize/orientation change alters the surface's laid-out size and position, which would
+    // throw off the math below — simplest safe behaviour is to just snap back to plain 100% then
     window.addEventListener('resize', resetZoom);
     window.addEventListener('orientationchange', () => setTimeout(resetZoom, 150));
 
-    // keep the point under (screenX, screenY) fixed while scale changes to newScale
+    // keep the point under (screenX, screenY) fixed while scale changes to newScale (rotation unchanged)
     function zoomAround(screenX, screenY, newScale){
       newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
-      const r = drawSurface.getBoundingClientRect();
-      const localX = (screenX - r.left) / scale;
-      const localY = (screenY - r.top) / scale;
-      const staticLeft = r.left - tx, staticTop = r.top - ty;
-      tx = screenX - staticLeft - newScale * localX;
-      ty = screenY - staticTop - newScale * localY;
-      scale = newScale;
+      const b = stageBaseRect();
+      const local = stageToLocal(screenX, screenY, b);
+      const rad = stageRot * Math.PI / 180, cos = Math.cos(rad), sin = Math.sin(rad);
+      stageTx = screenX - b.left - newScale * (local.x * cos - local.y * sin);
+      stageTy = screenY - b.top - newScale * (local.x * sin + local.y * cos);
+      stageScale = newScale;
       apply();
     }
 
-    // -- two-finger touch: pinch to zoom, drag to pan --
+    // Batch every touch-driven transform update onto the next animation frame instead of
+    // writing style.transform straight from the raw pointermove handler. A finger reports far
+    // more move events than the screen can actually redraw, so writing on every single one was
+    // pure wasted work — and worse, combined with a getBoundingClientRect() read (below) it was
+    // forcing the browser to do a full synchronous layout on every one of those events too,
+    // which is what turned rotating into a freeze.
+    let rafPending = false;
+    function scheduleApply(){
+      if(rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => { rafPending = false; apply(); });
+    }
+
+    // -- two-finger touch: pinch to zoom, twist to rotate, drag to pan — all at once, like
+    // holding a real sheet of paper down with two fingers and turning/sliding/stretching it --
     const touches = new Map();
-    let pinch = null;
-    function mid(){ const p = [...touches.values()]; return { x:(p[0].x+p[1].x)/2, y:(p[0].y+p[1].y)/2 }; }
-    function dist(){ const p = [...touches.values()]; return Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y); }
+    let pinch = null;   // { L1, L2, id1, id2, base } — the two fingers' fixed points ON THE PAPER, set once when the 2nd finger lands
 
     stage.addEventListener('pointerdown', e => {
       if(e.pointerType === 'mouse') return;
@@ -5585,19 +6377,16 @@
       activeTouchIds.add(e.pointerId);
       if(touches.size >= 2){
         gestureLock = true;                      // from now until every finger is up, nothing may draw
-        abortStrokeForGesture();                 // a second finger means "zoom", not "draw" — drop any stroke just started (and undo its dot)
+        abortStrokeForGesture();                 // a second finger means "transform", not "draw" — drop any stroke just started (and undo its dot)
       }
       if(touches.size === 2){
-        const r = drawSurface.getBoundingClientRect();
-        const m = mid();
-        pinch = {
-          startDist: dist(),
-          startScale: scale,
-          startLocalX: (m.x - r.left) / scale,
-          startLocalY: (m.y - r.top) / scale,
-          startStaticLeft: r.left - tx,
-          startStaticTop: r.top - ty
-        };
+        const ids = [...touches.keys()];
+        const p1 = touches.get(ids[0]), p2 = touches.get(ids[1]);
+        // Read the layout ONCE, right here at gesture start — never again during the move
+        // handler below, since a getBoundingClientRect() read forces a synchronous layout and
+        // this element's transform is being rewritten every frame during the gesture.
+        const base = stageBaseRect();
+        pinch = { id1: ids[0], id2: ids[1], L1: stageToLocal(p1.x, p1.y, base), L2: stageToLocal(p2.x, p2.y, base), base };
       }
     }, true);
 
@@ -5606,12 +6395,27 @@
       touches.set(e.pointerId, { x:e.clientX, y:e.clientY });
       if(touches.size === 2 && pinch){
         e.preventDefault();
-        const m = mid();
-        const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinch.startScale * (dist() / pinch.startDist)));
-        tx = m.x - pinch.startStaticLeft - newScale * pinch.startLocalX;
-        ty = m.y - pinch.startStaticTop - newScale * pinch.startLocalY;
-        scale = newScale;
-        apply();
+        const S1 = touches.get(pinch.id1), S2 = touches.get(pinch.id2);
+        if(!S1 || !S2) return;
+        // Solve for the single scale + rotation + pan that puts the two fingers' fixed paper
+        // points (L1, L2, captured when the 2nd finger touched down) exactly back under the
+        // two fingers' CURRENT screen positions — a standard 2-point similarity transform.
+        const dLx = pinch.L2.x - pinch.L1.x, dLy = pinch.L2.y - pinch.L1.y;
+        const lenL = Math.hypot(dLx, dLy) || 1;
+        const angL = Math.atan2(dLy, dLx);
+        const dSx = S2.x - S1.x, dSy = S2.y - S1.y;
+        const lenS = Math.hypot(dSx, dSy);
+        const angS = Math.atan2(dSy, dSx);
+        const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, lenS / lenL));
+        let newRot = (angS - angL) * 180 / Math.PI;
+        while(newRot - stageRot > 180) newRot -= 360;     // stay on the nearest equivalent angle so a
+        while(newRot - stageRot < -180) newRot += 360;     // twist through ±180° doesn't visibly snap
+        const b = pinch.base, rad = newRot * Math.PI / 180, cos = Math.cos(rad), sin = Math.sin(rad);
+        stageTx = S1.x - b.left - newScale * (pinch.L1.x * cos - pinch.L1.y * sin);
+        stageTy = S1.y - b.top - newScale * (pinch.L1.x * sin + pinch.L1.y * cos);
+        stageScale = newScale;
+        stageRot = newRot;
+        scheduleApply();
       }
     }, true);
 
@@ -5624,11 +6428,11 @@
       }, true);
     });
 
-    // -- trackpad pinch / ctrl+wheel (desktop) --
+    // -- trackpad pinch / ctrl+wheel (desktop) — zoom only, no rotation gesture on a mouse wheel --
     stage.addEventListener('wheel', e => {
       if(!e.ctrlKey) return;    // browsers report trackpad pinch as a ctrl+wheel event
       e.preventDefault();
-      zoomAround(e.clientX, e.clientY, scale * (1 - e.deltaY * 0.01));
+      zoomAround(e.clientX, e.clientY, stageScale * (1 - e.deltaY * 0.01));
     }, { passive:false });
   })();
 
@@ -5650,15 +6454,50 @@
       setBrushPanel(false);
     });
   });
+  // ---- Picker (eyedropper) tool: tap anywhere on the canvas to sample the colour that's
+  // actually showing there (blending every visible layer, top to bottom, same as what your
+  // eyes see) and load it as the current colour. Picking switches straight back to Brush so
+  // the very next tap on the canvas paints with the colour you just grabbed. ----
+  document.querySelectorAll('.tool-btn[aria-label="Picker"]').forEach(b => {
+    b.addEventListener('click', () => {
+      setActiveTool('Picker');
+      closePops();
+      setBrushPanel(false);
+    });
+  });
+  function sampleCanvasColor(x, y){
+    const f = currentFrame();
+    const w = currentCanvasSize.w, h = currentCanvasSize.h;
+    const tmp = document.createElement('canvas');
+    tmp.width = w; tmp.height = h;
+    const tctx = tmp.getContext('2d');
+    tctx.fillStyle = '#f4f2ee';           // same paper colour the canvas is shown on
+    tctx.fillRect(0, 0, w, h);
+    f.layers.forEach(l => {
+      if(!l.visible) return;
+      tctx.globalAlpha = l.opacity / 100;
+      tctx.drawImage(l.canvas, 0, 0);
+    });
+    tctx.globalAlpha = 1;
+    const d = tctx.getImageData(x, y, 1, 1).data;
+    return '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+  function doEyedropper(e){
+    const w = currentCanvasSize.w, h = currentCanvasSize.h;
+    const p = canvasPointFromEvent(e, w, h);
+    const px = Math.floor(p.x), py = Math.floor(p.y);
+    if(px < 0 || py < 0 || px >= w || py >= h) return;
+    setBrushColor(sampleCanvasColor(px, py));
+    setActiveTool('Brush');   // picked -> back to drawing, ready to use that colour right away
+    updateBrushPanelForTool();
+  }
   const FILL_TOLERANCE = 28;   // how different a neighbour's colour can be and still count as "the same area"
-  function floodFillCanvas(canvas, x, y, hexColor, tolerance, barrier){
+  function floodFillCanvas(canvas, x, y, hexColor, tolerance, regionMask){
     const w = canvas.width, h = canvas.height;
     const ctx = canvas.getContext('2d');
     const imgData = ctx.getImageData(0, 0, w, h);
     const data = imgData.data;
-    const wallData = barrier ? barrier.getContext('2d').getImageData(0, 0, w, h).data : null;
     const startI = (y * w + x) * 4;
-    if(wallData && wallData[startI + 3] > 40) return;   // tapped right on a wall — nothing to fill
     const tr = data[startI], tg = data[startI + 1], tb = data[startI + 2], ta = data[startI + 3];
     const n = parseInt(hexColor.slice(1), 16);
     const fr = (n >> 16) & 255, fg = (n >> 8) & 255, fb = n & 255, fa = 255;
@@ -5670,9 +6509,12 @@
     let sp = 0;
     stack[sp++] = y * w + x;
     visited[y * w + x] = 1;
+    // regionMask, when given, is the side of any Lock Pencil wall the click landed on (from
+    // floodFillRegion) — without it a bucket fill would happily spread straight across a lock
+    // line since it only ever looks at colour, never at the wall.
     const tryPush = (p) => {
       if(visited[p]) return;
-      if(wallData && wallData[p * 4 + 3] > 40) return;   // a lock-pencil wall stops the fill from spreading through it
+      if(regionMask && !regionMask[p]) return;
       const i = p * 4;
       const dr = data[i] - tr, dg = data[i + 1] - tg, db = data[i + 2] - tb, da = data[i + 3] - ta;
       if(dr * dr + dg * dg + db * db + da * da <= tol){ visited[p] = 1; stack[sp++] = p; }
@@ -5692,13 +6534,18 @@
   function doFloodFill(e){
     const layer = getActiveLayer();
     if(!layer || !layer.visible || layer.locked) return;
-    const r = drawSurface.getBoundingClientRect();
-    const px = Math.floor((e.clientX - r.left) * layer.canvas.width / r.width);
-    const py = Math.floor((e.clientY - r.top) * layer.canvas.height / r.height);
+    const pfill = canvasPointFromEvent(e, layer.canvas.width, layer.canvas.height);
+    const px = Math.floor(pfill.x), py = Math.floor(pfill.y);
     if(px < 0 || py < 0 || px >= layer.canvas.width || py >= layer.canvas.height) return;
-    pushUndoSnapshot(layer);
+    // same wall the brush respects: a bucket fill must not cross a Lock Pencil line either.
     const frame = currentFrame();
-    floodFillCanvas(layer.canvas, px, py, brushColor, FILL_TOLERANCE, frame.hasLocks ? ensureLockBarrier(frame) : null);
+    let regionMask = null;
+    if(frame.barrier && frame.barrierHasInk){
+      const region = floodFillRegion(getBarrierCanvas(frame), px, py, Math.max(2, Math.round(canvasK() * 2)));
+      if(region) regionMask = region.mask;
+    }
+    pushUndoSnapshot(layer);
+    floodFillCanvas(layer.canvas, px, py, brushColor, FILL_TOLERANCE, regionMask);
     refreshThumbnails();
   }
 
