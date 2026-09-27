@@ -4952,7 +4952,21 @@
         // Media.saveVideo needs a real file path to copy from, not a blob, so stage it in the
         // app's own private cache first — this part never touches public storage.
         const staged = await Filesystem.writeFile({ path: filename, data: base64, directory: 'CACHE' });
-        await Media.saveVideo({ path: staged.uri, album: 'DG Dynamics' });
+
+        // Since plugin v5+, Android requires an album *identifier*, not a name — createAlbum()
+        // doesn't hand one back either, so find-or-create, then look it up via getAlbums().
+        const ALBUM_NAME = 'DG Dynamics';
+        const findAlbumId = async () => {
+          const { albums } = await Media.getAlbums();
+          const match = (albums || []).find(a => a.name === ALBUM_NAME);
+          return match ? match.identifier : null;
+        };
+        let albumIdentifier = await findAlbumId();
+        if(!albumIdentifier){
+          await Media.createAlbum({ name: ALBUM_NAME });
+          albumIdentifier = await findAlbumId();
+        }
+        await Media.saveVideo({ path: staged.uri, albumIdentifier });
       }catch(err){
         alert("Couldn't save the video: " + (err && err.message ? err.message : err));
       }
