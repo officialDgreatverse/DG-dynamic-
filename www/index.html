@@ -21,7 +21,7 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{height:100%;overflow:hidden;}
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
   body{
     margin:0;
     background:var(--bg);
@@ -36,6 +36,7 @@
     width:100%;
     height:100vh;
     height:100dvh;
+    height:var(--app-h, 100dvh);
     position:relative;
     overflow:hidden;
   }
@@ -427,6 +428,25 @@
   }
   .expand-btn{display:none;}
 
+  /* ---- Hide mode: only the top bar (so Hide can be turned off again) and the Play button stay ---- */
+  #page-editor.ui-hidden .toolbar-landscape,
+  #page-editor.ui-hidden .toolbar-portrait,
+  #page-editor.ui-hidden .brush-panel,
+  #page-editor.ui-hidden .fx-panel,
+  #page-editor.ui-hidden .ruler-bar,
+  #page-editor.ui-hidden .opt-pop,
+  #page-editor.ui-hidden .layer-panel,
+  #page-editor.ui-hidden .bottom-landscape .utils-cluster,
+  #page-editor.ui-hidden .bottom-landscape .frame-strip,
+  #page-editor.ui-hidden .bottom-landscape .layer-btn,
+  #page-editor.ui-hidden .bottom-portrait .frame-strip,
+  #page-editor.ui-hidden .bottom-portrait .row-2,
+  #page-editor.ui-hidden .playback-group .play-btn[aria-label="Previous frame"],
+  #page-editor.ui-hidden .playback-group .play-btn[aria-label="Next frame"]{display:none !important;}
+  #page-editor.ui-hidden .bottom-landscape,
+  #page-editor.ui-hidden .bottom-portrait .row-1{justify-content:center;}
+  #page-editor.ui-hidden .scan-wrap .icon-btn{color:var(--accent-1);}
+
   @media (orientation:portrait){
     .scan-label{display:block;}
   }
@@ -517,10 +537,8 @@
   }
   .canvas-surface{
     position:relative;
-    isolation:isolate;
     overflow:hidden;
     background:#f4f2ee;
-    border-radius:2px;
     box-shadow:0 0 0 1px rgba(0,0,0,0.25);
     flex-shrink:0;
     touch-action:none;
@@ -665,6 +683,14 @@
   .paste-handle.ne{left:100%;top:0;cursor:nesw-resize;}
   .paste-handle.sw{left:0;top:100%;cursor:nesw-resize;}
   .paste-handle.se{left:100%;top:100%;cursor:nwse-resize;}
+
+
+  /* select tool: free-aspect crop box with 8 handles */
+  .crop-box{position:absolute;z-index:60;touch-action:none;cursor:move;border:1.5px dashed rgba(255,255,255,0.95);box-shadow:0 0 0 1px rgba(0,0,0,0.65);-webkit-user-select:none;user-select:none;}
+  .crop-box .paste-handle.n{left:50%;top:0;}
+  .crop-box .paste-handle.s{left:50%;top:100%;}
+  .crop-box .paste-handle.w{left:0;top:50%;}
+  .crop-box .paste-handle.e{left:100%;top:50%;}
 
   /* confirm / cancel pair that floats above the paste box */
   .paste-actions{
@@ -1228,6 +1254,7 @@
       bottom:0;
       max-height:52vh;
       max-height:52dvh;
+      max-height:calc(var(--app-h, 100dvh) * 0.52);
       padding-bottom:env(safe-area-inset-bottom);
       border-top:1px solid var(--line);
       border-radius:16px 16px 0 0;
@@ -1243,6 +1270,7 @@
       width:300px;
       max-height:calc(100vh - 130px);
       max-height:calc(100dvh - 130px);
+      max-height:calc(var(--app-h, 100dvh) - 130px);
       border:1px solid var(--line);
       border-radius:16px;
     }
@@ -1273,6 +1301,7 @@
     z-index:39;
     max-height:82vh;
     max-height:82dvh;
+    max-height:calc(var(--app-h, 100dvh) * 0.82);
     background:var(--surface);
     border-top:1px solid var(--line);
     border-radius:16px 16px 0 0;
@@ -1652,7 +1681,7 @@
   .fx-btn svg{width:26px;height:26px;}
   .fx-btn.active{color:var(--accent-1);}
   .fx-size{display:flex;align-items:center;gap:8px;width:100%;font-size:11px;font-weight:600;color:var(--muted);}
-  .fx-size input{flex:1;height:26px;accent-color:var(--accent-1);touch-action:pan-y;}
+  .fx-size input{flex:1;height:26px;accent-color:var(--accent-1);touch-action:none;}
   .fx-size b{color:var(--accent-1);min-width:22px;text-align:right;}
   @media (orientation:landscape){ .fx-panel{left:76px;transform:none;} }
 
@@ -1757,13 +1786,38 @@
     height:30px;
     margin:4px 0 6px;
     accent-color:var(--accent-1);
-    touch-action:pan-y;
+    touch-action:none;
   }
   .opt-preview{
     display:block;
     width:100%;
     height:46px;
     border-radius:10px;
+  }
+  .color-bars{display:flex;flex-direction:column;gap:8px;padding:2px 2px 12px;}
+  .color-bar{
+    display:flex;align-items:center;gap:8px;
+    min-height:38px;padding:4px;
+    border-radius:10px;border:1px solid var(--line);
+    background:rgba(255,255,255,0.03);
+    box-sizing:border-box;
+  }
+  .color-bar .cb-label{
+    flex:0 0 auto;width:52px;padding-left:4px;
+    font-size:10px;font-weight:600;letter-spacing:.02em;color:var(--muted);
+  }
+  .color-bar.cur{cursor:pointer;}
+  .color-bar .cb-fill{
+    flex:1;align-self:stretch;min-height:30px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2);
+  }
+  .cb-recents{flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px 0;min-height:30px;align-items:center;-webkit-overflow-scrolling:touch;}
+  .cb-recents:empty::after{content:"none yet";font-size:10px;color:var(--muted);}
+  .cb-chip{
+    flex:0 0 auto;width:28px;height:28px;padding:0;border:none;border-radius:50%;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.25);cursor:pointer;
   }
   .swatches{
     display:grid;
@@ -1787,6 +1841,23 @@
     background:conic-gradient(#ff3b30,#ffcc00,#34c759,#0a84ff,#af52de,#ff3b30);
     overflow:hidden;
   }
+  /* in-app colour editor: Hue / Saturation / Value sliders that start on the current colour */
+  .hsv-ed{display:none;}
+  .opt-pop.editing .hsv-ed{display:block;}
+  .opt-pop.editing .swatches{display:none;}
+  .opt-pop.editing{width:284px;}
+  .hsv-cmp{display:flex;height:44px;margin-bottom:12px;border-radius:11px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2);}
+  .hsv-cmp div{flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;letter-spacing:.02em;}
+  .hsv-row{display:grid;grid-template-columns:40px 1fr 32px;align-items:start;gap:8px;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted);}
+  .hsv-row > span,.hsv-row output{margin-top:10px;}
+  .hsv-row output{text-align:right;font-variant-numeric:tabular-nums;}
+  /* tall colour bar with an arrow-shaped selector underneath, its tip touching the exact spot picked */
+  .hsv-range{-webkit-appearance:none;appearance:none;width:100%;height:62px;margin:0;padding:0;background:transparent;outline:none;touch-action:pan-y;}
+  .hsv-range::-webkit-slider-runnable-track{height:36px;border-radius:10px;background:var(--g);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.25);}
+  .hsv-range::-moz-range-track{height:36px;border-radius:10px;background:var(--g);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.25);}
+  .hsv-range::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:28px;margin-top:33px;border:none;border-radius:0;background:#fff;clip-path:polygon(50% 0,100% 40%,100% 100%,0 100%,0 40%);filter:drop-shadow(0 0 1.5px rgba(0,0,0,0.9));}
+  .hsv-range::-moz-range-thumb{width:30px;height:28px;border:none;border-radius:0;background:#fff;clip-path:polygon(50% 0,100% 40%,100% 100%,0 100%,0 40%);transform:translateY(33px);}
+  .hsv-done{display:block;width:100%;margin-top:2px;padding:12px;border:none;border-radius:11px;background:var(--accent-1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
   .opt-pop .picker-row{padding:10px 2px;}
   .opt-pop .picker-row + .picker-row{border-top:1px solid var(--line);}
   .swatch.custom input{
@@ -2190,8 +2261,28 @@
 
         <!-- color box: opens from the selector's Color button -->
         <div class="opt-pop" id="color-pop" role="dialog" aria-label="Brush color">
+          <div class="color-bars">
+            <div class="color-bar cur" id="cb-cur-bar" role="button" tabindex="0" title="Tap to adjust this color">
+              <span class="cb-label">Selected</span>
+              <span class="cb-fill" id="cb-current"></span>
+            </div>
+            <div class="color-bar rec">
+              <span class="cb-label">Recent</span>
+              <div class="cb-recents" id="cb-recents"></div>
+            </div>
+          </div>
           <div class="swatches" id="swatches">
-            <input type="color" id="color-input" value="#000000" aria-label="Pick any color">
+            <input type="color" id="color-input" value="#000000" aria-label="Pick any color" hidden>
+          </div>
+          <div class="hsv-ed" id="hsv-ed">
+            <div class="hsv-cmp">
+              <div id="hsv-was">Was</div>
+              <div id="hsv-now">Now</div>
+            </div>
+            <div class="hsv-row"><span>Hue</span><input class="hsv-range" id="hsv-h" type="range" min="0" max="360" step="1" aria-label="Hue"><output id="hsv-h-v"></output></div>
+            <div class="hsv-row"><span>Sat</span><input class="hsv-range" id="hsv-s" type="range" min="0" max="100" step="1" aria-label="Saturation"><output id="hsv-s-v"></output></div>
+            <div class="hsv-row"><span>Value</span><input class="hsv-range" id="hsv-v" type="range" min="0" max="100" step="1" aria-label="Value"><output id="hsv-v-v"></output></div>
+            <button type="button" class="hsv-done" id="hsv-done">Done</button>
           </div>
         </div>
       </div>
@@ -2252,6 +2343,12 @@
       <!-- ============ LAYER PANEL (portrait: bottom sheet / landscape: side panel) ============ -->
       <div class="layer-panel" id="layer-panel" role="region" aria-label="Layers">
         <div class="layer-handle" id="layer-handle" aria-label="Close layers"><span></span></div>
+        <div class="picker-header" style="padding:2px 14px 6px;">
+          <button class="icon-btn" id="layer-back-btn" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="picker-title">Layers</div>
+        </div>
         <div class="layer-list" id="layer-list"></div>
         <button class="layer-add" id="layer-add" aria-label="Add layer">
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
@@ -2499,6 +2596,7 @@
   let _saveTimer = null;
   let _saving = Promise.resolve();
   let _storageWarned = false;
+  let _saveFailWarned = false;
   const SAVE_DELAY_MS = 700;
 
   function uid(){ return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
@@ -2635,6 +2733,7 @@
         if(l.write){
           const blob = await l.blobP;
           if(blob) writes.push({ key: k, blob: blob, layer: l });
+          else if(l.ref) l.ref._blobP = null;   // encoding failed — force a fresh attempt on the next save
         }
         layersOut.push({ key: l.key, name: l.name, opacity: l.opacity, visible: l.visible, locked: l.locked });
       }
@@ -2681,7 +2780,13 @@
     if(!currentProject || projectLoading) return _saving;
     let snap;
     try{ snap = snapshotProject(); }catch(e){ console.warn('autosave snapshot failed', e); return _saving; }
-    _saving = _saving.catch(() => {}).then(() => writeSnapshot(snap)).catch(e => console.warn('autosave failed', e));
+    _saving = _saving.catch(() => {}).then(() => writeSnapshot(snap)).then(() => { _saveFailWarned = false; }).catch(e => {
+      console.warn('autosave failed', e);
+      if(!_saveFailWarned){
+        _saveFailWarned = true;
+        try{ alert("Your latest changes couldn't be saved. The phone's storage may be full. Free up some space, then keep working — the app will try again on your next change."); }catch(_){}
+      }
+    });
     return _saving;
   }
 
@@ -2846,7 +2951,29 @@
   }
 
   // The editor's X button: bake any floating paste, save immediately, then go home.
+  // ---- Hide button (top bar): hides every toolbar and leaves only the Play button ----
+  function setUiHidden(hide){
+    const page = document.getElementById('page-editor');
+    if(!page) return;
+    if(hide){
+      if(typeof setBrushPanel === 'function') setBrushPanel(false);
+      if(typeof setFxPanel === 'function') setFxPanel(false);
+      if(typeof closeLayerPanel === 'function') closeLayerPanel();
+    }
+    page.classList.toggle('ui-hidden', hide);
+    const b = page.querySelector('.scan-wrap .icon-btn');
+    if(b) b.setAttribute('aria-pressed', hide ? 'true' : 'false');
+    const l = page.querySelector('.scan-label');
+    if(l) l.textContent = hide ? 'Show' : 'Hide';
+    requestAnimationFrame(() => { if(typeof fitCanvasSurface === 'function') fitCanvasSurface(); });
+  }
+  (function(){
+    const b = document.querySelector('#page-editor .scan-wrap .icon-btn');
+    if(b) b.addEventListener('click', () => setUiHidden(!document.getElementById('page-editor').classList.contains('ui-hidden')));
+  })();
+
   async function closeEditor(){
+    setUiHidden(false);
     try{
       if(typeof isPlaying !== 'undefined' && isPlaying) stopPlayback();
       if(pasteState) commitPasteTransform();
@@ -2918,6 +3045,22 @@
     if(typeof syncVideoBox === 'function') syncVideoBox();     // ...and the video placement box, if one's open
     if(typeof renderRulerGuide === 'function') renderRulerGuide();   // and the ruler guide, including on rotation to landscape
   }
+  // Real viewport height -> --app-h. Android WebView / APK reports dvh late or wrong, which left the
+  // toolbar and bottom menus partly below the screen until something re-laid out.
+  function syncAppHeight(){
+    const vv = window.visualViewport;
+    const h = Math.round(vv ? vv.height : window.innerHeight);
+    if(h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
+    requestAnimationFrame(fitCanvasSurface);
+    try{ if(typeof clampBrushPanel === 'function') clampBrushPanel(); }catch(err){}   // (not ready yet on the very first call)
+  }
+  syncAppHeight();
+  [120, 400, 900].forEach(t => setTimeout(syncAppHeight, t));   // APK settles its size after launch
+  window.addEventListener('resize', syncAppHeight);
+  window.addEventListener('orientationchange', () => setTimeout(syncAppHeight, 200));
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', syncAppHeight);
+  window.addEventListener('pageshow', syncAppHeight);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) syncAppHeight(); });
   window.addEventListener('resize', () => requestAnimationFrame(fitCanvasSurface));
   window.addEventListener('orientationchange', () => setTimeout(fitCanvasSurface, 150));
 
@@ -2955,7 +3098,12 @@
   }
   frameMenuEl.querySelector('[data-act="copy"]').onclick = () => { copyFrame(frameMenuTargetN); closeFrameMenu(); };
   frameMenuEl.querySelector('[data-act="paste"]').onclick = () => { pasteFrame(frameMenuTargetN); closeFrameMenu(); };
-  frameMenuEl.querySelector('[data-act="delete"]').onclick = () => { deleteFrame(frameMenuTargetN); closeFrameMenu(); };
+  frameMenuEl.querySelector('[data-act="delete"]').onclick = () => {
+    const n = frameMenuTargetN;
+    closeFrameMenu();
+    if(frames.length > 1 && !confirm('Delete frame ' + n + '? This cannot be undone.')) return;
+    deleteFrame(n);
+  };
 
   // ---- live thumbnails: frame-strip tiles + layer-list tiles mirror what's actually drawn ----
   function thumbPixelSize(){
@@ -3008,7 +3156,7 @@
   let lastThumbRefresh = 0;
   function throttledRefreshThumbnails(){
     const now = performance.now();
-    if(now - lastThumbRefresh < 120) return;
+    if(now - lastThumbRefresh < 220) return;
     lastThumbRefresh = now;
     refreshThumbnails();
   }
@@ -3263,7 +3411,8 @@
     const idx = frames.findIndex(f => f.n === n);
     if(idx === -1) return;
     const wasSelected = frames[idx].selected;
-    frames.splice(idx, 1);
+    const gone = frames.splice(idx, 1)[0];
+    try{ (gone.undoStack || []).forEach(releaseGroup); (gone.redoStack || []).forEach(releaseGroup); gone.undoStack = []; gone.redoStack = []; }catch(_){}
     frames.forEach((f, i) => f.n = i + 1);
     if(wasSelected){
       const nextIdx = Math.min(idx, frames.length - 1);
@@ -3446,12 +3595,25 @@
   // FRAME owns its own undo/redo stack (frame.undoStack / frame.redoStack) — Ctrl+Z only ever
   // steps back through what happened on the frame you're currently viewing, never a different
   // frame you passed through in between.
-  const MAX_HISTORY = 40;
+  const MAX_TOTAL_HISTORY_BYTES = 250 * 1024 * 1024;   // across every frame together
+  const MAX_HISTORY = 25;
+  const MAX_HISTORY_BYTES = 120 * 1024 * 1024;   // per frame; oldest steps are dropped beyond this so long sessions don't run out of memory
 
+  // Snapshots are now a GPU-side canvas copy (drawImage) instead of getImageData. getImageData
+  // forces the browser to finish every queued draw and copy the whole canvas to the CPU — done at
+  // the start of EVERY stroke, that is what made the pencil hang for ~2s when scribbling back and
+  // forth to colour. `.data` (real ImageData) is only built lazily, for the rare Lock-Pencil clip.
   function snapshotOf(layer){
-    const ctx = layer.canvas.getContext('2d');
-    return { layer: layer, data: ctx.getImageData(0, 0, layer.canvas.width, layer.canvas.height) };
+    const src = layer.canvas;
+    const c = document.createElement('canvas');
+    c.width = src.width; c.height = src.height;
+    c.getContext('2d').drawImage(src, 0, 0);
+    return {
+      layer: layer, canvas: c, bytes: c.width * c.height * 4, _img: null,
+      get data(){ return this._img || (this._img = c.getContext('2d').getImageData(0, 0, c.width, c.height)); }
+    };
   }
+  function releaseGroup(g){ g.forEach(sn => { sn._img = null; sn.canvas.width = sn.canvas.height = 0; }); }
   // Each history entry is a GROUP of one-or-more canvas snapshots that undo/redo together as one
   // step. Pass a single layer (the common case) or an array (e.g. a Lock Pencil stroke, whose
   // visible ink and barrier line should un-draw together). Returns the group, so a caller that
@@ -3461,13 +3623,36 @@
     const f = currentFrame();
     const group = (Array.isArray(layer) ? layer : [layer]).map(snapshotOf);
     f.undoStack.push(group);
-    if(f.undoStack.length > MAX_HISTORY) f.undoStack.shift();
+    if(f.undoStack.length > MAX_HISTORY) releaseGroup(f.undoStack.shift());
+    let histBytes = 0;
+    for(const g of f.undoStack) for(const sn of g) histBytes += sn.bytes;
+    while(f.undoStack.length > 4 && histBytes > MAX_HISTORY_BYTES){
+      const old = f.undoStack.shift();
+      for(const sn of old) histBytes -= sn.bytes;
+      releaseGroup(old);
+    }
+    // whole-project cap: many frames each holding history could add up to more than the phone has
+    let total = 0;
+    frames.forEach(fr => { (fr.undoStack || []).forEach(g => g.forEach(sn => { total += sn.bytes; })); });
+    while(total > MAX_TOTAL_HISTORY_BYTES){
+      const victim = frames.filter(fr => fr !== f && fr.undoStack && fr.undoStack.length).sort((a, b) => b.undoStack.length - a.undoStack.length)[0];
+      if(!victim) break;
+      const old = victim.undoStack.shift();
+      old.forEach(sn => { total -= sn.bytes; });
+      releaseGroup(old);
+    }
+    if(f.redoStack.length > 10) f.redoStack.splice(0, f.redoStack.length - 10);
     f.redoStack.length = 0;                 // a new action invalidates anything that could have been redone
     updateHistoryButtons();
     return group;
   }
   function restoreSnapshot(entry){
-    entry.forEach(s => s.layer.canvas.getContext('2d').putImageData(s.data, 0, 0));
+    entry.forEach(s => {
+      const ctx = s.layer.canvas.getContext('2d');
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'copy';
+      ctx.drawImage(s.canvas, 0, 0);
+      ctx.restore();
+    });
   }
   function undo(){
     const f = currentFrame();
@@ -3753,14 +3938,16 @@
     setLayerPanel(false);
   }
   document.querySelectorAll('.layer-btn').forEach(b => {
-    b.addEventListener('click', () => setLayerPanel(!layerPanelEl.classList.contains('open')));
+    b.addEventListener('click', () => { layerPanelEl.style.transform = ''; setLayerPanel(!layerPanelEl.classList.contains('open')); });
   });
+  document.getElementById('layer-back-btn').addEventListener('click', closeLayerPanel);
 
   // ---- "More" sheet (Project settings / Frames viewer / Onion / Grid / Magic Cut / Add image / Add video / Make Movie) ----
   // Onion, Grid and Frames viewer are wired below; the rest are still just the list for now.
   const moreSheetEl = document.getElementById('more-sheet');
   const moreBackdropEl = document.getElementById('more-backdrop');
   function setMoreSheet(open){
+    moreSheetEl.style.transform = '';
     moreSheetEl.classList.toggle('open', open);
     moreBackdropEl.classList.toggle('open', open);
   }
@@ -4681,6 +4868,7 @@
     playbackVideoEl = vid;
     const finish = () => { if(isPlaying) onDone(); };
     vid.addEventListener('ended', finish, { once: true });
+    vid.addEventListener('error', () => setTimeout(finish, 300), { once: true });   // unreadable clip — move on instead of sticking
     const p = vid.play();
     if(p && p.catch) p.catch(finish);   // autoplay blocked — don't get stuck, just move on
   }
@@ -4800,9 +4988,12 @@
       vid.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;';
       document.body.appendChild(vid);
       let raf = 0, done = false;
+      // safety net: never wait longer than the clip's length (plus slack) — a stalled file must not freeze the export
+      const watchdog = setTimeout(() => cleanup(), ((frame.video.duration || 0) * 1000 || 60000) + 10000);
       function cleanup(){
         if(done) return;
         done = true;
+        clearTimeout(watchdog);
         cancelAnimationFrame(raf);
         vid.pause();
         vid.remove();
@@ -4810,6 +5001,7 @@
       }
       function draw(){
         if(done) return;
+        if(exportCancelled){ cleanup(); return; }
         if(vid.readyState >= 2){
           const { sx, sy, sw, sh, box } = exportCropRect(frame);
           ctx.drawImage(vid, sx, sy, sw, sh, box.x, box.y, box.w, box.h);
@@ -4987,6 +5179,17 @@
   }
 
   async function exportMovie(chosenFormat){
+    if(isExporting) return;
+    try{ await exportMovieInner(chosenFormat); }
+    catch(err){
+      console.warn('export failed', err);
+      try{ alert("Couldn't make the movie: " + (err && err.message ? err.message : err)); }catch(_){}
+    }finally{
+      if(isExporting){ isExporting = false; makeMovieBtn.disabled = false; hideExportOverlay(); }
+      if(exportAudioCtx){ try{ exportAudioCtx.close(); }catch(_){} exportAudioCtx = null; }
+    }
+  }
+  async function exportMovieInner(chosenFormat){
     if(isExporting || !frames.length) return;
     if(!window.MediaRecorder){
       alert("This device can't export video. Try updating the app.");
@@ -5144,6 +5347,7 @@
       panelEl.style.transition = 'transform .15s ease';
       if(!cancelled && (travelled < 6 || dy > 40)){
         closeFn();
+        panelEl.style.transform = '';
       } else {
         panelEl.style.transform = '';
       }
@@ -5210,6 +5414,7 @@
   const BRUSHES = [
     { id:'pen',           name:'Pen' },
     { id:'pen-soft',      name:'Pen (Soft)' },
+    { id:'blend',         name:'Blend (Ultra Soft)' },
     { id:'pen-choppy',    name:'Pen (Choppy)' },
     { id:'sketch',        name:'Sketch' },
     { id:'airbrush',      name:'Airbrush' },
@@ -5233,6 +5438,7 @@
   let eraserFade = 60;             // 0 = softest edge / lightest touch, 100 = fully hard-edged / complete erase
   let eraseToAlpha = true;         // true: erases to transparent. false: erases to solid white instead
   let brushSize = DEFAULT_SIZE;          // 1-100, scaled to the canvas resolution when drawing
+  let eraserSize = DEFAULT_SIZE;         // the eraser keeps its own size, separate from the pencil/brush
   let brushColor = DEFAULT_COLOR;
 
   const CHEVRON = '<svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -5335,6 +5541,13 @@
     'pen': {
       spacing: 0.07,
       stamp(e, x, y){ e.disc(x, y, e.px * 0.5 * (0.55 + 0.45 * e.p)); }
+    },
+
+    // ultra-soft blending brush: much softer edge than Pen (Soft), but the colour is solid
+    // (not see-through) — dense overlapping dabs fill in to full opacity with a feathered edge
+    'blend': {
+      spacing: 0.04,
+      stamp(e, x, y){ e.soft(x, y, e.px * (1.15 + 0.1 * e.p), 0.6 * (0.85 + 0.15 * e.p), 0); }
     },
 
     // feathered ink: soft edge, translucent dabs that build up where they overlap
@@ -5715,6 +5928,7 @@
     if(typeof pasteState !== 'undefined' && pasteState) commitPasteTransform();   // switching tools bakes any floating paste in place
     if(label !== 'Select' && typeof clearLassoSelection === 'function') clearLassoSelection();   // leaving Select drops the old marquee so it can't linger over other tools
     activeTool = label;
+    syncSizeUI();
     const isFx = (label === 'Smudge' || label === 'Blur');
     document.querySelectorAll('.tool-btn, #bp-lock').forEach(b => {
       const n = b.getAttribute('aria-label');
@@ -5722,6 +5936,13 @@
     });
     document.querySelectorAll('.fx-btn').forEach(b => b.classList.toggle('active', b.getAttribute('aria-label') === label));
     if(!isFx) setFxPanel(false);
+  }
+  // the Size box shows the size of whichever tool is active (eraser has its own)
+  function syncSizeUI(){
+    const v = activeTool === 'Eraser' ? eraserSize : brushSize;
+    const r = document.getElementById('size-range'), t = document.getElementById('size-val');
+    if(r) r.value = v;
+    if(t) t.textContent = v;
   }
   function setFxPanel(open){
     const el = document.getElementById('fx-panel');
@@ -5744,11 +5965,21 @@
     document.querySelectorAll('.tool-btn[aria-label="Brush"], .tool-btn[aria-label="Eraser"]').forEach(b => b.setAttribute('aria-expanded', open));
   }
   function resetBrushPanelPosition(){ brushPanelEl.style.cssText = ''; }
+  // if the floating brush/tool selector was dragged (or the screen resized) so it's partly off screen, pull it back in
+  function clampBrushPanel(){
+    if(!brushPanelEl.style.left) return;
+    const host = brushPanelEl.parentElement; if(!host) return;
+    const hr = host.getBoundingClientRect();
+    const x = Math.max(0, Math.min(hr.width - brushPanelEl.offsetWidth, parseFloat(brushPanelEl.style.left) || 0));
+    const y = Math.max(0, Math.min(hr.height - brushPanelEl.offsetHeight, parseFloat(brushPanelEl.style.top) || 0));
+    brushPanelEl.style.left = x + 'px'; brushPanelEl.style.top = y + 'px';
+  }
   function resetBrushUI(){
     selectedBrushId = DEFAULT_BRUSH;
     selectedEraserBrushId = 'eraser-light';
     eraserFade = 60;
     eraseToAlpha = true;
+    brushSize = DEFAULT_SIZE; eraserSize = DEFAULT_SIZE;
     setBrushSize(DEFAULT_SIZE);
     setBrushColor(DEFAULT_COLOR);
     renderBrushList();
@@ -5923,7 +6154,7 @@
     return { mask, w, h };
   }
   function expandClipBBox(px, py){
-    const rad = Math.ceil(brushSize * canvasK() * 0.6) + 3;
+    const rad = Math.ceil(Math.max(brushSize, eraserSize) * canvasK() * 0.6) + 3;
     const x0 = Math.floor(px - rad), x1 = Math.ceil(px + rad);
     const y0 = Math.floor(py - rad), y1 = Math.ceil(py + rad);
     if(!clipBBox) clipBBox = { minX: x0, minY: y0, maxX: x1, maxY: y1 };
@@ -6019,7 +6250,13 @@
       clipRegionMask = null; clipLayer = null; clipPreStroke = null; clipBBox = null;
     }
     currentStrokeIsLock = false;
-    if(!skipThumb) refreshThumbnails();
+    if(!skipThumb) deferredRefreshThumbnails();
+  }
+  // several quick strokes in a row only rebuild the little thumbnails once, after the finger is up
+  let _thumbDefer = 0;
+  function deferredRefreshThumbnails(){
+    if(_thumbDefer) return;
+    _thumbDefer = setTimeout(() => { _thumbDefer = 0; refreshThumbnails(); }, 90);
   }
 
   // -- lasso: freehand-circle a region of the active layer, then Copy / Paste it --
@@ -6088,6 +6325,45 @@
     cancelAnimationFrame(lassoAnimRaf);
     animateLassoAnts();
     updateClipboardButtons();
+    floatLassoSelection();
+  }
+
+  // bounding box of the non-transparent pixels, with its offset in the source canvas
+  function trimWithOffset(src){
+    const w = src.width, h = src.height;
+    const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+    let minX = w, minY = h, maxX = -1, maxY = -1;
+    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
+      if(d[(y * w + x) * 4 + 3] !== 0){ if(x < minX) minX = x; if(x > maxX) maxX = x; if(y < minY) minY = y; if(y > maxY) maxY = y; }
+    }
+    if(maxX < minX) return null;
+    const cw = maxX - minX + 1, ch = maxY - minY + 1;
+    const out = document.createElement('canvas'); out.width = cw; out.height = ch;
+    out.getContext('2d').drawImage(src, minX, minY, cw, ch, 0, 0, cw, ch);
+    return { canvas: out, w: cw, h: ch, x: minX, y: minY };
+  }
+  // lift ONLY the circled element off its layer and wrap it in the move / resize box
+  function floatLassoSelection(){
+    if(!lassoSelection) return;
+    const layer = lassoSelection.layer, src = lassoSelection.canvas;
+    if(layer.locked) return;
+    const t = trimWithOffset(src);
+    if(!t){ clearLassoSelection(); return; }
+    pushUndoSnapshot(layer);
+    const ctx = layer.canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.drawImage(src, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    refreshThumbnails();
+    cancelAnimationFrame(lassoAnimRaf); lassoAnimRaf = 0;
+    const ov = document.getElementById('lasso-overlay');
+    ov.getContext('2d').clearRect(0, 0, ov.width, ov.height);
+    startPasteTransform({ canvas: t.canvas, w: t.w, h: t.h });
+    if(!pasteState) return;
+    pasteState.x = t.x; pasteState.y = t.y; pasteState.w = t.w; pasteState.h = t.h;
+    pasteState.layer = layer;
+    pasteState.floatSource = { x: t.x, y: t.y, w: t.w, h: t.h };
+    syncPasteBox();
   }
 
   // ---- Smudge / Blur engine: both act ONLY on the active layer's own pixels ----
@@ -6226,7 +6502,7 @@
       ? 'source-atop'
       : (isErasing && eraseToAlpha ? 'destination-out' : 'source-over');
     drawEngine.k = k;
-    drawEngine.px = brushSize * k;
+    drawEngine.px = (isErasing ? eraserSize : brushSize) * k;
     drawEngine.setBrush(isErasing ? selectedEraserBrushId : selectedBrushId);
     drawEngine.setColor(isErasing && !eraseToAlpha ? '#ffffff' : brushColor);
     if(rulerType && rulerGuide){
@@ -6357,12 +6633,14 @@
   (function(){
     const stage = document.getElementById('canvas-stage');
     const badge = document.getElementById('zoom-badge');
-    const MIN_SCALE = 1, MAX_SCALE = 8;
+    const MIN_SCALE = 1 / 3, MAX_SCALE = 100;   // pinch in to 33% (zoom out a little past full size, not endlessly)
+    //   // 10000% — zoom limit restored. (The canvas cut-off while moving is fixed separately below, it was never the limit itself.)
     // scale/tx/ty/rot live in outer scope now (stageScale/stageTx/stageTy/stageRot), shared with
     // the drawing code above, so a finger's mapped canvas point always matches the transform
     // that's actually on screen. rot is in degrees, completely free (can pass through 90/180/270
     // — e.g. to draw upside down).
     drawSurface.style.transformOrigin = '0 0';
+    let gesturing = false;   // true while two fingers are on the paper
 
     function apply(){
       const idle = stageScale === 1 && stageTx === 0 && stageTy === 0 && stageRot === 0;
@@ -6370,7 +6648,12 @@
         ? ''
         : `translate(${stageTx}px, ${stageTy}px) rotate(${stageRot}deg) scale(${stageScale})`;
       const rotShown = Math.abs(((stageRot % 360) + 540) % 360 - 180) !== 180;  // true whenever rot isn't a multiple of 360
-      if(stageScale > 1.01 || rotShown){
+      drawSurface.style.imageRendering = stageScale > 6 ? 'pixelated' : '';
+      // While fingers are moving/pinching the paper, keep it as ONE pinned GPU layer so panning is a
+      // pure compositor move (no re-drawing every frame -> no blank/cut-off tiles, esp. in the APK).
+      // Once the fingers lift, un-pin at deep zoom so the canvas re-draws crisp.
+      drawSurface.style.willChange = (gesturing || stageScale <= 4) ? 'transform' : 'auto';
+      if(stageScale > 1.01 || stageScale < 0.99 || rotShown){
         badge.textContent = Math.round(stageScale * 100) + '%' + (rotShown ? ' · ' + Math.round(((stageRot % 360) + 360) % 360) + '°' : '');
         badge.classList.add('show');
       } else {
@@ -6426,6 +6709,7 @@
         abortStrokeForGesture();                 // a second finger means "transform", not "draw" — drop any stroke just started (and undo its dot)
       }
       if(touches.size === 2){
+        gesturing = true; apply();
         const ids = [...touches.keys()];
         const p1 = touches.get(ids[0]), p2 = touches.get(ids[1]);
         // Read the layout ONCE, right here at gesture start — never again during the move
@@ -6471,6 +6755,7 @@
         activeTouchIds.delete(e.pointerId);
         if(touches.size < 2) pinch = null;
         if(touches.size === 0){ gestureLock = false; activeTouchIds.clear(); }
+        if(gesturing && touches.size < 2){ gesturing = false; apply(); }   // fingers up -> settle crisp
       }, true);
     });
 
@@ -6534,6 +6819,7 @@
     const px = Math.floor(p.x), py = Math.floor(p.y);
     if(px < 0 || py < 0 || px >= w || py >= h) return;
     setBrushColor(sampleCanvasColor(px, py));
+    commitColor();
     setActiveTool('Brush');   // picked -> back to drawing, ready to use that colour right away
     updateBrushPanelForTool();
   }
@@ -6689,15 +6975,22 @@
     }
   }
   function cancelPasteTransform(){
+    if(pasteState && pasteState.floatSource && pasteState.layer){
+      const fs = pasteState.floatSource;
+      pasteState.layer.canvas.getContext('2d').drawImage(pasteState.clip.canvas, fs.x, fs.y, fs.w, fs.h);
+      refreshThumbnails();
+    }
     if(pasteBoxEl){ pasteBoxEl.remove(); pasteBoxEl = null; }
     if(pasteActionsEl){ pasteActionsEl.remove(); pasteActionsEl = null; }
     pasteState = null;
   }
   function commitPasteTransform(){
     if(!pasteState) return;
-    const layer = getActiveLayer();
+    const layer = pasteState.layer || getActiveLayer();
+    const wasFloat = !!pasteState.floatSource;
+    pasteState.floatSource = null;      // committing, not cancelling: don't restore the original
     if(layer){
-      pushUndoSnapshot(layer);
+      if(!wasFloat) pushUndoSnapshot(layer);
       const ctx = layer.canvas.getContext('2d');
       if(layer.locked) ctx.globalCompositeOperation = 'source-atop';   // respect the layer's lock here too
       ctx.drawImage(pasteState.clip.canvas, pasteState.x, pasteState.y, pasteState.w, pasteState.h);
@@ -6839,6 +7132,7 @@
   const ALL_POPS = [sizePop, fadePop, colorPop, eraserTypePop, frameMenuEl];
   function popsOpen(){ return ALL_POPS.some(p => p.classList.contains('open')); }
   function closePops(){
+    if(colorPop.classList.contains('editing')){ colorPop.classList.remove('editing'); try{ commitColor(); }catch(_){} }
     ALL_POPS.forEach(p => p.classList.remove('open'));
     [bpSizeBtn, bpFadeBtn, bpColorBtn, bpBrushBtn].forEach(b => b.setAttribute('aria-expanded', 'false'));
   }
@@ -7076,8 +7370,9 @@
     const cw = sizePreview.clientWidth, ch = sizePreview.clientHeight;
     if(!cw || !ch) return;
     const dpr = window.devicePixelRatio || 1;
-    sizePreview.width = Math.round(cw * dpr);
-    sizePreview.height = Math.round(ch * dpr);
+    const tw = Math.round(cw * dpr), th = Math.round(ch * dpr);
+    if(sizePreview.width !== tw) sizePreview.width = tw;
+    if(sizePreview.height !== th) sizePreview.height = th;
     const ctx = sizePreview.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const isErasing = activeTool === 'Eraser';
@@ -7087,33 +7382,40 @@
     ctx.fillRect(0, 0, cw, ch);
     const shown = drawSurface.getBoundingClientRect().width || currentCanvasSize.w;
     const scale = (shown / currentCanvasSize.w) * canvasK();                       // canvas px -> screen px
-    let px = brushSize * scale, k = scale;
+    let px = (isErasing ? eraserSize : brushSize) * scale, k = scale;
     const fit = Math.min(1, (ch * 0.82) / px);                                     // keep huge sizes inside the preview
     if(isErasing) ctx.globalCompositeOperation = 'destination-out';
     runDemo(ctx, cw, ch, isErasing ? selectedEraserBrushId : selectedBrushId, '#000000', px * fit, k * fit, 7);
     ctx.globalCompositeOperation = 'source-over';
   }
   function setBrushSize(v){
-    brushSize = Math.max(1, Math.min(100, Math.round(v)));
-    sizeRange.value = brushSize;
-    sizeValEl.textContent = brushSize;
+    const c = Math.max(1, Math.min(100, Math.round(v)));
+    if(activeTool === 'Eraser') eraserSize = c; else brushSize = c;
+    sizeRange.value = c;
+    sizeValEl.textContent = c;
   }
-  sizeRange.addEventListener('input', () => { setBrushSize(Number(sizeRange.value)); drawSizePreview(); });
+  let sizePrevRaf = 0;
+  sizeRange.addEventListener('input', () => {
+    setBrushSize(Number(sizeRange.value));
+    if(sizePrevRaf) return;
+    sizePrevRaf = requestAnimationFrame(() => { sizePrevRaf = 0; drawSizePreview(); });
+  });
 
   // -- eraser fade: 0 = soft, gradual erase, 100 = hard-edged, complete erase in one pass --
   function drawFadePreview(){
     const cw = fadePreview.clientWidth, ch = fadePreview.clientHeight;
     if(!cw || !ch) return;
     const dpr = window.devicePixelRatio || 1;
-    fadePreview.width = Math.round(cw * dpr);
-    fadePreview.height = Math.round(ch * dpr);
+    const tw = Math.round(cw * dpr), th = Math.round(ch * dpr);
+    if(fadePreview.width !== tw) fadePreview.width = tw;
+    if(fadePreview.height !== th) fadePreview.height = th;
     const ctx = fadePreview.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#f4f2ee';
     ctx.fillRect(0, 0, cw, ch);
     const shown = drawSurface.getBoundingClientRect().width || currentCanvasSize.w;
     const scale = (shown / currentCanvasSize.w) * canvasK();
-    let px = brushSize * scale, k = scale;
+    let px = eraserSize * scale, k = scale;
     const fit = Math.min(1, (ch * 0.82) / px);
     ctx.globalCompositeOperation = 'destination-out';
     runDemo(ctx, cw, ch, selectedEraserBrushId, '#000000', px * fit, k * fit, 7);
@@ -7124,7 +7426,12 @@
     fadeRange.value = eraserFade;
     fadeValEl.textContent = eraserFade;
   }
-  fadeRange.addEventListener('input', () => { setEraserFade(Number(fadeRange.value)); drawFadePreview(); });
+  let fadePrevRaf = 0;
+  fadeRange.addEventListener('input', () => {
+    setEraserFade(Number(fadeRange.value));
+    if(fadePrevRaf) return;
+    fadePrevRaf = requestAnimationFrame(() => { fadePrevRaf = 0; drawFadePreview(); });
+  });
 
   // -- eraser type: Light (gradual) vs Full (solid, one-pass) --
   function renderEraserTypeList(){
@@ -7142,6 +7449,39 @@
   renderEraserTypeList();
 
   // -- color --
+  // Two bars sit above the swatches: "Selected" (the colour in use — tap it to open the colour
+  // picker already loaded with that colour, so you can adjust it) and "Recent" (colours you
+  // used before — tap one to bring it back). A colour only counts as "used" once you commit it
+  // (tap a swatch / recent / eyedropper, or let go of the picker), not while the picker slides.
+  const RECENT_MAX = 5;
+  let recentColors = [];
+  try{ recentColors = (JSON.parse(localStorage.getItem('anim_recent_colors') || '[]') || []).filter(h => /^#[0-9a-f]{6}$/.test(h)).slice(0, RECENT_MAX); }catch(_){}
+  let committedColor = DEFAULT_COLOR.toLowerCase();
+  const cbCurrentEl = document.getElementById('cb-current');
+  const cbRecentsEl = document.getElementById('cb-recents');
+  function renderColorBars(){
+    cbCurrentEl.style.background = brushColor;
+    cbCurrentEl.style.color = luminance(brushColor) > 0.6 ? '#1c1c1f' : '#ffffff';
+    cbCurrentEl.textContent = brushColor.toUpperCase();
+    cbRecentsEl.innerHTML = '';
+    recentColors.forEach(hex => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cb-chip';
+      b.style.background = hex;
+      b.setAttribute('aria-label', 'Recent color ' + hex);
+      b.addEventListener('click', () => { setBrushColor(hex); commitColor(); });
+      cbRecentsEl.appendChild(b);
+    });
+  }
+  function commitColor(){
+    // the colour you just picked goes to the front; the list keeps only the latest 5
+    const c = brushColor;
+    recentColors = [c].concat(recentColors.filter(h => h !== c)).slice(0, RECENT_MAX);
+    committedColor = c;
+    try{ localStorage.setItem('anim_recent_colors', JSON.stringify(recentColors)); }catch(_){}
+    renderColorBars();
+  }
   function buildSwatches(){
     swatchesEl.innerHTML = '';
     PALETTE.forEach(hex => {
@@ -7151,13 +7491,14 @@
       b.style.background = hex;
       b.dataset.hex = hex;
       b.setAttribute('aria-label', 'Color ' + hex);
-      b.addEventListener('click', () => setBrushColor(hex));
+      b.addEventListener('click', () => { setBrushColor(hex); commitColor(); });
       swatchesEl.appendChild(b);
     });
-    const custom = document.createElement('label');
+    const custom = document.createElement('button');
+    custom.type = 'button';
     custom.className = 'swatch custom';
     custom.setAttribute('aria-label', 'Custom color');
-    custom.appendChild(colorInput);
+    custom.addEventListener('click', openHsvEditor);
     swatchesEl.appendChild(custom);
   }
   function setBrushColor(hex){
@@ -7171,8 +7512,70 @@
       matched = matched || on;
     });
     swatchesEl.querySelector('.custom').classList.toggle('sel', !matched);
+    renderColorBars();
+    // if a swatch / recent was tapped while the editor is open, move the sliders to that colour
+    if(colorPop.classList.contains('editing') && !hsvDragging){ hsv = hexToHsv(brushColor, hsv.h); syncHsvUI(); }
   }
-  colorInput.addEventListener('input', () => setBrushColor(colorInput.value));
+
+  // ---- Hue / Saturation / Value editor ----
+  // Opens already set to the colour in use (so nudging Hue keeps you on the same blue, just shifted),
+  // with a Was | Now box so you can see what you're changing it to.
+  let hsv = {h:0, s:0, v:0}, hsvDragging = false;
+  const hsvEls = {
+    h: document.getElementById('hsv-h'), s: document.getElementById('hsv-s'), v: document.getElementById('hsv-v'),
+    hv: document.getElementById('hsv-h-v'), sv: document.getElementById('hsv-s-v'), vv: document.getElementById('hsv-v-v'),
+    was: document.getElementById('hsv-was'), now: document.getElementById('hsv-now')
+  };
+  function hexToHsv(hex, keepH){
+    const n = parseInt(hex.slice(1), 16);
+    const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    let h = keepH || 0;
+    if(d > 0){
+      if(mx === r) h = 60 * (((g - b) / d) % 6);
+      else if(mx === g) h = 60 * ((b - r) / d + 2);
+      else h = 60 * ((r - g) / d + 4);
+      if(h < 0) h += 360;
+    }
+    return {h: Math.round(h) % 361, s: Math.round((mx === 0 ? 0 : d / mx) * 100), v: Math.round(mx * 100)};
+  }
+  function hsvToHex(h, s, v){
+    s /= 100; v /= 100;
+    const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+    return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+  }
+  function syncHsvUI(){
+    hsvEls.h.value = hsv.h; hsvEls.s.value = hsv.s; hsvEls.v.value = hsv.v;
+    hsvEls.hv.textContent = hsv.h; hsvEls.sv.textContent = hsv.s; hsvEls.vv.textContent = hsv.v;
+    hsvEls.h.style.setProperty('--g', 'linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)');
+    hsvEls.s.style.setProperty('--g', 'linear-gradient(90deg,' + hsvToHex(hsv.h, 0, hsv.v) + ',' + hsvToHex(hsv.h, 100, hsv.v) + ')');
+    hsvEls.v.style.setProperty('--g', 'linear-gradient(90deg,#000,' + hsvToHex(hsv.h, hsv.s, 100) + ')');
+    const now = hsvToHex(hsv.h, hsv.s, hsv.v);
+    hsvEls.now.style.background = now;
+    hsvEls.now.style.color = luminance(now) > 0.6 ? '#1c1c1f' : '#ffffff';
+  }
+  function openHsvEditor(){
+    hsv = hexToHsv(brushColor, hsv.h);
+    hsvEls.was.style.background = brushColor;
+    hsvEls.was.style.color = luminance(brushColor) > 0.6 ? '#1c1c1f' : '#ffffff';
+    colorPop.classList.add('editing');
+    syncHsvUI();
+    placePop(colorPop, bpColorBtn);
+  }
+  ['h', 's', 'v'].forEach(k => {
+    hsvEls[k].addEventListener('input', () => {
+      hsv[k] = +hsvEls[k].value;
+      hsvDragging = true;
+      setBrushColor(hsvToHex(hsv.h, hsv.s, hsv.v));
+      hsvDragging = false;
+      syncHsvUI();
+    });
+    ['change','pointerup','touchend'].forEach(ev => hsvEls[k].addEventListener(ev, commitColor));
+  });
+  document.getElementById('hsv-done').addEventListener('click', () => { commitColor(); colorPop.classList.remove('editing'); placePop(colorPop, bpColorBtn); });
+  const cbCurBar = document.getElementById('cb-cur-bar');
+  cbCurBar.addEventListener('click', openHsvEditor);
+  cbCurBar.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openHsvEditor(); } });
   buildSwatches();
   setBrushColor(DEFAULT_COLOR);
   setBrushSize(DEFAULT_SIZE);
