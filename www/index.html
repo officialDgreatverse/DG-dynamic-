@@ -910,6 +910,7 @@
   .playback-group{display:flex;align-items:center;gap:14px;}
 
   .frame-strip{
+    position:relative;   /* makes the strip the tiles' offsetParent, so a dragged tile's position is measured from the strip itself */
     display:flex;
     align-items:center;
     gap:8px;
@@ -976,6 +977,38 @@
   }
   .frame-add svg{width:14px;height:14px;}
 
+  /* ---- bigger frame strip with the frame number always visible (inside the tile, so it is never clipped) ---- */
+  .frame-strip .frame-thumb,
+  .frame-strip .frame-add{width:62px;height:47px;border-radius:7px;}
+  .frame-strip .frame-thumb{border-width:2px;}
+  .frame-strip .frame-add svg{width:20px;height:20px;}
+  .frame-strip .frame-badge{
+    top:3px;
+    left:3px;
+    right:auto;
+    width:auto;
+    min-width:20px;
+    height:20px;
+    padding:0 5px;
+    border-radius:10px;
+    background:rgba(20,20,24,0.88);
+    color:#fff;
+    font-size:13px;
+    font-weight:800;
+    line-height:1;
+    box-shadow:0 1px 4px rgba(0,0,0,0.5);
+  }
+  .frame-strip .frame-thumb.selected .frame-badge{background:var(--accent-1);}
+  .frame-strip .frame-thumb.selected{box-shadow:0 0 0 2px rgba(255,79,139,0.28), 0 0 14px 3px rgba(255,79,139,0.42);}
+  .frame-strip .frame-thumb.selected.dragging{box-shadow:0 0 0 2px rgba(255,79,139,0.35), 0 0 16px 4px rgba(255,79,139,0.5), 0 6px 16px rgba(0,0,0,0.5);}
+  .frame-strip{gap:8px;padding:9px 8px;margin:-6px 0;}   /* padding gives the selected frame's glow room; margin cancels it out so the bar height is unchanged */
+  .frame-strip .frame-video-badge{font-size:10px;bottom:3px;left:3px;}
+  @media (orientation:landscape){
+    .frame-strip .frame-thumb,
+    .frame-strip .frame-add{width:54px;height:40px;}
+    .frame-strip .frame-badge{min-width:18px;height:18px;font-size:12px;}
+  }
+
   .frame-menu{
     position:fixed;
     display:none;
@@ -1005,6 +1038,31 @@
   .frame-menu button:active{background:var(--line);}
   .frame-menu button.danger{color:var(--accent-1);}
   .frame-menu button.disabled{color:var(--muted);pointer-events:none;}
+  .frame-move-bar{
+    position:fixed;
+    display:none;
+    gap:6px;
+    padding:5px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    z-index:501;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  }
+  .frame-move-bar.open{display:flex;}
+  .frame-move-bar button{
+    width:44px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    border:none;border-radius:10px;
+    background:#2c2c31;color:var(--text);
+    cursor:pointer;
+  }
+  .frame-move-bar button.done{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:#fff;}
+  .frame-move-bar button.disabled{opacity:0.3;pointer-events:none;}
+  .frame-thumb{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  .frame-menu .arrow-choice{display:none;align-items:center;gap:4px;color:var(--accent-1);}
+  .frame-menu.choosing .arrow-choice{display:flex;}
+  .frame-menu.choosing button:not(.arrow-choice){display:none;}
 
   .layer-btn{position:relative;}
   .layer-badge{
@@ -1183,6 +1241,22 @@
     color:var(--muted);
   }
   .layer-chevron svg{width:16px;height:16px;}
+  .layer-del{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    align-self:stretch;
+    flex-shrink:0;
+    width:36px;
+    background:none;
+    border:none;
+    padding:0;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .layer-del svg{width:17px;height:17px;}
+  .layer-del:active{color:var(--accent-1);}
+  .layer-del.disabled{opacity:0.3;pointer-events:none;}
   .layer-lock{
     display:flex;
     align-items:center;
@@ -2455,6 +2529,18 @@
       </div>
     </div>
 
+    <!-- ============ CONFIRM DIALOG (delete layer / delete frame) ============ -->
+    <div class="modal" id="confirm-modal" style="z-index:90">
+      <div class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+        <p class="modal-title" id="confirm-modal-title">Delete?</p>
+        <p class="field-label" id="confirm-modal-text" style="margin-bottom:20px"></p>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn modal-cancel" id="confirm-cancel">Cancel</button>
+          <button type="button" class="modal-btn modal-save ready" id="confirm-ok">Delete</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ GRID SIZE DIALOG ============ -->
     <div class="modal" id="grid-modal">
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="grid-modal-title">
@@ -2684,13 +2770,26 @@
   }
 
   // Synchronous: captures exactly what is on screen right now and starts encoding what changed.
+  function thumbSig(f){ return f.layers.map(l => l.id + ':' + (l.visible !== false ? 1 : 0) + ':' + l.opacity).join(','); }
   function snapshotProject(){
     const proj = currentProject;
     const framesSnap = frames.map(f => {
       const isVideo = f.type === 'video' && f.video;
       if(isVideo && !f.video.assetId){ f.video.assetId = uid(); f.video.assetSaved = false; }
+      // the frame's small preview picture: only re-made when the frame actually changed
+      if(!f._tkey) f._tkey = uid();
+      if(frameIsLoaded(f) && (f._thumbBlobP === undefined || f._thumbSig !== thumbSig(f) || f.layers.some(l => l._dirty || !l._blobP))){
+        try{
+          const tc = document.createElement('canvas');
+          drawFrameThumb(tc, f);
+          f._thumbBlobP = canvasToBlob(tc, 'image/jpeg', 0.72);
+          f._thumbSig = thumbSig(f);
+          f._thumbWrite = true;
+        }catch(_){}
+      }
       f.layers.forEach(prepareLayerForSave);
       return {
+        ref: f, tkey: f._tkey, thumbP: f._thumbBlobP, thumbWrite: !!f._thumbWrite,
         type: isVideo ? 'video' : 'picture',
         layerSeq: f.layerSeq || 1,
         activeIdx: Math.max(0, f.layers.findIndex(l => l.id === f.activeLayerId)),
@@ -2706,11 +2805,13 @@
         } : null
       };
     });
-    let thumbP = Promise.resolve(null);
+    let thumbP = Promise.resolve(proj.thumb || null);     // frame 1 not loaded yet: keep the existing home picture
     try{
-      const tc = document.createElement('canvas');
-      drawFrameThumb(tc, frames[0]);
-      thumbP = canvasToBlob(tc, 'image/jpeg', 0.72);
+      if(frameIsLoaded(frames[0]) || frames[0]._thumbC){
+        const tc = document.createElement('canvas');
+        drawFrameThumb(tc, frames[0]);
+        thumbP = canvasToBlob(tc, 'image/jpeg', 0.72);
+      }
     }catch(_){}
     return {
       proj, frames: framesSnap, thumbP,
@@ -2722,6 +2823,7 @@
   async function writeSnapshot(s){
     const pid = s.proj.id;
     const thumb = await s.thumbP;
+    if(thumb) s.proj.thumb = thumb;
     const keep = new Set();
     const writes = [];
     const dataFrames = [];
@@ -2745,7 +2847,15 @@
         videoOut = { assetId: f.video.assetId, natW: f.video.natW, natH: f.video.natH,
                      duration: f.video.duration, zoom: f.video.zoom, box: f.video.box };
       }
-      dataFrames.push({ type: f.type, layerSeq: f.layerSeq, activeIdx: f.activeIdx, layers: layersOut, video: videoOut });
+      let tkeyOut = null;
+      if(f.tkey && f.thumbP){
+        const tk = pid + '|T|' + f.tkey;
+        if(f.thumbWrite){
+          const tb = await f.thumbP;
+          if(tb){ writes.push({ key: tk, blob: tb, thumbFrame: f }); keep.add(tk); tkeyOut = f.tkey; }
+        } else { keep.add(tk); tkeyOut = f.tkey; }
+      }
+      dataFrames.push({ type: f.type, layerSeq: f.layerSeq, activeIdx: f.activeIdx, layers: layersOut, video: videoOut, tkey: tkeyOut });
     }
     const meta = {
       id: pid, name: s.proj.name, created: s.proj.created, updated: Date.now(),
@@ -2768,6 +2878,7 @@
     });
     writes.forEach(w => {
       if(w.video) w.video.ref.assetSaved = true;
+      else if(w.thumbFrame){ if(w.thumbFrame.ref._thumbBlobP === w.thumbFrame.thumbP) w.thumbFrame.ref._thumbWrite = false; }
       else if(w.layer.ref._blobP === w.layer.blobP) w.layer.ref._needsWrite = false;
     });
   }
@@ -2788,6 +2899,136 @@
       }
     });
     return _saving;
+  }
+
+  // ================= SAMPLE PROJECT: two skeletons fighting (50 frames) =================
+  // Made once, the first time the app runs, so there is a finished animation to open and play with.
+  // Each frame is its own picture on "Layer 1", saved exactly like a project you drew yourself.
+  const SAMPLE_ID = 'sample-skeleton-fight';
+  const SK_G = { lean:5, tilt:0, a1:35, a2:150, b1:20, b2:140, c1:25, c2:5, d1:-25, d2:-10 };
+  function skP(o){ const r = Object.assign({}, SK_G); return Object.assign(r, o); }
+  const SK_A = [
+    [0,  skP({x:260})],
+    [10, skP({x:248, lean:-8, a1:-50, a2:-20, b1:30, b2:150, c1:20, d1:-35})],
+    [18, skP({x:340, lean:20, a1:88, a2:90, b1:-10, b2:110, c1:50, c2:25, d1:-40, d2:-20})],
+    [26, skP({x:300, lean:8})],
+    [32, skP({x:290, lean:6})],
+    [38, skP({x:225, lean:-24, tilt:-18, a1:-30, a2:-70, b1:-50, b2:-100, c1:5, c2:-15, d1:-35, d2:-20})],
+    [44, skP({x:255})],
+    [49, skP({x:260})]
+  ];
+  const SK_B = [
+    [0,  skP({x:560})],
+    [10, skP({x:565})],
+    [18, skP({x:600, lean:-26, tilt:-16, a1:-35, a2:-80, b1:-55, b2:-110, c1:0, c2:-15, d1:-30, d2:-20})],
+    [26, skP({x:568})],
+    [32, skP({x:545, lean:-12, a1:60, a2:140, c1:85, c2:88, d1:-5, d2:-5})],
+    [38, skP({x:530, lean:-16, a1:70, a2:150, c1:92, c2:92, d1:-8, d2:-5})],
+    [44, skP({x:558})],
+    [49, skP({x:560})]
+  ];
+  function skPose(keys, f){
+    for(let i = 0; i < keys.length - 1; i++){
+      const a = keys[i], b = keys[i + 1];
+      if(f >= a[0] && f <= b[0]){
+        const u = b[0] === a[0] ? 0 : (f - a[0]) / (b[0] - a[0]), t = u * u * (3 - 2 * u), r = {};
+        for(const k in a[1]) r[k] = a[1][k] + (b[1][k] - a[1][k]) * t;
+        return r;
+      }
+    }
+    return keys[keys.length - 1][1];
+  }
+  // Draws one frame of the fight (ink on transparent, so it sits on the paper like a hand drawing).
+  function skRenderFrame(ctx, f, W, H){
+    const S = W / 800, GROUND = 340, INK = '#2b2824', SOFT = '#6f695f', RAD = Math.PI / 180;
+    ctx.setTransform(S, 0, 0, S, 0, (H - 400 * S) / 2 + 20 * S);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    function limb(pts, col, w){
+      ctx.strokeStyle = col; ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for(let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
+      ctx.fillStyle = col;
+      pts.forEach(q => { ctx.beginPath(); ctx.arc(q[0], q[1], w * .95, 0, 6.3); ctx.fill(); });
+    }
+    function draw(p, dir){
+      const at = (s, ang, L) => [s[0] + L * Math.sin(ang * RAD) * dir, s[1] + L * Math.cos(ang * RAD)];
+      const dF = 55 * Math.cos(p.c1 * RAD) + 55 * Math.cos(p.c2 * RAD), dB = 55 * Math.cos(p.d1 * RAD) + 55 * Math.cos(p.d2 * RAD);
+      const hip = [p.x, GROUND - Math.max(dF, dB)];
+      const ux = Math.sin(p.lean * RAD) * dir, uy = -Math.cos(p.lean * RAD);
+      const sh = [hip[0] + ux * 72, hip[1] + uy * 72];
+      const hd = [hip[0] + Math.sin((p.lean + p.tilt) * RAD) * dir * 104, hip[1] - Math.cos((p.lean + p.tilt) * RAD) * 104];
+      const bk = at(sh, p.b1, 42); limb([sh, bk, at(bk, p.b2, 40)], SOFT, 4);
+      const dk = at(hip, p.d1, 55); limb([hip, dk, at(dk, p.d2, 55)], SOFT, 5);
+      ctx.strokeStyle = INK; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(hip[0], hip[1]); ctx.lineTo(sh[0], sh[1]); ctx.stroke();
+      for(let r = 0; r < 4; r++){
+        const t = .45 + r * .16, cx = hip[0] + (sh[0] - hip[0]) * t, cy = hip[1] + (sh[1] - hip[1]) * t, w = 17 - r * 2.5;
+        ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx + uy * w, cy - ux * w); ctx.lineTo(cx - uy * w, cy + ux * w); ctx.stroke();
+      }
+      ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(hip[0] - 11, hip[1]); ctx.lineTo(hip[0] + 11, hip[1]); ctx.stroke();
+      ctx.fillStyle = '#fbfaf6'; ctx.lineWidth = 3; ctx.strokeStyle = INK;
+      ctx.beginPath(); ctx.arc(hd[0], hd[1], 17, 0, 6.3); ctx.fill(); ctx.stroke();
+      ctx.fillRect(hd[0] - 9, hd[1] + 9, 18, 11); ctx.strokeRect(hd[0] - 9, hd[1] + 9, 18, 11);
+      ctx.fillStyle = INK;
+      ctx.beginPath(); ctx.arc(hd[0] + 5 * dir, hd[1] - 2, 4.2, 0, 6.3); ctx.arc(hd[0] - 6 * dir, hd[1] - 2, 3.6, 0, 6.3); ctx.fill();
+      ctx.fillRect(hd[0] - 6, hd[1] + 12, 12, 2);
+      const fk = at(hip, p.c1, 55), foot = at(fk, p.c2, 55); limb([hip, fk, foot], INK, 5);
+      const ek = at(sh, p.a1, 42), hand = at(ek, p.a2, 40); limb([sh, ek, hand], INK, 4);
+      return { hand: hand, foot: foot };
+    }
+    function burst(x, y, s, txt){
+      ctx.save(); ctx.translate(x, y); ctx.fillStyle = '#ffcf5a'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath();
+      for(let i = 0; i < 16; i++){ const a = i * Math.PI / 8, r = (i % 2 ? .45 : 1) * s; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#7c1d0b'; ctx.font = 'bold ' + Math.round(s * .42) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(txt, 0, s * .15);
+      ctx.restore();
+    }
+    ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, GROUND + 4); ctx.lineTo(800, GROUND + 4); ctx.stroke();
+    const a = draw(skPose(SK_A, f), 1), b = draw(skPose(SK_B, f), -1);
+    if(f >= 17 && f <= 21) burst(a.hand[0] + 6, a.hand[1], 46 - (f - 17) * 6, 'POW!');
+    if(f >= 37 && f <= 41) burst(b.foot[0] - 6, b.foot[1], 46 - (f - 37) * 6, 'CRACK!');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  async function seedSampleProject(){
+    let seeded = false;
+    try{ seeded = localStorage.getItem('sampleSkeletonSeeded') === '1'; }catch(_){}
+    if(seeded) return false;
+    try{
+      if(await idbGet('meta', SAMPLE_ID)){ try{ localStorage.setItem('sampleSkeletonSeeded', '1'); }catch(_){} return false; }
+      const W = 1280, H = 720, N = 50, pid = SAMPLE_ID;
+      const tsz = { w: 160, h: Math.round(160 * H / W) };
+      const blobs = [], framesData = [];
+      let homeThumb = null;
+      for(let f = 0; f < N; f++){
+        const c = document.createElement('canvas'); c.width = W; c.height = H;
+        skRenderFrame(c.getContext('2d'), f, W, H);
+        const lkey = uid(), tkey = uid();
+        const layerBlob = await canvasToBlob(c, 'image/png');
+        const tc = document.createElement('canvas'); tc.width = tsz.w; tc.height = tsz.h;
+        const tx = tc.getContext('2d'); tx.fillStyle = '#f4f2ee'; tx.fillRect(0, 0, tsz.w, tsz.h); tx.drawImage(c, 0, 0, tsz.w, tsz.h);
+        const thumbBlob = await canvasToBlob(tc, 'image/jpeg', 0.72);
+        if(!layerBlob || !thumbBlob) throw new Error('could not draw sample frame');
+        if(f === 0) homeThumb = thumbBlob;
+        blobs.push([pid + '|L|' + lkey, layerBlob], [pid + '|T|' + tkey, thumbBlob]);
+        framesData.push({ type: 'picture', layerSeq: 1, activeIdx: 0, layers: [{ key: lkey, name: 'Layer 1', opacity: 100, visible: true, locked: false }], video: null, tkey: tkey });
+        c.width = c.height = 0;
+        await new Promise(r => setTimeout(r, 0));      // let the screen stay smooth while this runs
+      }
+      const now = Date.now();
+      const meta = { id: pid, name: 'Skeleton Fight (sample)', created: now, updated: now, w: W, h: H, fps: 12, frameCount: N, thumb: homeThumb };
+      const db = await dbOpen();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(['meta', 'data', 'blobs'], 'readwrite');
+        tx.objectStore('meta').put(meta);
+        tx.objectStore('data').put({ id: pid, selectedIndex: 0, frames: framesData });
+        const bs = tx.objectStore('blobs');
+        blobs.forEach(b => bs.put(b[1], b[0]));
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      try{ localStorage.setItem('sampleSkeletonSeeded', '1'); }catch(_){}
+      return true;
+    }catch(e){ console.warn('sample project failed', e); return false; }
   }
 
   // ---- Home screen: list of saved projects ----
@@ -2870,6 +3111,102 @@
     });
   }
 
+  // ================= LAZY FRAMES =================
+  // Only a handful of frames keep their full-size pictures in memory. Every other frame stays
+  // saved on the phone (and shows its small thumbnail) and is loaded the moment it's needed.
+  const MAX_FULL_FRAMES = 12;
+  const PLAY_LOOKAHEAD = 6;
+  let _frameTick = 0;
+  function frameIsLoaded(f){ return !f.layers || !f.layers.some(l => l._unloaded); }
+  function ensureFrameLoaded(f){
+    f._used = ++_frameTick;
+    if(frameIsLoaded(f)) return Promise.resolve();
+    if(f._loadP) return f._loadP;
+    const p = (async () => {
+      const need = f.layers.filter(l => l._unloaded && l._lazyKey);
+      if(need.length){
+        const got = await idbGetBlobs(need.map(l => l._lazyKey));
+        need.forEach((l, i) => { l._blobP = Promise.resolve(got[i]); l._lazyKey = null; });
+      }
+      await Promise.all(f.layers.filter(l => l._unloaded).map(async l => {
+        const blob = await l._blobP;
+        l.canvas.width = currentCanvasSize.w; l.canvas.height = currentCanvasSize.h;
+        await drawBlobOnCanvas(blob, l.canvas);
+        if(!blob) l._dirty = true;
+        l._unloaded = false;
+      }));
+    })().catch(e => { console.warn('frame load failed', e); }).then(() => { f._loadP = null; });
+    f._loadP = p;
+    return p;
+  }
+  function cacheThumb(f){
+    if(f._thumbC) return;
+    const c = document.createElement('canvas');
+    drawFrameThumb(c, f);      // a frame that isn't selected keeps its small picture in _thumbC
+  }
+  async function evictFrame(f){
+    if(f.selected || f._evicting || !frameIsLoaded(f)) return;
+    if((f.undoStack && f.undoStack.length) || (f.redoStack && f.redoStack.length)) return;
+    if(f.layers.some(l => l._dirty || !l._blobP)) return;
+    f._evicting = true;
+    try{
+      const ps = f.layers.map(l => l._blobP);
+      const blobs = await Promise.all(ps);
+      if(blobs.some(b => !b)) return;                                    // never drop pictures that aren't safely saved
+      if(f.selected || !frameIsLoaded(f)) return;
+      if(f.layers.some((l, i) => l._dirty || l._blobP !== ps[i])) return; // changed while we waited
+      cacheThumb(f);
+      if(!f._thumbC) return;
+      f.layers.forEach(l => { l.canvas.width = 1; l.canvas.height = 1; l._unloaded = true; });
+    }finally{ f._evicting = false; }
+  }
+  function trimFrames(){
+    const sel = frames.findIndex(f => f.selected);
+    const loaded = frames.filter((f, i) => frameIsLoaded(f) && !f.selected && !(sel >= 0 && Math.abs(i - sel) <= 1));
+    const room = MAX_FULL_FRAMES - 3;      // the selected frame and its two neighbours always stay
+    if(loaded.length <= room) return;
+    loaded.sort((a, b) => (a._used || 0) - (b._used || 0));
+    loaded.slice(0, loaded.length - room).forEach(f => { evictFrame(f); });
+  }
+  // Old projects have no thumbnails yet. Make them one frame at a time in the background (never
+  // blocking the screen), then save so the next open is instant.
+  async function makeMissingThumbs(list, pid){
+    for(let i = 0; i < list.length; i++){
+      const f = list[i];
+      if(!currentProject || currentProject.id !== pid) return;
+      if(!frames.includes(f) || f._thumbC) continue;
+      await new Promise(r => setTimeout(r, 40));            // let the screen breathe between frames
+      if(!currentProject || currentProject.id !== pid) return;
+      try{
+        await ensureFrameLoaded(f);
+        if(!frames.includes(f) || !frameIsLoaded(f)) continue;
+        if(f.selected){ cacheThumb(f); }
+        const tc = document.createElement('canvas');
+        drawFrameThumb(tc, f);
+        if(!f._thumbC && !f.selected){ /* drawFrameThumb caches it when not selected */ }
+        f._thumbBlobP = canvasToBlob(tc, 'image/jpeg', 0.72);
+        f._thumbSig = thumbSig(f);
+        f._thumbWrite = true;
+        if(!f._tkey) f._tkey = uid();
+        frameStripEls.forEach(el => {
+          const c = el.querySelector('.frame-thumb[data-n="' + f.n + '"] canvas');
+          if(c) drawFrameThumb(c, f);
+        });
+        trimFrames();
+      }catch(e){ console.warn('thumbnail failed', e); }
+      if(i % 10 === 9) markProjectChanged();
+    }
+    markProjectChanged();
+  }
+  function preloadAround(f){
+    const i = frames.indexOf(f);
+    if(i < 0) return;
+    [1, -1].forEach(k => {
+      const t = frames[i + k];
+      if(t) ensureFrameLoaded(t);
+    });
+  }
+
   // Rebuild a saved project on screen, exactly where you left it (same frame, same layer).
   let _opening = false;
   async function openProject(id){
@@ -2879,12 +3216,16 @@
       const meta = await idbGet('meta', id);
       const data = await idbGet('data', id);
       if(!meta || !data){ alert('Could not open this project.'); return; }
+      const selIdx = Math.min(data.selectedIndex || 0, data.frames.length - 1);
       const keys = [];
-      data.frames.forEach(f => {
-        f.layers.forEach(l => keys.push(id + '|L|' + l.key));
+      data.frames.forEach((f, fi) => {
+        if(Math.abs(fi - selIdx) <= 1) f.layers.forEach(l => keys.push(id + '|L|' + l.key));   // only the frame you were on + neighbours
         if(f.video) keys.push(id + '|V|' + f.video.assetId);
+        if(f.tkey) keys.push(id + '|T|' + f.tkey);                                              // small pictures for the whole timeline
       });
       const blobs = await idbGetBlobs(keys);
+      const B = {};
+      keys.forEach((k, i) => { B[k] = blobs[i]; });
 
       projectLoading = true;
       currentProject = null;
@@ -2901,33 +3242,59 @@
       const maxLayerCount = data.frames.reduce((m, fd) => Math.max(m, fd.layers.length), 0);
       const sharedIds = [];
       for(let i = 0; i < maxLayerCount; i++) sharedIds.push(++layerUid);
-      let bi = 0;
+      const decodeJobs = [];
+      const thumbJobs = [];
+      const legacy = [];      // frames saved before thumbnails existed: their thumbnails get made quietly afterwards
       for(let fi = 0; fi < data.frames.length; fi++){
         const fd = data.frames[fi];
         const f = { n: fi + 1, selected: false, layers: [], activeLayerId: null,
                     layerSeq: fd.layerSeq || 1, undoStack: [], redoStack: [] };
+        const tblob = fd.tkey ? B[id + '|T|' + fd.tkey] : null;
+        // frames far from the one you were on stay unloaded: nothing about them is read until needed
+        const lazy = Math.abs(fi - selIdx) > 1;
         for(let li = 0; li < fd.layers.length; li++){
           const ld = fd.layers[li];
-          const l = makeLayer(ld.name, sharedIds[li]);
+          const l = makeLayer(ld.name, sharedIds[li], lazy);
           l.opacity = ld.opacity; l.visible = ld.visible !== false; l.locked = !!ld.locked;
-          const blob = blobs[bi++];
-          await drawBlobOnCanvas(blob, l.canvas);
+          const blob = lazy ? null : B[id + '|L|' + ld.key];
+          if(blob) decodeJobs.push({ blob: blob, canvas: l.canvas });   // decoded in parallel below
           l._key = ld.key;
           l._blobP = Promise.resolve(blob);
+          if(lazy) l._lazyKey = id + '|L|' + ld.key;                     // fetched from storage only when this frame is needed
           l._needsWrite = false;
-          l._dirty = !blob;   // a layer whose file went missing gets rewritten (blank) on the next save
+          l._dirty = !blob && !lazy;   // a layer whose file went missing gets rewritten (blank) on the next save
           f.layers.push(l);
         }
+        if(fd.tkey && tblob){
+          f._tkey = fd.tkey; f._thumbBlobP = Promise.resolve(tblob); f._thumbWrite = false;
+          const tsz = thumbPixelSize();
+          const tcv = document.createElement('canvas'); tcv.width = tsz.w; tcv.height = tsz.h;
+          f._thumbC = tcv;
+          thumbJobs.push(drawBlobOnCanvas(tblob, tcv));
+        } else if(lazy) legacy.push(f);
         if(!f.layers.length){ const l = makeLayer('Layer 1'); f.layers.push(l); }
         f.activeLayerId = (f.layers[fd.activeIdx] || f.layers[f.layers.length - 1]).id;
         if(fd.type === 'video' && fd.video){
-          const vblob = blobs[bi++];
+          const vblob = B[id + '|V|' + fd.video.assetId];
           f.type = 'video';
           f.video = { src: vblob ? URL.createObjectURL(vblob) : '', natW: fd.video.natW, natH: fd.video.natH,
                       duration: fd.video.duration, box: fd.video.box, zoom: fd.video.zoom || 1,
                       blob: vblob, assetId: fd.video.assetId, assetSaved: true };
         }
+        f._thumbSig = thumbSig(f);
+        f._used = 0;
         frames.push(f);
+      }
+      // Decode all the saved pictures at the same time (8 at once) instead of one after another.
+      {
+        let next = 0;
+        const worker = async () => {
+          while(next < decodeJobs.length){
+            const j = decodeJobs[next++];
+            await drawBlobOnCanvas(j.blob, j.canvas);
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(8, decodeJobs.length) }, worker).concat(thumbJobs));
       }
       if(!frames.length) frames.push({ n: 1, selected: true, layers: [makeLayer('Layer 1')], layerSeq: 1, undoStack: [], redoStack: [] });
       frames.forEach((f, i) => { f.selected = (i === Math.min(data.selectedIndex || 0, frames.length - 1)); });
@@ -2937,10 +3304,12 @@
       updateHistoryButtons();
       updateOnionOverlay();
       updateGridOverlay();
-      currentProject = { id: meta.id, name: meta.name, created: meta.created };
+      currentProject = { id: meta.id, name: meta.name, created: meta.created, thumb: meta.thumb || null };
       projectLoading = false;
       showPage('page-editor');
       requestAnimationFrame(fitCanvasSurface);
+      { const cf = currentFrame(); if(cf){ cf._used = ++_frameTick; preloadAround(cf); } }
+      if(legacy.length) makeMissingThumbs(legacy, meta.id);
     }catch(e){
       console.warn('open project failed', e);
       alert('Could not open this project.');
@@ -3074,17 +3443,25 @@
   frameMenuEl.innerHTML =
     '<button data-act="copy">Copy</button>' +
     '<button data-act="paste">Paste</button>' +
-    '<button data-act="delete" class="danger">Delete</button>';
+    '<button data-act="move">Move</button>' +
+    '<button data-act="delete" class="danger">Delete</button>' +
+    '<button data-act="paste-back" class="arrow-choice" aria-label="Paste behind this frame"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>' +
+    '<button data-act="paste-front" class="arrow-choice" aria-label="Paste in front of this frame">Front<svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
   document.body.appendChild(frameMenuEl);
   let frameMenuTargetN = null;
 
+  function setFrameMenuChoice(on){          // true = show only the Back / Front arrows
+    frameMenuEl.classList.toggle('choosing', on);
+  }
   function closeFrameMenu(){
     frameMenuEl.classList.remove('open');
+    setFrameMenuChoice(false);
     frameMenuTargetN = null;
   }
   function openFrameMenu(n, anchorEl){
     closePops();
     frameMenuTargetN = n;
+    setFrameMenuChoice(false);
     frameMenuEl.querySelector('[data-act="paste"]').classList.toggle('disabled', !frameClipboard);
     frameMenuEl.classList.add('open');
     const r = anchorEl.getBoundingClientRect();
@@ -3096,14 +3473,91 @@
     frameMenuEl.style.left = left + 'px';
     frameMenuEl.style.top = top + 'px';
   }
+  frameMenuEl.querySelector('[data-act="move"]').onclick = () => { const n = frameMenuTargetN; closeFrameMenu(); openMoveBar(n); };
   frameMenuEl.querySelector('[data-act="copy"]').onclick = () => { copyFrame(frameMenuTargetN); closeFrameMenu(); };
-  frameMenuEl.querySelector('[data-act="paste"]').onclick = () => { pasteFrame(frameMenuTargetN); closeFrameMenu(); };
+  // Paste first asks where: Back = before this frame, Front = after it (further along the timeline)
+  frameMenuEl.querySelector('[data-act="paste"]').onclick = () => { setFrameMenuChoice(true); };
+  frameMenuEl.querySelector('[data-act="paste-back"]').onclick = () => { const n = frameMenuTargetN; closeFrameMenu(); pasteFrame(n, 'back'); };
+  frameMenuEl.querySelector('[data-act="paste-front"]').onclick = () => { const n = frameMenuTargetN; closeFrameMenu(); pasteFrame(n, 'front'); };
   frameMenuEl.querySelector('[data-act="delete"]').onclick = () => {
     const n = frameMenuTargetN;
     closeFrameMenu();
-    if(frames.length > 1 && !confirm('Delete frame ' + n + '? This cannot be undone.')) return;
-    deleteFrame(n);
+    if(frames.length > 1) askConfirm('Delete frame ' + n + '?', 'This cannot be undone.', () => deleteFrame(n));
+    else deleteFrame(n);
   };
+
+  // ---- Move bar: ◀ ▶ nudge the selected frame one place at a time, ✓ when it is where you want it ----
+  const moveBarEl = document.createElement('div');
+  moveBarEl.className = 'frame-move-bar';
+  moveBarEl.innerHTML =
+    '<button type="button" data-mv="back" aria-label="Move frame back"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+    '<button type="button" data-mv="front" aria-label="Move frame forward"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+    '<button type="button" data-mv="done" class="done" aria-label="Done moving"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+  document.body.appendChild(moveBarEl);
+  let moveBarFrame = null;
+  function closeMoveBar(){ moveBarEl.classList.remove('open'); moveBarFrame = null; }
+  function positionMoveBar(){
+    if(!moveBarFrame) return;
+    let thumb = null;
+    for(const el of frameStripEls){
+      const t = el.querySelector(`.frame-thumb[data-n="${moveBarFrame.n}"]`);
+      if(t && t.getBoundingClientRect().width > 0){ thumb = t; break; }
+    }
+    if(!thumb) return;
+    const r = thumb.getBoundingClientRect();
+    const bw = moveBarEl.offsetWidth, bh = moveBarEl.offsetHeight;
+    let left = Math.max(6, Math.min(r.left + r.width / 2 - bw / 2, window.innerWidth - bw - 6));
+    let top = r.top - bh - 8;
+    if(top < 6) top = r.bottom + 8;
+    moveBarEl.style.left = left + 'px';
+    moveBarEl.style.top = top + 'px';
+    const idx = frames.indexOf(moveBarFrame);
+    moveBarEl.querySelector('[data-mv="back"]').classList.toggle('disabled', idx <= 0);
+    moveBarEl.querySelector('[data-mv="front"]').classList.toggle('disabled', idx >= frames.length - 1);
+  }
+  function openMoveBar(n){
+    const f = frames.find(x => x.n === n);
+    if(!f) return;
+    moveBarFrame = f;
+    moveBarEl.classList.add('open');
+    positionMoveBar();
+    setTimeout(positionMoveBar, 260);
+  }
+  function nudgeMoveFrame(dir){
+    if(!moveBarFrame) return;
+    const idx = frames.indexOf(moveBarFrame);
+    const to = idx + dir;
+    if(idx < 0 || to < 0 || to >= frames.length) return;
+    frames.splice(idx, 1);
+    frames.splice(to, 0, moveBarFrame);
+    frames.forEach((fr, i) => fr.n = i + 1);
+    renderFrameStrips();
+    updateOnionOverlay();
+    markProjectChanged();
+    positionMoveBar();
+    setTimeout(positionMoveBar, 260);
+  }
+  moveBarEl.querySelector('[data-mv="back"]').addEventListener('click', () => nudgeMoveFrame(-1));
+  moveBarEl.querySelector('[data-mv="front"]').addEventListener('click', () => nudgeMoveFrame(1));
+  moveBarEl.querySelector('[data-mv="done"]').addEventListener('click', closeMoveBar);
+
+  // ---- in-app confirm dialog: title, message, then runs onYes only if the person taps Delete ----
+  let confirmYes = null;
+  function askConfirm(title, text, onYes){
+    const m = document.getElementById('confirm-modal');
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-text').textContent = text;
+    confirmYes = onYes;
+    m.classList.add('open');
+  }
+  function closeConfirm(){ document.getElementById('confirm-modal').classList.remove('open'); confirmYes = null; }
+  document.getElementById('confirm-cancel').addEventListener('click', closeConfirm);
+  document.getElementById('confirm-ok').addEventListener('click', () => {
+    const fn = confirmYes;
+    closeConfirm();
+    if(fn) fn();
+  });
+  document.getElementById('confirm-modal').addEventListener('click', e => { if(e.target.id === 'confirm-modal') closeConfirm(); });
 
   // ---- live thumbnails: frame-strip tiles + layer-list tiles mirror what's actually drawn ----
   function thumbPixelSize(){
@@ -3111,11 +3565,29 @@
     const ar = currentCanvasSize.h / currentCanvasSize.w;
     return { w: maxW, h: Math.max(1, Math.round(maxW * ar)) };
   }
+  // Every frame keeps one small finished picture of itself (_thumbC). Rebuilding the strip then
+  // just stamps that tiny picture instead of re-drawing every full-size layer of every frame --
+  // that re-drawing was what made pasting / switching frames slow (and RAM-hungry) late in a project.
+  // The frame you are on is always drawn live, and its picture is dropped so it is rebuilt fresh.
+  function invalidateThumbCache(){ frames.forEach(fr => { if(frameIsLoaded(fr)) fr._thumbC = null; }); }
   function drawFrameThumb(canvas, frame){
     if(!canvas || !frame || !frame.layers) return;
     const sz = thumbPixelSize();
     if(canvas.width !== sz.w || canvas.height !== sz.h){ canvas.width = sz.w; canvas.height = sz.h; }
     const ctx = canvas.getContext('2d');
+    const tc = frame._thumbC;
+    if(!frameIsLoaded(frame)){             // not loaded: show its saved small picture, never its (empty) layers
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#f4f2ee';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if(tc) ctx.drawImage(tc, 0, 0, canvas.width, canvas.height);
+      return;
+    }
+    if(!frame.selected && tc && tc.width === canvas.width && tc.height === canvas.height){
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(tc, 0, 0);
+      return;
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#f4f2ee';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3125,6 +3597,13 @@
       ctx.drawImage(l.canvas, 0, 0, canvas.width, canvas.height);
     });
     ctx.globalAlpha = 1;
+    if(frame.selected) frame._thumbC = null;
+    else {
+      const keep = document.createElement('canvas');
+      keep.width = canvas.width; keep.height = canvas.height;
+      keep.getContext('2d').drawImage(canvas, 0, 0);
+      frame._thumbC = keep;
+    }
   }
   function drawLayerThumb(canvas, layer){
     if(!canvas || !layer) return;
@@ -3138,7 +3617,7 @@
   // tiles (in both frame strips) and the active layer's row tile, without rebuilding any lists.
   function refreshThumbnails(){
     const f = currentFrame();
-    if(f && f.layers) f.layers.forEach(l => { l._dirty = true; });   // pixels on this frame may have changed -> re-save them
+    if(f){ f._thumbC = null; const al = getActiveLayer(); if(al) al._dirty = true; }   // the layer being edited changed -> re-save just that one
     markProjectChanged();
     if(f) frameStripEls.forEach(el => {
       const c = el.querySelector(`.frame-thumb[data-n="${f.n}"] canvas`);
@@ -3178,6 +3657,7 @@
     const idx = frames.indexOf(f);
     const prev = idx > 0 ? frames[idx - 1] : null;
     if(!prev || !prev.layers) return;
+    if(!frameIsLoaded(prev)){ ensureFrameLoaded(prev).then(() => { if(currentFrame() === f) updateOnionOverlay(); }); return; }
     ctx.globalAlpha = 0.35;
     prev.layers.forEach(l => {
       if(!l.visible) return;
@@ -3247,6 +3727,7 @@
   gridModalEl.addEventListener('click', e => { if(e.target === gridModalEl) gridModalEl.classList.remove('open'); });
 
   function renderFrameStrip(el){
+    const keepScroll = el.scrollLeft;      // remember where the strip was, so tapping a frame doesn't move it
     el.innerHTML = '';
     frames.forEach(f => {
       const thumb = document.createElement('button');
@@ -3267,14 +3748,22 @@
       };
       el.appendChild(thumb);
       drawFrameThumb(thumb.querySelector('canvas'), f);
-      if(f.selected) thumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       bindFrameDrag(el, thumb, f);
     });
     const add = document.createElement('button');
     add.className = 'frame-add';
     add.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
-    add.onclick = () => { closeFrameMenu(); addFrame(); };
+    add.onclick = () => { closeFrameMenu(); addFrame(true); };
     el.appendChild(add);
+    // Keep the strip exactly where it was. It only moves when the frame you picked is cut off at an
+    // edge (or off screen) -- and then just far enough to show it, not to the far end.
+    el.scrollLeft = keepScroll;
+    const sel = el.querySelector('.frame-thumb.selected');
+    if(sel && el.clientWidth > 0){
+      const pad = 6, left = sel.offsetLeft, right = left + sel.offsetWidth;
+      if(left < el.scrollLeft + pad) el.scrollLeft = Math.max(0, left - pad);
+      else if(right > el.scrollLeft + el.clientWidth - pad) el.scrollLeft = right - el.clientWidth + pad;
+    }
   }
 
   // ---- reorder: long-press a frame thumbnail, then drag it left/right to a new spot in the strip ----
@@ -3298,6 +3787,19 @@
       const x = lastX - rect.left + el.scrollLeft;                 // finger position inside the strip
       let left = x - grabOffset;
       left = Math.max(0, Math.min(el.scrollWidth - thumb.offsetWidth, left));
+      // Pushing past the far end of a fully scrolled strip drops the frame at the very end (or very start),
+      // so frame 1 can always go after the last frame, and the last frame before frame 1.
+      const rectNow = el.getBoundingClientRect();
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if(lastX > rectNow.right + 6 && el.scrollLeft >= maxScroll - 3){
+        let nx = thumb.nextElementSibling;
+        while(nx && nx.classList.contains('frame-thumb')){ el.insertBefore(nx, thumb); nx = thumb.nextElementSibling; }
+        left = Math.max(0, Math.min(el.scrollWidth - thumb.offsetWidth, thumb.offsetLeft));
+      } else if(lastX < rectNow.left - 6 && el.scrollLeft <= 3){
+        let pv = thumb.previousElementSibling;
+        while(pv && pv.classList.contains('frame-thumb')){ el.insertBefore(pv, thumb.nextSibling); pv = thumb.previousElementSibling; }
+        left = thumb.offsetLeft;
+      }
       let prev = thumb.previousElementSibling;
       while(prev && prev.classList.contains('frame-thumb') && left < prev.offsetLeft + prev.offsetWidth / 2){
         el.insertBefore(prev, thumb.nextSibling);                  // move the neighbour, not the dragged thumb
@@ -3308,18 +3810,32 @@
         el.insertBefore(next, thumb);
         next = thumb.nextElementSibling;
       }
-      thumb.style.transform = 'translateX(' + (left - thumb.offsetLeft) + 'px)';
+      thumb.style.transform = 'translateX(' + (left - thumb.offsetLeft) + 'px) scale(1.12)';
     }
     function tick(){
       if(!dragging) return;
       const rect = el.getBoundingClientRect();
-      if(lastX < rect.left + 30) el.scrollLeft -= 8;                // auto-scroll near the edges
-      else if(lastX > rect.right - 30) el.scrollLeft += 8;
+      // auto-scroll: gentle when the finger first reaches the edge, faster the closer / further past it
+      // it goes, so you can crawl to an exact spot or fly across a long timeline
+      const zone = Math.min(90, rect.width * 0.25);
+      let depth = 0, dir = 0;
+      if(lastX < rect.left + zone){ depth = (rect.left + zone - lastX) / zone; dir = -1; }
+      else if(lastX > rect.right - zone){ depth = (lastX - (rect.right - zone)) / zone; dir = 1; }
+      if(dir){
+        const speed = Math.min(32, 1.2 + 10 * depth * depth);
+        el.scrollLeft += dir * speed;
+      }
       update();
       raf = requestAnimationFrame(tick);
     }
+    function blockScrollWhileDragging(ev){ if(ev.cancelable) ev.preventDefault(); }   // finger drags the tile, not the strip
+    thumb.addEventListener('contextmenu', ev => ev.preventDefault());
     function beginDrag(e){
       dragging = true; moved = false;
+      if(!f.selected){ selectFrame(f.n, true); }                   // holding a frame selects it (tiles stay put so the drag keeps going)
+      el.style.scrollBehavior = 'auto';                           // smooth-scroll would fight the per-frame auto-scroll
+      document.addEventListener('touchmove', blockScrollWhileDragging, { passive: false });
+      if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(_){} }
       const rect = el.getBoundingClientRect();
       grabOffset = (lastX - rect.left + el.scrollLeft) - thumb.offsetLeft;
       thumb.classList.add('dragging');
@@ -3347,6 +3863,8 @@
       if(!dragging) return;
       dragging = false;
       cancelAnimationFrame(raf);
+      el.style.scrollBehavior = '';
+      document.removeEventListener('touchmove', blockScrollWhileDragging);
       thumb.classList.remove('dragging');
       thumb.style.transition = 'transform .12s ease';
       thumb.style.transform = '';
@@ -3366,20 +3884,39 @@
 
   // Jump to a different frame: same layer stays active (by position in the stack), the
   // canvases on screen swap to that frame's own layers, and its own pixels are what you draw on.
-  function selectFrame(n){
+  let _pendingSelect = null;
+  function selectFrame(n, keepStrip){
     const f = frames.find(x => x.n === n);
     if(!f || f.selected) return;
+    if(!frameIsLoaded(f)){        // bring this frame's pictures back first, then switch to it
+      _pendingSelect = f;
+      ensureFrameLoaded(f).then(() => { if(_pendingSelect === f && !f.selected) selectFrame(n, keepStrip); });
+      return;
+    }
+    _pendingSelect = null;
+    // A lassoed piece is lifted off its layer and floats in a box. Put it back down on the
+    // layer/frame it came from BEFORE leaving, so it doesn't vanish or hang over the next frame.
+    if(pasteState) commitPasteTransform();
+    closeMoveBar();
+    noteFrameVisit(currentFrame());          // remember the frame being left
     frames.forEach(x => x.selected = (x === f));
+    noteFrameVisit(f);
     clearLassoSelection();     // a lasso selection belongs to the frame/layer it was drawn on
+    clearFarFrameHistory();    // a 4th different frame back: its undo steps are dropped
     renderLayers();            // swaps in this frame's layer canvases + layer list
-    renderFrameStrips();
+    if(keepStrip){             // mid-drag: keep the tiles as they are, just move the highlight
+      frameStripEls.forEach(el => el.querySelectorAll('.frame-thumb').forEach(t => t.classList.toggle('selected', Number(t.dataset.n) === n)));
+    } else renderFrameStrips();
     updateOnionOverlay();
+    f._used = ++_frameTick;
+    preloadAround(f);        // the next frame and the one before (onion skin) are ready before you tap them
+    trimFrames();
   }
 
   // Add a new blank frame right after the current one. It gets the same layer setup as the
   // frame you're on (same names/order, all blank), and stays on "the same layer" — e.g. if
   // you're on Layer 1 now, you're still on Layer 1 once you land on the new frame.
-  function addFrame(){
+  function addFrame(atEnd){
     const cur = currentFrame();
     const activeIdx = cur.layers.findIndex(l => l.id === cur.activeLayerId);
     const newLayers = cur.layers.map(l => {
@@ -3389,7 +3926,7 @@
       nl.locked = l.locked;
       return nl;
     });
-    const insertAt = frames.indexOf(cur) + 1;
+    const insertAt = atEnd ? frames.length : frames.indexOf(cur) + 1;   // plus button: very end of the strip; Magic Cut: right after the current frame
     const newFrame = {
       n: 0,
       selected: false,
@@ -3410,6 +3947,12 @@
     if(frames.length <= 1) return;
     const idx = frames.findIndex(f => f.n === n);
     if(idx === -1) return;
+    if(frames[idx].selected){          // the frame that takes its place must be loaded before we land on it
+      const cand = frames[idx + 1] || frames[idx - 1];
+      if(cand && !frameIsLoaded(cand)){ const target = frames[idx]; ensureFrameLoaded(cand).then(() => { if(frames.includes(target)) deleteFrame(target.n); }); return; }
+    }
+    if(pasteState && frames[idx].selected) cancelPasteTransform();   // its floating piece belongs to the frame going away
+    closeMoveBar();
     const wasSelected = frames[idx].selected;
     const gone = frames.splice(idx, 1)[0];
     try{ (gone.undoStack || []).forEach(releaseGroup); (gone.redoStack || []).forEach(releaseGroup); gone.undoStack = []; gone.redoStack = []; }catch(_){}
@@ -3425,44 +3968,74 @@
     renderFrameStrips();
   }
 
-  // Copy: snapshots that frame's layers (pixels, names, opacity, visibility) into a clipboard.
+  // Copy: takes an exact snapshot of that frame -- every layer's pixels (by layer id), the
+  // Lock Pencil barrier lines, and whether it is a video frame -- so a paste is a true twin.
+  function releaseFrameClipboard(){
+    if(!frameClipboard) return;
+    try{
+      frameClipboard.layers.forEach(l => { l.canvas.width = l.canvas.height = 0; });
+      if(frameClipboard.barrier) frameClipboard.barrier.width = frameClipboard.barrier.height = 0;
+    }catch(_){}
+    frameClipboard = null;
+  }
   function copyFrame(n){
     const f = frames.find(x => x.n === n);
     if(!f) return;
-    frameClipboard = f.layers.map(l => {
+    if(!frameIsLoaded(f)){ ensureFrameLoaded(f).then(() => copyFrame(n)); return; }
+    if(pasteState) commitPasteTransform();   // settle any lifted lasso piece so the copy includes it
+    const clone = src => {
       const c = document.createElement('canvas');
-      c.width = l.canvas.width; c.height = l.canvas.height;
-      c.getContext('2d').drawImage(l.canvas, 0, 0);
-      return { name: l.name, opacity: l.opacity, visible: l.visible, locked: l.locked, canvas: c };
-    });
+      c.width = src.width; c.height = src.height;
+      c.getContext('2d').drawImage(src, 0, 0);
+      return c;
+    };
+    releaseFrameClipboard();
+    frameClipboard = {
+      layers: f.layers.map(l => ({ id: l.id, name: l.name, canvas: clone(l.canvas) })),
+      barrier: f.barrier ? clone(f.barrier) : null,
+      type: f.type || null,
+      video: f.video ? Object.assign({}, f.video) : null
+    };
   }
 
-  // Paste: drops a new frame right after n, built from whatever Copy last grabbed.
-  function pasteFrame(n){
+  // Paste: adds a twin of the copied frame before n (where = "back") or after n ("front").
+  // The new frame uses the project's current layer stack (a layer is shared by every frame),
+  // and each layer is filled with the copied pixels for that same layer.
+  function pasteFrame(n, where){
     if(!frameClipboard) return;
     const idx = frames.findIndex(x => x.n === n);
     if(idx === -1) return;
+    if(pasteState) commitPasteTransform();
     const cur = frames[idx];
-    const activeIdx = cur.layers.findIndex(l => l.id === cur.activeLayerId);
-    const newLayers = frameClipboard.map((l, i) => {
-      const matchId = cur.layers[i] ? cur.layers[i].id : undefined;   // same layer identity as the current stack
-      const nl = makeLayer(l.name, matchId);
+    const byId = new Map(frameClipboard.layers.map(l => [l.id, l]));
+    const newLayers = cur.layers.map(l => {
+      const nl = makeLayer(l.name, l.id);
       nl.opacity = l.opacity;
       nl.visible = l.visible;
-      nl.locked = !!l.locked;
-      nl.canvas.getContext('2d').drawImage(l.canvas, 0, 0);
+      nl.locked = l.locked;
+      const src = byId.get(l.id);
+      if(src) nl.canvas.getContext('2d').drawImage(src.canvas, 0, 0, nl.canvas.width, nl.canvas.height);
       return nl;
     });
     const newFrame = {
       n: 0,
       selected: false,
       layers: newLayers,
-      activeLayerId: newLayers[activeIdx >= 0 ? activeIdx : newLayers.length - 1].id,
+      activeLayerId: cur.activeLayerId,
       layerSeq: cur.layerSeq,
       undoStack: [],
       redoStack: []
     };
-    frames.splice(idx + 1, 0, newFrame);
+    if(frameClipboard.type) newFrame.type = frameClipboard.type;
+    if(frameClipboard.video) newFrame.video = Object.assign({}, frameClipboard.video);
+    if(frameClipboard.barrier){
+      const bc = document.createElement('canvas');
+      bc.width = frameClipboard.barrier.width; bc.height = frameClipboard.barrier.height;
+      bc.getContext('2d').drawImage(frameClipboard.barrier, 0, 0);
+      newFrame.barrier = bc;
+    }
+    newLayers.forEach(l => { l._dirty = true; });   // make sure the copied pixels get saved
+    frames.splice(where === 'back' ? idx : idx + 1, 0, newFrame);
     frames.forEach((f, i) => f.n = i + 1);
     selectFrame(newFrame.n);
   }
@@ -3554,13 +4127,13 @@
   // A layer's id is what makes it "the same layer" across every frame — pass an existing id
   // to give a frame a blank canvas for a layer that already exists elsewhere (new frame, load),
   // or omit it to mint a brand new layer id (only when the layer is genuinely new).
-  function makeLayer(name, id){
+  function makeLayer(name, id, tiny){
     const canvas = document.createElement('canvas');
     canvas.className = 'layer-canvas';
-    canvas.width = currentCanvasSize.w;
-    canvas.height = currentCanvasSize.h;
+    canvas.width = tiny ? 1 : currentCanvasSize.w;     // tiny = not loaded yet (see LAZY FRAMES)
+    canvas.height = tiny ? 1 : currentCanvasSize.h;
     if(id !== undefined && id > layerUid) layerUid = id;
-    return { id: id !== undefined ? id : ++layerUid, name: name, opacity: 100, visible: true, locked: false, canvas: canvas };
+    return { id: id !== undefined ? id : ++layerUid, name: name, opacity: 100, visible: true, locked: false, canvas: canvas, _unloaded: !!tiny };
   }
 
   // Lock Pencil's barrier lines live on a hidden canvas of their own, one per frame -- separate
@@ -3595,9 +4168,9 @@
   // FRAME owns its own undo/redo stack (frame.undoStack / frame.redoStack) — Ctrl+Z only ever
   // steps back through what happened on the frame you're currently viewing, never a different
   // frame you passed through in between.
-  const MAX_TOTAL_HISTORY_BYTES = 250 * 1024 * 1024;   // across every frame together
+  const MAX_TOTAL_HISTORY_BYTES = 150 * 1024 * 1024;   // across every frame together
   const MAX_HISTORY = 25;
-  const MAX_HISTORY_BYTES = 120 * 1024 * 1024;   // per frame; oldest steps are dropped beyond this so long sessions don't run out of memory
+  const MAX_HISTORY_BYTES = 80 * 1024 * 1024;   // per frame; oldest steps are dropped beyond this so long sessions don't run out of memory
 
   // Snapshots are now a GPU-side canvas copy (drawImage) instead of getImageData. getImageData
   // forces the browser to finish every queued draw and copy the whole canvas to the CPU — done at
@@ -3622,6 +4195,8 @@
   function pushUndoSnapshot(layer){
     const f = currentFrame();
     const group = (Array.isArray(layer) ? layer : [layer]).map(snapshotOf);
+    f._thumbC = null;
+    group.forEach(sn => { sn.layer._dirty = true; });     // whatever is about to change gets saved again
     f.undoStack.push(group);
     if(f.undoStack.length > MAX_HISTORY) releaseGroup(f.undoStack.shift());
     let histBytes = 0;
@@ -3646,8 +4221,44 @@
     updateHistoryButtons();
     return group;
   }
+  // Undo is only kept for the layer you are working on, and only for frames near the one you are on.
+  // 1) Leaving a layer wipes that layer's undo / redo steps (in every frame it exists in).
+  function clearHistoryForLayerId(layerId){
+    if(layerId === undefined || layerId === null) return;
+    frames.forEach(fr => {
+      ['undoStack', 'redoStack'].forEach(k => {
+        if(!fr[k]) return;
+        fr[k] = fr[k].filter(group => {
+          const hit = group.some(sn => sn.layer && sn.layer.id === layerId);
+          if(hit) releaseGroup(group);
+          return !hit;
+        });
+      });
+    });
+    updateHistoryButtons();
+  }
+  // 2) Only the frame you are on and the last 3 frames you came from keep undo steps. Switch to a
+  //    4th different frame and the oldest one is forgotten.
+  const HISTORY_FRAMES_KEPT = 4;             // the current frame + the 3 before it
+  let recentFrames = [];
+  function noteFrameVisit(fr){
+    if(!fr) return;
+    recentFrames = recentFrames.filter(x => x !== fr && frames.includes(x));
+    recentFrames.unshift(fr);
+    if(recentFrames.length > HISTORY_FRAMES_KEPT) recentFrames.length = HISTORY_FRAMES_KEPT;
+  }
+  function clearFarFrameHistory(){
+    frames.forEach(fr => {
+      if(recentFrames.includes(fr)) return;
+      ['undoStack', 'redoStack'].forEach(k => {
+        if(fr[k] && fr[k].length){ fr[k].forEach(releaseGroup); fr[k] = []; }
+      });
+    });
+    updateHistoryButtons();
+  }
   function restoreSnapshot(entry){
     entry.forEach(s => {
+      s.layer._dirty = true;
       const ctx = s.layer.canvas.getContext('2d');
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'copy';
       ctx.drawImage(s.canvas, 0, 0);
@@ -3723,7 +4334,7 @@
       f.activeLayerId = base.id;
       f.layerSeq = 1;
     });
-    frameClipboard = null;
+    releaseFrameClipboard();
     closeFrameMenu();
     renderFrameStrips();
     closeLayerPanel();
@@ -3770,7 +4381,7 @@
         '<span class="layer-name"></span>' +
         '<span class="layer-opacity">' + l.opacity + '%</span>' +
         '<button type="button" class="layer-lock' + (l.locked ? ' locked' : '') + '" aria-label="Lock layer" aria-pressed="' + !!l.locked + '"><svg viewBox="0 0 24 24" fill="none"><path class="lock-shackle" d="' + (l.locked ? 'M7 10V7a5 5 0 0110 0' : 'M7 10V7a5 5 0 019.8-1.5') + '" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/></svg></button>' +
-        '<span class="layer-chevron"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+        '<button type="button" class="layer-del' + (f.layers.length <= 1 ? ' disabled' : '') + '" aria-label="Delete layer"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
       row.querySelector('.layer-name').textContent = l.name;
       row.onclick = () => {
         if(performance.now() < suppressRowClickUntil) return;   // a drag just ended, don't treat it as a tap
@@ -3785,6 +4396,12 @@
         forEachFrameLayer(l.id, ll => { ll.locked = nowLocked; });   // same layer, every frame
         suppressRowClickUntil = performance.now() + 200;
         renderLayerList();                   // simplest way to refresh this row + thumb badge + icon
+      });
+      row.querySelector('.layer-del').addEventListener('click', e => {
+        e.stopPropagation();                 // don't also select the row
+        suppressRowClickUntil = performance.now() + 200;
+        if(f.layers.length <= 1) return;
+        askConfirm('Delete layer "' + l.name + '"?', 'It is removed from every frame. This cannot be undone.', () => deleteLayer(l.id));
       });
       bindOpacityScrub(row.querySelector('.layer-opacity'), l);
       bindLayerDrag(row.querySelector('.layer-drag'), row);
@@ -3801,9 +4418,50 @@
     renderLayerList();
   }
 
+  // Delete a layer from the whole project (a layer is the same layer in every frame). Always
+  // leaves at least one layer. If the deleted layer was the active one, the layer just below
+  // it (or above, if it was the bottom) becomes active in every frame.
+  function deleteLayer(id){
+    const cur = currentFrame();
+    if(!cur.layers.some(l => l.id === id) || cur.layers.length <= 1) return;
+    if(pasteState) commitPasteTransform();     // bake any floating piece first so nothing is left dangling
+    clearLassoSelection();
+    const idx = cur.layers.findIndex(l => l.id === id);
+    const fallback = cur.layers[idx - 1] || cur.layers[idx + 1];
+    const gone = new Set();
+    frames.forEach(fr => {
+      if(!fr.layers) return;
+      const i = fr.layers.findIndex(l => l.id === id);
+      if(i === -1) return;
+      const layer = fr.layers.splice(i, 1)[0];
+      gone.add(layer);
+      if(fr.activeLayerId === id) fr.activeLayerId = fallback.id;
+      if(!fr.layers.some(l => l.id === fr.activeLayerId)) fr.activeLayerId = fr.layers[fr.layers.length - 1].id;
+      // undo / redo steps that touch the deleted layer can't be replayed any more -> drop them
+      ['undoStack', 'redoStack'].forEach(k => {
+        if(!fr[k]) return;
+        fr[k] = fr[k].filter(group => {
+          const hit = group.some(sn => gone.has(sn.layer));
+          if(hit) releaseGroup(group);
+          return !hit;
+        });
+      });
+    });
+    gone.forEach(l => { if(l.canvas.parentNode) l.canvas.remove(); l.canvas.width = l.canvas.height = 0; });
+    invalidateThumbCache();
+    renderLayers();
+    updateHistoryButtons();
+    refreshThumbnails();
+  }
+
   function selectLayer(id){
     const f = currentFrame();
     if(!f.layers.some(l => l.id === id)) return;
+    const prevLayerId = f.activeLayerId;
+    if(prevLayerId !== id){
+      if(pasteState) commitPasteTransform();      // settle any floating piece on the layer being left
+      clearHistoryForLayerId(prevLayerId);        // leaving a layer wipes its undo history
+    }
     // Which layer is "active" is a project-wide choice, not something each frame remembers on
     // its own — so picking Layer 2 here means every frame that has a Layer 2 switches to it too.
     // That's what keeps you on Layer 2 after hopping to another frame instead of snapping back
@@ -3842,6 +4500,7 @@
       el.classList.remove('scrubbing');
       if(moved){
         suppressRowClickUntil = performance.now() + 200;
+        invalidateThumbCache();
         refreshThumbnails();
       }
     }
@@ -3864,6 +4523,7 @@
       const reordered = bottomFirstIds.map(id => frById.get(id)).filter(Boolean);
       if(reordered.length === fr.layers.length) fr.layers = reordered;
     });
+    invalidateThumbCache();
     renderLayerCanvases();                           // updates the stacking order of the canvases
     markProjectChanged();
   }
@@ -4881,7 +5541,18 @@
     if(!isPlaying) return;
     const idx = frames.indexOf(frame);
     if(idx === -1){ stopPlayback(); return; }
+    if(!frameIsLoaded(frame)){        // its pictures aren't in memory yet: wait a moment, then carry on at an even pace
+      playTimer = null;
+      ensureFrameLoaded(frame).then(() => {
+        if(!isPlaying) return;
+        playAnchorTime = performance.now(); playTickCount = 0;
+        playSequenceFrom(frame);
+      });
+      return;
+    }
     if(!frame.selected) selectFrameForPlayback(frame.n);
+    for(let k = 1; k <= PLAY_LOOKAHEAD; k++) ensureFrameLoaded(frames[(idx + k) % frames.length]);   // load ahead while playing
+    trimFrames();
     if(frame.type === 'video'){
       playTimer = null;
       playVideoFrame(frame, () => {
@@ -5242,6 +5913,8 @@
     for(let i = 0; i < frames.length; i++){
       if(exportCancelled) break;
       const frame = frames[i];
+      await ensureFrameLoaded(frame);
+      if(i + 1 < frames.length) ensureFrameLoaded(frames[i + 1]);
       if(frame.type === 'video'){
         await exportVideoFrame(ctx, frame, w, h, audioDest);
       } else {
@@ -5249,6 +5922,7 @@
         await new Promise(res => setTimeout(res, Math.max(30, Math.round(1000 / fps))));
       }
       updateExportOverlay(i + 1, frames.length, formatLabel);
+      trimFrames();
     }
 
     recorder.stop();
@@ -5390,9 +6064,12 @@
     const sharedId = ++layerUid;
     frames.forEach(fr => {
       if(!fr.layers) return;
-      fr.layers.push(makeLayer(name, sharedId));   // new layer goes on top of every frame's stack
+      if(frameIsLoaded(fr)) fr.layers.push(makeLayer(name, sharedId));   // new layer goes on top of every frame's stack
+      else { const nl = makeLayer(name, sharedId, true); nl._blobP = Promise.resolve(null); fr.layers.push(nl); }   // frame not loaded: blank layer, filled in when it loads
       fr.layerSeq = newSeq;
     });
+    if(pasteState) commitPasteTransform();
+    clearHistoryForLayerId(f.activeLayerId);       // moving onto the new layer leaves the old one behind
     f.activeLayerId = sharedId;                    // becomes selected only on the frame you're on
     closeLayerModal();
     renderLayers();
@@ -6309,17 +6986,30 @@
     if(lassoPoints.length < 3){ clearLassoSelection(); return; }
     const layer = getActiveLayer();
     if(layer){
+      const W = layer.canvas.width, H = layer.canvas.height;
+      // 1) the circled area as a HARD-edged mask: any pixel the loop touches is fully in, the rest fully out.
+      //    (A soft, anti-aliased edge is what used to leave stray specks of the drawing behind.)
+      const mask = document.createElement('canvas');
+      mask.width = W; mask.height = H;
+      const mctx = mask.getContext('2d');
+      mctx.fillStyle = '#000';
+      mctx.beginPath();
+      mctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+      for(let i = 1; i < lassoPoints.length; i++) mctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+      mctx.closePath();
+      mctx.fill();
+      const mimg = mctx.getImageData(0, 0, W, H);
+      const md = mimg.data;
+      for(let i = 3; i < md.length; i += 4) if(md[i]) md[i] = 255;
+      mctx.putImageData(mimg, 0, 0);
+      // 2) the lifted piece = the layer's pixels inside that mask, untouched
       const off = document.createElement('canvas');
-      off.width = layer.canvas.width;
-      off.height = layer.canvas.height;
+      off.width = W; off.height = H;
       const octx = off.getContext('2d');
-      octx.beginPath();
-      octx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
-      for(let i = 1; i < lassoPoints.length; i++) octx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
-      octx.closePath();
-      octx.clip();
       octx.drawImage(layer.canvas, 0, 0);
-      lassoSelection = { canvas: off, layer: layer };
+      octx.globalCompositeOperation = 'destination-in';
+      octx.drawImage(mask, 0, 0);
+      lassoSelection = { canvas: off, layer: layer, mask: mask };
     }
     renderLassoPath(true);
     cancelAnimationFrame(lassoAnimRaf);
@@ -6351,8 +7041,10 @@
     if(!t){ clearLassoSelection(); return; }
     pushUndoSnapshot(layer);
     const ctx = layer.canvas.getContext('2d');
+    // Remove the piece using the hard mask, not the piece itself: erasing a semi-transparent pixel with
+    // itself only removes part of it, which left faint specks of the drawing in the old spot.
     ctx.globalCompositeOperation = 'destination-out';
-    ctx.drawImage(src, 0, 0);
+    ctx.drawImage(lassoSelection.mask || src, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
     refreshThumbnails();
     cancelAnimationFrame(lassoAnimRaf); lassoAnimRaf = 0;
@@ -6946,7 +7638,7 @@
   document.querySelectorAll('.util-btn[aria-label="Copy"]').forEach(b => {
     b.addEventListener('click', () => {
       if(!lassoSelection) return;
-      const trimmed = trimCanvas(lassoSelection.canvas);
+      const trimmed = trimWithOffset(lassoSelection.canvas);   // keeps x / y: where the piece sat on the canvas
       if(!trimmed) return;
       clipboard = trimmed;
       updateClipboardButtons();
@@ -7067,9 +7759,14 @@
     commitPasteTransform();                                // bake any already-floating paste first
     const surface = document.getElementById('editor-canvas');
     const maxW = currentCanvasSize.w * 0.7, maxH = currentCanvasSize.h * 0.7;
-    const fit = Math.min(1, maxW / clip.w, maxH / clip.h);
+    const hasSpot = typeof clip.x === 'number' && typeof clip.y === 'number';
+    const fit = hasSpot ? 1 : Math.min(1, maxW / clip.w, maxH / clip.h);
     const w = clip.w * fit, h = clip.h * fit;
-    pasteState = { clip: clip, x: (currentCanvasSize.w - w) / 2, y: (currentCanvasSize.h - h) / 2, w: w, h: h };
+    // copied with Copy -> lands at the exact spot it was copied from; anything else (Magic Cut,
+    // saved images) still starts centred
+    const px = hasSpot ? Math.max(0, Math.min(currentCanvasSize.w - w, clip.x)) : (currentCanvasSize.w - w) / 2;
+    const py = hasSpot ? Math.max(0, Math.min(currentCanvasSize.h - h, clip.y)) : (currentCanvasSize.h - h) / 2;
+    pasteState = { clip: clip, x: px, y: py, w: w, h: h };
 
     pasteBoxEl = document.createElement('div');
     pasteBoxEl.className = 'paste-box';
@@ -7588,6 +8285,7 @@
 
   // Everything is set up — show the projects saved on this device.
   refreshProjectList();
+  seedSampleProject().then(made => { if(made) refreshProjectList(); });   // first launch only: adds the sample fight
 </script>
 
 </body>
