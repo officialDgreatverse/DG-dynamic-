@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>document.documentElement.dataset.theme=(function(){try{return localStorage.getItem("dg_theme")||"pink"}catch(e){return"pink"}})();</script>
 <style>
   :root{
     --bg:#18181b;
@@ -189,7 +190,7 @@
     align-items:center;
     justify-content:center;
     margin-top:-20px;
-    box-shadow:0 4px 12px rgba(255,79,139,0.35);
+    box-shadow:0 4px 12px rgba(var(--accent-rgb),0.35);
     cursor:pointer;
   }
   .nav-plus svg{width:19px;height:19px;}
@@ -999,8 +1000,8 @@
     box-shadow:0 1px 4px rgba(0,0,0,0.5);
   }
   .frame-strip .frame-thumb.selected .frame-badge{background:var(--accent-1);}
-  .frame-strip .frame-thumb.selected{box-shadow:0 0 0 2px rgba(255,79,139,0.28), 0 0 14px 3px rgba(255,79,139,0.42);}
-  .frame-strip .frame-thumb.selected.dragging{box-shadow:0 0 0 2px rgba(255,79,139,0.35), 0 0 16px 4px rgba(255,79,139,0.5), 0 6px 16px rgba(0,0,0,0.5);}
+  .frame-strip .frame-thumb.selected{box-shadow:0 0 0 2px rgba(var(--accent-rgb),0.28), 0 0 14px 3px rgba(var(--accent-rgb),0.42);}
+  .frame-strip .frame-thumb.selected.dragging{box-shadow:0 0 0 2px rgba(var(--accent-rgb),0.35), 0 0 16px 4px rgba(var(--accent-rgb),0.5), 0 6px 16px rgba(0,0,0,0.5);}
   .frame-strip{gap:8px;padding:9px 8px;margin:-6px 0;}   /* padding gives the selected frame's glow room; margin cancels it out so the bar height is unchanged */
   .frame-strip .frame-video-badge{font-size:10px;bottom:3px;left:3px;}
   @media (orientation:landscape){
@@ -1976,7 +1977,7 @@
   .mc-modes{display:flex;gap:8px;margin-bottom:10px;}
   .mc-mode-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;}
   .mc-mode-btn svg{width:16px;height:16px;}
-  .mc-mode-btn.active{border-color:var(--accent-1);color:var(--accent-1);background:rgba(255,79,139,0.08);}
+  .mc-mode-btn.active{border-color:var(--accent-1);color:var(--accent-1);background:rgba(var(--accent-rgb),0.08);}
   .mc-btns{display:flex;gap:8px;margin-top:6px;}
   .mc-btns button{flex:1;padding:11px 6px;border:none;border-radius:12px;background:#2c2c31;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;}
   .mc-btns button:disabled{opacity:0.35;}
@@ -2024,6 +2025,32 @@
   .mci-thumb .mci-del{top:4px;right:4px;}
   .mci-empty{grid-column:1/-1;padding:44px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;}
 
+
+  /* ================= THEMES / MENU / SETTINGS / UPDATE ================= */
+  :root{--accent-rgb:255,79,139;}
+  :root[data-theme="blue"]{--accent-1:#3b8cff;--accent-2:#1d4ed8;--accent-dim:#1e3a5f;--accent-dim-text:#8fb4e0;--accent-rgb:59,140,255;}
+  :root[data-theme="green"]{--accent-1:#2ecc71;--accent-2:#0f9d58;--accent-dim:#1d4a33;--accent-dim-text:#8fc4a5;--accent-rgb:46,204,113;}
+  :root[data-theme="orange"]{--accent-1:#ff8a1f;--accent-2:#f04e23;--accent-dim:#5a3413;--accent-dim-text:#d1a57a;--accent-rgb:255,138,31;}
+
+  .drawer-scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;}
+  .drawer-scrim.open{opacity:1;pointer-events:auto;}
+  .drawer{position:fixed;top:0;left:0;bottom:0;width:72%;max-width:280px;background:var(--surface);transform:translateX(-100%);transition:transform .22s;z-index:51;padding-top:calc(18px + env(safe-area-inset-top));}
+  .drawer.open{transform:none;}
+  .drawer-title{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:18px;padding:0 20px 14px;border-bottom:1px solid var(--line);}
+  .drawer-item{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;color:var(--text);font-size:15px;font-weight:600;padding:16px 20px;text-align:left;cursor:pointer;}
+  .upd-dot{width:9px;height:9px;border-radius:50%;background:var(--accent-1);}
+  .upd-dot[hidden]{display:none;}
+  .set-body{flex:1;padding:14px 20px;overflow-y:auto;}
+  .set-title{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:22px;margin:0 0 18px;}
+  .set-label{color:var(--muted);font-size:12px;font-weight:600;margin:0 0 12px;}
+  .theme-row{display:flex;gap:14px;}
+  .theme-btn{width:52px;height:52px;border-radius:50%;border:3px solid transparent;cursor:pointer;}
+  .theme-btn.sel{border-color:var(--text);}
+  .upd-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;}
+  .upd-card p{margin:0 0 6px;font-size:13px;color:var(--muted);}
+  .upd-card b{color:var(--text);font-size:15px;}
+  .upd-btn{width:100%;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));cursor:pointer;}
+  .upd-btn:disabled{opacity:.5;}
 </style>
 </head>
 <body>
@@ -2034,7 +2061,7 @@
   <div class="page active" id="page-home">
 
     <div class="topbar">
-      <button class="icon-btn" aria-label="Menu">
+      <button class="icon-btn" id="menu-btn" aria-label="Menu">
         <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
       <div class="logo">DG Dynamics</div>
@@ -2074,6 +2101,41 @@
       </button>
     </div>
 
+    <div class="drawer-scrim" id="drawer-scrim"></div>
+    <div class="drawer" id="drawer">
+      <div class="drawer-title">DG Dynamics</div>
+      <button class="drawer-item" data-go="page-settings">Settings</button>
+      <button class="drawer-item" data-go="page-update">Update <span class="upd-dot" id="upd-dot" hidden></span></button>
+    </div>
+
+  </div>
+
+  <!-- ================= SETTINGS ================= -->
+  <div class="page" id="page-settings">
+    <div class="create-header"><button class="icon-btn" aria-label="Back" onclick="showPage('page-home')"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <div class="set-body">
+      <h2 class="set-title">Settings</h2>
+      <p class="set-label">Color theme</p>
+      <div class="theme-row" id="theme-row">
+        <button class="theme-btn" data-theme="pink" style="background:linear-gradient(135deg,#ff4f8b,#7c5cff)" aria-label="Pink"></button>
+        <button class="theme-btn" data-theme="blue" style="background:linear-gradient(135deg,#3b8cff,#1d4ed8)" aria-label="Blue"></button>
+        <button class="theme-btn" data-theme="green" style="background:linear-gradient(135deg,#2ecc71,#0f9d58)" aria-label="Green"></button>
+        <button class="theme-btn" data-theme="orange" style="background:linear-gradient(135deg,#ff8a1f,#f04e23)" aria-label="Orange"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= UPDATE ================= -->
+  <div class="page" id="page-update">
+    <div class="create-header"><button class="icon-btn" aria-label="Back" onclick="showPage('page-home')"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <div class="set-body">
+      <h2 class="set-title">Update</h2>
+      <div class="upd-card">
+        <p>Installed version</p><b id="upd-current">-</b>
+        <p style="margin-top:12px" id="upd-status">Tap the button to check.</p>
+      </div>
+      <button class="upd-btn" id="upd-btn">Search for update</button>
+    </div>
   </div>
 
   <!-- ================= CREATE PROJECT ================= -->
@@ -3615,7 +3677,7 @@
   }
   // Called right after any stroke/paste/undo touches pixels: repaints just the current frame's
   // tiles (in both frame strips) and the active layer's row tile, without rebuilding any lists.
-  function refreshThumbnails(){
+  function refreshThumbnails(live){
     const f = currentFrame();
     if(f){ f._thumbC = null; const al = getActiveLayer(); if(al) al._dirty = true; }   // the layer being edited changed -> re-save just that one
     markProjectChanged();
@@ -3628,16 +3690,16 @@
       const c = layerListEl.querySelector(`.layer-row[data-id="${layer.id}"] .layer-thumb-canvas`);
       if(c) drawLayerThumb(c, layer);
     }
-    updateOnionOverlay();
+    if(live !== true) updateOnionOverlay();   // the previous frame doesn't change mid-stroke, so skip that big redraw while drawing
   }
   // While actively dragging a stroke, redraw the tiny tiles at most every ~120ms instead of
   // on every pointermove — keeps the "live preview" feel without redrawing on every pixel.
   let lastThumbRefresh = 0;
   function throttledRefreshThumbnails(){
     const now = performance.now();
-    if(now - lastThumbRefresh < 220) return;
+    if(now - lastThumbRefresh < 350) return;
     lastThumbRefresh = now;
-    refreshThumbnails();
+    refreshThumbnails(true);
   }
 
   // ================= ONION SKIN =================
@@ -4168,25 +4230,54 @@
   // FRAME owns its own undo/redo stack (frame.undoStack / frame.redoStack) — Ctrl+Z only ever
   // steps back through what happened on the frame you're currently viewing, never a different
   // frame you passed through in between.
-  const MAX_TOTAL_HISTORY_BYTES = 150 * 1024 * 1024;   // across every frame together
-  const MAX_HISTORY = 25;
-  const MAX_HISTORY_BYTES = 80 * 1024 * 1024;   // per frame; oldest steps are dropped beyond this so long sessions don't run out of memory
+  const MAX_TOTAL_HISTORY_BYTES = 110 * 1024 * 1024;   // across every frame together
+  const MAX_HISTORY = 20;
+  const MAX_HISTORY_BYTES = 64 * 1024 * 1024;   // per frame; oldest steps are dropped beyond this so long sessions don't run out of memory
 
   // Snapshots are now a GPU-side canvas copy (drawImage) instead of getImageData. getImageData
   // forces the browser to finish every queued draw and copy the whole canvas to the CPU — done at
   // the start of EVERY stroke, that is what made the pencil hang for ~2s when scribbling back and
   // forth to colour. `.data` (real ImageData) is only built lazily, for the rare Lock-Pencil clip.
+  // Canvases from dropped history steps go into a tiny pool and get reused, so starting a stroke
+  // no longer allocates a brand-new full-size canvas (that allocation was a big part of the pause).
+  const snapPool = [];
+  function takeSnapCanvas(w, h){
+    for(let i = 0; i < snapPool.length; i++){
+      const pc = snapPool[i];
+      if(pc.width === w && pc.height === h){
+        snapPool.splice(i, 1);
+        pc.getContext('2d').clearRect(0, 0, w, h);
+        return pc;
+      }
+    }
+    const nc = document.createElement('canvas');
+    nc.width = w; nc.height = h;
+    return nc;
+  }
   function snapshotOf(layer){
     const src = layer.canvas;
-    const c = document.createElement('canvas');
-    c.width = src.width; c.height = src.height;
+    const c = takeSnapCanvas(src.width, src.height);
     c.getContext('2d').drawImage(src, 0, 0);
     return {
       layer: layer, canvas: c, bytes: c.width * c.height * 4, _img: null,
       get data(){ return this._img || (this._img = c.getContext('2d').getImageData(0, 0, c.width, c.height)); }
     };
   }
-  function releaseGroup(g){ g.forEach(sn => { sn._img = null; sn.canvas.width = sn.canvas.height = 0; }); }
+  function releaseGroup(g){
+    g.forEach(sn => {
+      if(sn._released) return;
+      sn._released = true;
+      sn._img = null;
+      const rc = sn.canvas;
+      if(!rc) return;
+      // keep a few for reuse (same size only); free the rest
+      for(let i = snapPool.length - 1; i >= 0; i--){
+        if(snapPool[i].width !== rc.width || snapPool[i].height !== rc.height){ snapPool[i].width = snapPool[i].height = 0; snapPool.splice(i, 1); }
+      }
+      if(rc.width && rc.height && snapPool.length < 4) snapPool.push(rc);
+      else rc.width = rc.height = 0;
+    });
+  }
   // Each history entry is a GROUP of one-or-more canvas snapshots that undo/redo together as one
   // step. Pass a single layer (the common case) or an array (e.g. a Lock Pencil stroke, whose
   // visible ink and barrier line should un-draw together). Returns the group, so a caller that
@@ -7137,7 +7228,7 @@
   let gestureLock = false;            // true from the 2nd finger down until ALL fingers are lifted -> nothing may draw
   let pending = null;                 // { e, moves:[], timer } — a touch stroke waiting out the grace period
   let strokeStartWall = 0;
-  const TOUCH_GRACE_MS = 70;
+  const TOUCH_GRACE_MS = 45;
 
   function cancelPending(){
     if(!pending) return;
@@ -8005,12 +8096,12 @@
     const dash = Math.max(1.5, canvasK() * 3);
     let shape = '';
     if(rulerType === 'circ'){
-      shape = `<ellipse cx="${rulerGuide.cx}" cy="${rulerGuide.cy}" rx="${rulerGuide.rx}" ry="${rulerGuide.ry}" fill="none" stroke="#ff4f8b" stroke-width="${dash}" stroke-dasharray="${dash * 3} ${dash * 2.4}"/>`;
+      shape = `<ellipse cx="${rulerGuide.cx}" cy="${rulerGuide.cy}" rx="${rulerGuide.rx}" ry="${rulerGuide.ry}" fill="none" stroke="${accentColor()}" stroke-width="${dash}" stroke-dasharray="${dash * 3} ${dash * 2.4}"/>`;
     } else if(rulerType === 'box'){
       const x = rulerGuide.cx - rulerGuide.halfW, y = rulerGuide.cy - rulerGuide.halfH;
-      shape = `<rect x="${x}" y="${y}" width="${rulerGuide.halfW * 2}" height="${rulerGuide.halfH * 2}" fill="none" stroke="#ff4f8b" stroke-width="${dash}" stroke-dasharray="${dash * 3} ${dash * 2.4}"/>`;
+      shape = `<rect x="${x}" y="${y}" width="${rulerGuide.halfW * 2}" height="${rulerGuide.halfH * 2}" fill="none" stroke="${accentColor()}" stroke-width="${dash}" stroke-dasharray="${dash * 3} ${dash * 2.4}"/>`;
     } else if(rulerType === 'line'){
-      shape = `<line x1="${rulerGuide.x1}" y1="${rulerGuide.y1}" x2="${rulerGuide.x2}" y2="${rulerGuide.y2}" stroke="#ff4f8b" stroke-width="${dash}" stroke-dasharray="${dash * 3} ${dash * 2.4}"/>`;
+      shape = `<line x1="${rulerGuide.x1}" y1="${rulerGuide.y1}" x2="${rulerGuide.x2}" y2="${rulerGuide.y2}" stroke="${accentColor()}" stroke-width="${dash}" stroke-dasharray="${dash * 3} ${dash * 2.4}"/>`;
     }
     rulerGuideSvg.innerHTML = shape;
 
@@ -8282,6 +8373,88 @@
     if(sizePop.classList.contains('open')) requestAnimationFrame(drawSizePreview);
     if(fadePop.classList.contains('open')) requestAnimationFrame(drawFadePreview);
   });
+
+  // ---------- Theme colour (accent) ----------
+  function accentColor(){ return getComputedStyle(document.documentElement).getPropertyValue('--accent-1').trim() || '#ff4f8b'; }
+
+  (function(){
+    // -- theme picker --
+    function applyTheme(t){
+      document.documentElement.dataset.theme = t;
+      try{ localStorage.setItem('dg_theme', t); }catch(_){}
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('sel', b.dataset.theme === t));
+    }
+    document.querySelectorAll('.theme-btn').forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
+    applyTheme(document.documentElement.dataset.theme || 'pink');
+
+    // -- hamburger menu --
+    const drawer = document.getElementById('drawer'), scrim = document.getElementById('drawer-scrim');
+    function toggleDrawer(open){ drawer.classList.toggle('open', open); scrim.classList.toggle('open', open); }
+    document.getElementById('menu-btn').addEventListener('click', () => toggleDrawer(true));
+    scrim.addEventListener('click', () => toggleDrawer(false));
+    drawer.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+      toggleDrawer(false);
+      showPage(b.dataset.go);
+      if(b.dataset.go === 'page-update') runUpdateCheck();
+    }));
+
+    // -- update from GitHub releases --
+    const GITHUB_REPO = 'officialDgreatverse/DG-dynamic-';   // GitHub username/repo that holds the APK releases
+    let foundUpdate = null, checking = false;
+    const updEls = { cur: document.getElementById('upd-current'), st: document.getElementById('upd-status'),
+                     btn: document.getElementById('upd-btn'), dot: document.getElementById('upd-dot') };
+
+    async function getCurrentVersion(){
+      try{
+        const A = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+        if(A && A.getInfo) return (await A.getInfo()).version;
+      }catch(_){}
+      return null;
+    }
+    function verParts(v){ return String(v).replace(/^v/i, '').split('.').map(n => parseInt(n) || 0); }
+    function isNewer(a, b){
+      const x = verParts(a), y = verParts(b);
+      for(let i = 0; i < Math.max(x.length, y.length); i++){ const d = (x[i] || 0) - (y[i] || 0); if(d) return d > 0; }
+      return false;
+    }
+    async function fetchLatest(){
+      const res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest', { headers:{ Accept:'application/vnd.github+json' } });
+      if(!res.ok) throw new Error('GitHub replied ' + res.status);
+      const r = await res.json();
+      const apk = (r.assets || []).find(a => /\.apk$/i.test(a.name));
+      return { version: r.tag_name, url: apk ? apk.browser_download_url : null };
+    }
+    async function runUpdateCheck(silent){
+      if(checking) return;
+      checking = true;
+      const cur = await getCurrentVersion();
+      updEls.cur.textContent = cur || 'unknown (only shown in the installed app)';
+      if(!silent){ updEls.st.textContent = 'Searching for update...'; updEls.btn.disabled = true; }
+      try{
+        const latest = await fetchLatest();
+        if(cur && latest.url && isNewer(latest.version, cur)){
+          foundUpdate = latest; updEls.dot.hidden = false;
+          updEls.st.textContent = 'New update available: ' + latest.version;
+          updEls.btn.textContent = 'Download & install';
+        }else{
+          foundUpdate = null; updEls.dot.hidden = true;
+          updEls.st.textContent = 'You are up to date.';
+          updEls.btn.textContent = 'Search for update';
+        }
+      }catch(e){
+        if(!silent) updEls.st.textContent = 'Could not check for updates: ' + e.message;
+      }
+      updEls.btn.disabled = false;
+      checking = false;
+    }
+    updEls.btn.addEventListener('click', () => {
+      if(!foundUpdate){ runUpdateCheck(); return; }
+      const P = window.Capacitor && window.Capacitor.Plugins;
+      if(P && P.Browser && P.Browser.open) P.Browser.open({ url: foundUpdate.url });
+      else window.open(foundUpdate.url, '_system');
+    });
+    runUpdateCheck(true);   // quiet check on launch: only shows the dot if there is something new
+  })();
 
   // Everything is set up — show the projects saved on this device.
   refreshProjectList();
