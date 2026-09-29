@@ -1,4 +1,4 @@
 {
-  "versionName": "1.2.1",
+  "versionName": "1.2.2",
   "notes": "Bump versionName before a push when you want the Play-Store-style label to change. The internal versionCode (which Android actually uses to decide 'this is newer') is set automatically by GitHub Actions from the build number, so you never have to remember to bump a counter."
 }
