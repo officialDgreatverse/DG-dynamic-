@@ -52,6 +52,13 @@
 
   button{font-family:inherit;}
 
+
+  #bp-curve.active{color:var(--accent-1);}
+  .curve-bar{display:none;position:fixed;left:50%;bottom:calc(168px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;gap:10px;padding:8px;background:rgba(24,24,27,0.94);border:1px solid var(--line);border-radius:999px;}
+  .curve-bar.open{display:flex;}
+  .curve-bar button{border:none;border-radius:999px;padding:9px 20px;font-size:14px;font-weight:600;background:#2c2c31;color:var(--text);cursor:pointer;}
+  .curve-bar button.primary{background:linear-gradient(135deg,var(--accent-1),var(--accent-2));}
+
   /* ================= HOME ================= */
 
   .topbar{
@@ -769,6 +776,18 @@
   }
   .video-zoom{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px;}
   .video-zoom input[type="range"]{width:84px;accent-color:var(--accent-1);}
+
+  /* lightweight playback layer: ONE canvas that shows the flattened frame while Play runs */
+  .play-canvas{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    display:block;
+    pointer-events:none;
+    z-index:40;
+  }
 
   /* live video during Play — sits exactly over the box baked in at confirm time */
   .video-playback{
@@ -2051,6 +2070,86 @@
   .upd-card b{color:var(--text);font-size:15px;}
   .upd-btn{width:100%;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));cursor:pointer;}
   .upd-btn:disabled{opacity:.5;}
+
+  /* ================= WORK DIRECTORY / WORKSPACE ================= */
+  .wd-modal{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);}
+  .wd-modal.open{display:flex;}
+  .wd-card{width:100%;max-width:520px;background:var(--surface);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));}
+  .wd-card h3{margin:0 0 14px;font-family:'Baloo 2',sans-serif;font-size:20px;}
+  .wd-input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--text);font-size:15px;font-family:inherit;margin-bottom:14px;}
+  .wd-lab{color:var(--muted);font-size:12px;font-weight:600;margin:0 0 8px;}
+  .wd-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .wd-chip{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:20px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;}
+  .wd-chip.sel{border-color:var(--accent-1);color:var(--accent-1);}
+  .wd-dims{display:flex;gap:10px;align-items:center;margin-bottom:6px;}
+  .wd-dims input{flex:1;min-width:0;margin:0;}
+  .wd-dims span{color:var(--muted);}
+  .wd-hint{color:var(--muted);font-size:11px;margin:0 0 16px;}
+  .wd-row{display:flex;gap:10px;}
+  .wd-btn{flex:1;border:none;border-radius:24px;padding:13px 0;font-size:13px;font-weight:700;cursor:pointer;color:var(--text);background:#2c2c31;}
+  .wd-btn.primary{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:#fff;}
+  #wd-grid .proj-thumb{background:repeating-conic-gradient(#e9e7e2 0 25%,#f7f6f3 0 50%) 0 0/16px 16px;}
+  #page-workspace{background:var(--bg);}
+  .ws-head{display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;border-bottom:1px solid var(--line);}
+  .ws-title{flex:1;min-width:0;text-align:center;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:none;color:var(--text);padding:6px;}
+  .ws-head .icon-btn svg{width:22px;height:22px;}
+  .ws-head .icon-btn:disabled{opacity:.3;}
+  .ws-stage{flex:1;min-height:0;position:relative;overflow:hidden;background:#0e0e10;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #wd-canvas{position:absolute;left:0;top:0;transform-origin:0 0;background:repeating-conic-gradient(#e9e7e2 0 25%,#f7f6f3 0 50%) 0 0/16px 16px;box-shadow:0 0 0 1px rgba(0,0,0,.4);}
+  .ws-bar{background:var(--surface);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom));}
+  .ws-tools{display:flex;gap:6px;justify-content:space-between;margin-bottom:8px;}
+  .ws-tool{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:1px solid transparent;border-radius:12px;color:var(--muted);font-size:10px;font-weight:600;padding:7px 2px;cursor:pointer;}
+  .ws-tool svg{width:22px;height:22px;}
+  .ws-tool.on{color:#fff;border-color:var(--accent-1);background:var(--accent-dim);}
+
+  .ws-tool.soon{opacity:.45;}
+  #wd-skel{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:5;}
+  .skl-bar{position:absolute;left:50%;top:8px;transform:translateX(-50%);display:none;align-items:center;gap:6px;z-index:8;background:rgba(20,20,24,.92);border:1px solid var(--accent-1);border-radius:22px;padding:5px 6px 5px 12px;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;}
+  .skl-bar.show{display:flex;}
+  .skl-bar button{background:rgba(255,255,255,.12);border:none;color:#fff;font-size:12px;font-weight:700;padding:7px 9px;border-radius:16px;}
+  .skl-bar button:disabled{opacity:.35;}
+  .skl-bar button.skl-done{background:var(--accent-1);}
+  /* Easy Cut inside Work Directory */
+  .ec-screen{display:none;position:fixed;inset:0;z-index:950;background:var(--bg);flex-direction:column;}
+  .ec-screen.open{display:flex;}
+  .ec-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .ec-title{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:17px;flex:1;text-align:center;}
+  .ec-apply{border:0;border-radius:22px;padding:10px 13px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));white-space:nowrap;}
+  .ec-stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden;background:#111114;}
+  #ec-canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;touch-action:none;object-fit:contain;border-radius:7px;background-color:#f4f4f7;background-image:conic-gradient(#d6d6dc 25%,transparent 0 50%,#d6d6dc 0 75%,transparent 0);background-size:18px 18px;}
+  .ec-hint{text-align:center;font-size:11px;line-height:1.4;color:var(--muted);padding:7px 14px;min-height:30px;flex-shrink:0;}
+  .ec-controls{padding:8px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface);flex-shrink:0;}
+  .ec-modes{display:flex;gap:8px;margin-bottom:9px;}
+  .ec-mode{flex:1;padding:9px 6px;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;}
+  .ec-mode.active{border-color:var(--accent-1);color:var(--accent-1);background:rgba(var(--accent-rgb),.08);}
+  .ec-range{margin:7px 0;}
+  .ec-range-head{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;}
+  .ec-range-head b{color:var(--text);}
+  .ec-range input{width:100%;accent-color:var(--accent-1);margin:0;}
+  .ec-actions{display:flex;gap:7px;margin-top:8px;}
+  .ec-actions button{flex:1;border:0;border-radius:10px;padding:10px 5px;background:#2c2c31;color:var(--text);font-size:12px;font-weight:700;}
+  .ec-actions button:disabled{opacity:.35;}
+
+  .ws-opts{display:flex;align-items:center;gap:10px;}
+  .ws-colors{display:flex;gap:7px;overflow-x:auto;flex:1;padding:2px;scrollbar-width:none;}
+  .ws-colors::-webkit-scrollbar{display:none;}
+  .ws-sw{flex:0 0 auto;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);cursor:pointer;position:relative;padding:0;}
+  .ws-sw.sel{border-color:#fff;box-shadow:0 0 0 2px var(--accent-1);}
+  .ws-sw input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0;}
+  .ws-size{display:flex;align-items:center;gap:8px;width:42%;}
+  .ws-size input{flex:1;min-width:0;accent-color:var(--accent-1);}
+  .ws-size b{font-size:11px;color:var(--muted);min-width:24px;text-align:right;}
+  .ws-toast{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;font-size:12px;font-weight:600;padding:9px 14px;border-radius:18px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:5;white-space:nowrap;}
+  .ws-toast.show{opacity:1;}
+  .wd-gal{width:100%;max-width:560px;height:90dvh;height:90vh;background:var(--surface);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;}
+  .wd-gal-head{display:flex;align-items:center;gap:8px;padding:14px 14px 10px;}
+  .wd-gal-head select{flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:14px;font-family:inherit;}
+  .wd-gal-head button{border:none;background:#2c2c31;color:var(--text);border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+  .wd-gal-msg{color:var(--muted);font-size:12px;padding:0 16px 8px;min-height:18px;}
+  .wd-gal-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:0 3px calc(10px + env(safe-area-inset-bottom));align-content:start;}
+  .wd-gal-grid button{aspect-ratio:1;border:none;padding:0;background:#2c2c31;cursor:pointer;overflow:hidden;}
+  .wd-gal-grid img{width:100%;height:100%;object-fit:cover;display:block;}
+  .wd-gal-more{grid-column:1/-1;margin:8px;padding:12px;border:none;border-radius:12px;background:#2c2c31;color:var(--text);font-weight:700;font-size:13px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -2108,6 +2207,126 @@
       <button class="drawer-item" data-go="page-update">Update <span class="upd-dot" id="upd-dot" hidden></span></button>
     </div>
 
+  </div>
+
+  <!-- ================= WORK DIRECTORY ================= -->
+  <div class="page" id="page-workdir">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Back" onclick="wdBack()"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="logo">Work directory</div>
+      <button class="icon-btn" id="wd-add-btn" aria-label="Add"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="content" id="wd-content">
+      <div class="wd-row" style="margin-bottom:14px"><button class="wd-btn" id="wd-import-frame-btn">Import frame from project</button></div>
+      <div class="empty" id="wd-empty"><p>Nothing here yet.<br>Tap + to add a drawing space.</p></div>
+      <div class="proj-grid" id="wd-grid" style="display:none"></div>
+    </div>
+
+    <div class="wd-modal" id="wd-new">
+      <div class="wd-card">
+        <h3>New drawing space</h3>
+        <input class="wd-input" id="wd-new-name" type="text" maxlength="40" placeholder="Name">
+        <p class="wd-lab">Canvas size</p>
+        <div class="wd-chips" id="wd-presets"></div>
+        <div class="wd-dims">
+          <input class="wd-input" id="wd-new-w" type="number" inputmode="numeric" value="2048">
+          <span>×</span>
+          <input class="wd-input" id="wd-new-h" type="number" inputmode="numeric" value="2048">
+        </div>
+        <p class="wd-hint">256 to 3072 px per side. A bigger space gives room for a whole character.</p>
+        <div class="wd-row">
+          <button class="wd-btn" id="wd-import-new">Import image</button>
+          <button class="wd-btn primary" id="wd-create">Create blank</button>
+        </div>
+        <div class="wd-row" style="margin-top:10px"><button class="wd-btn" id="wd-new-cancel">Cancel</button></div>
+      </div>
+    </div>
+    <div class="wd-modal" id="wd-frame-picker" style="z-index:75">
+      <div class="wd-card">
+        <h3>Import a project frame</h3>
+        <p class="wd-hint">Choose a frame number. All visible layers will be brought into a new work directory drawing.</p>
+        <div id="wd-frame-list" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:42vh;overflow:auto;margin-bottom:14px"></div>
+        <div class="wd-row"><button class="wd-btn" id="wd-frame-cancel">Cancel</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= WORKSPACE (drawing space) ================= -->
+  <div class="page" id="page-workspace">
+    <div class="ws-head">
+      <button class="icon-btn" id="ws-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="ws-title" id="ws-title">Untitled</button>
+      <button class="icon-btn" id="ws-undo" aria-label="Undo" disabled><svg viewBox="0 0 24 24" fill="none"><path d="M9 7L4 12l5 5M4 12h10a6 6 0 010 12" transform="translate(0 -4)" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="icon-btn" id="ws-redo" aria-label="Redo" disabled><svg viewBox="0 0 24 24" fill="none"><path d="M15 7l5 5-5 5M20 12H10a6 6 0 000 12" transform="translate(0 -4)" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="ws-stage" id="ws-stage">
+      <canvas id="wd-canvas"></canvas>
+      <canvas id="wd-skel"></canvas>
+      <div class="skl-bar" id="skl-bar"><span>🦴</span><button type="button" id="skl-mode">✋ Move skin</button><button type="button" id="skl-undo" disabled>Undo</button><button type="button" id="skl-clear" disabled>Clear</button><button type="button" class="skl-done" id="skl-done">Done</button></div>
+      <div class="ws-toast" id="ws-toast"></div>
+    </div>
+    <div class="ws-bar">
+      <div class="ws-tools">
+        <button class="ws-tool on" data-tool="pencil"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20l1-4L16 5a2.1 2.1 0 013 3L8 19l-4 1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Pencil</button>
+        <button class="ws-tool" data-tool="eraser"><svg viewBox="0 0 24 24" fill="none"><path d="M8 20h12M5 15l9-9a2 2 0 013 0l2 2a2 2 0 010 3l-8 8H8l-3-3a1.4 1.4 0 010-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Eraser</button>
+        <button class="ws-tool" data-tool="hand"><svg viewBox="0 0 24 24" fill="none"><path d="M8 12V6a1.5 1.5 0 013 0v5m0-1V4.5a1.5 1.5 0 013 0V11m0-3a1.5 1.5 0 013 0v7a6 6 0 01-6 6h-1a6 6 0 01-5-3l-3-5a1.5 1.5 0 012.4-1.7L8 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Move</button>
+        <button class="ws-tool" id="ws-import"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-4 4 3 3-2 4 3" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Import</button>
+        <button class="ws-tool" id="ws-easycut" aria-label="Easy Cut"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.4" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="18" r="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M8 7.5L20 19M8 16.5L20 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Easy Cut</button>
+        <button class="ws-tool" id="ws-skel"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.2" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V14M12 10l-5 3M12 10l5 3M12 14l-3 6M12 14l3 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Skeleton</button>
+      </div>
+      <div class="ws-opts">
+        <div class="ws-colors" id="ws-colors"></div>
+        <div class="ws-size"><input type="range" id="ws-size" min="1" max="120" value="6"><b id="ws-size-v">6</b></div>
+      </div>
+    </div>
+    <input type="file" id="wd-file" accept="image/*" hidden>
+  </div>
+
+  <!-- ================= EASY CUT (Work Directory image/background cutout) ================= -->
+  <div class="ec-screen" id="ec-screen" role="dialog" aria-modal="true" aria-label="Easy Cut">
+    <div class="ec-header">
+      <button class="icon-btn" id="ec-close" aria-label="Close Easy Cut"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <div class="ec-title">Easy Cut</div>
+      <button class="ec-apply" id="ec-apply">Apply cutout</button>
+    </div>
+    <div class="ec-stage" id="ec-stage"><canvas id="ec-canvas"></canvas></div>
+    <div class="ec-hint" id="ec-hint">Tap the background to remove connected areas. Results depend on the picture's background.</div>
+    <div class="ec-controls">
+      <div class="ec-modes">
+        <button type="button" class="ec-mode active" id="ec-mode-magic">✦ Auto cut</button>
+        <button type="button" class="ec-mode" id="ec-mode-scissors">✂ Manual cut</button>
+      </div>
+      <div class="ec-range" id="ec-tol-row">
+        <div class="ec-range-head"><span>Cut strength</span><b id="ec-tol-val">26</b></div>
+        <input id="ec-tol" type="range" min="4" max="90" value="26" aria-label="Cut strength">
+      </div>
+      <div class="ec-range" id="ec-brush-row" style="display:none">
+        <div class="ec-range-head"><span>Scissors size</span><b id="ec-brush-val">24</b></div>
+        <input id="ec-brush" type="range" min="6" max="70" value="24" aria-label="Scissors size">
+      </div>
+      <div class="ec-range">
+        <div class="ec-range-head"><span>Cutout size</span><b id="ec-scale-val">100%</b></div>
+        <input id="ec-scale" type="range" min="25" max="150" step="5" value="100" aria-label="Cutout size">
+      </div>
+      <div class="ec-actions">
+        <button type="button" id="ec-undo" disabled>Undo</button>
+        <button type="button" id="ec-reset">Reset</button>
+        <button type="button" id="ec-fit">100% size</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- gallery picker (albums), used by Work directory imports -->
+  <div class="wd-modal" id="wd-gallery" style="z-index:70">
+    <div class="wd-gal">
+      <div class="wd-gal-head">
+        <button type="button" id="wd-gal-close" aria-label="Close">Close</button>
+        <select id="wd-gal-albums" aria-label="Album"></select>
+        <button type="button" id="wd-gal-files">Files</button>
+      </div>
+      <div class="wd-gal-msg" id="wd-gal-msg"></div>
+      <div class="wd-gal-grid" id="wd-gal-grid"></div>
+    </div>
   </div>
 
   <!-- ================= SETTINGS ================= -->
@@ -2358,6 +2577,10 @@
             <svg viewBox="0 0 24 24" fill="none"><g transform="rotate(-45 12 12)"><rect x="1.5" y="8" width="21" height="8" rx="1.6" stroke="currentColor" stroke-width="1.7"/><path d="M6 8v3M10 8v4.5M14 8v3M18 8v4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g></svg>
             <span>Ruler</span>
           </button>
+          <button class="util-btn bp-item" id="bp-curve" aria-label="Curve">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 18C8 3 15 21 20 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="18" r="2" fill="currentColor"/><circle cx="20" cy="6" r="2" fill="currentColor"/></svg>
+            <span>Curve</span>
+          </button>
         </div>
 
         <!-- more tools: Smudge / Blur (opens from the toolbar's "..." button) -->
@@ -2522,6 +2745,19 @@
             <button type="button" class="more-row-edit" data-edit="grid">Edit</button>
             <button type="button" class="sheet-toggle" id="grid-toggle" role="switch" aria-checked="false" aria-label="Toggle grid"></button>
           </button>
+          <button class="more-row" data-item="paint-texture">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 16c3-1 4-5 8-5s4 4 8 3M4 20c3-1 4-4 8-4s4 3 8 2M5 8.5c2-1 3-3 6-3 2.5 0 3 1.5 6 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span class="more-row-label">Paint texture</span>
+            <button type="button" class="sheet-toggle" id="texture-toggle" role="switch" aria-checked="false" aria-label="Toggle paint texture"></button>
+          </button>
+          <button class="more-row" data-item="cel-shade">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 4a8 8 0 010 16c3-2 4.5-5 4.5-8S15 6 12 4z" fill="currentColor"/></svg>
+            <span class="more-row-label">Cel shading</span>
+          </button>
+          <button class="more-row" data-item="add-motion">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="17" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 9h7M1.5 12h8M2.5 15h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span class="more-row-label">Add motion (current frame)</span>
+          </button>
           <button class="more-row" data-item="magic-cut">
             <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L9.5 14.5M6 18l3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="6.5" r="1.4" fill="currentColor"/><circle cx="18" cy="17.5" r="1.4" fill="currentColor"/></svg>
             <span class="more-row-label">Magic Cut</span>
@@ -2533,6 +2769,10 @@
           <button class="more-row" data-item="add-image">
             <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="9.5" r="1.6" stroke="currentColor" stroke-width="1.6"/><path d="M21 16l-5.5-5.5a2 2 0 00-2.8 0L4 19" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
             <span class="more-row-label">Add image</span>
+          </button>
+          <button class="more-row" data-item="work-directory">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            <span class="more-row-label">Work directory</span>
           </button>
           <button class="more-row" data-item="add-video">
             <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M19 9l3-2v10l-3-2" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -2729,6 +2969,7 @@
 
 </div>
 
+  <div class="curve-bar" id="curve-bar"><button type="button" id="curve-cancel">Cancel</button><button type="button" id="curve-done" class="primary">Done</button></div>
 <script>
   // ================= PROJECT STORAGE (auto-save to the device) =================
   // Every project is saved on the phone itself (IndexedDB inside the app's own storage), so it
@@ -3176,7 +3417,7 @@
   // ================= LAZY FRAMES =================
   // Only a handful of frames keep their full-size pictures in memory. Every other frame stays
   // saved on the phone (and shows its small thumbnail) and is loaded the moment it's needed.
-  const MAX_FULL_FRAMES = 12;
+  const MAX_FULL_FRAMES = 8;
   const PLAY_LOOKAHEAD = 6;
   let _frameTick = 0;
   function frameIsLoaded(f){ return !f.layers || !f.layers.some(l => l._unloaded); }
@@ -3433,6 +3674,7 @@
     document.getElementById(id).classList.add('active');
     window.scrollTo(0,0);
     if(id === 'page-home' && typeof refreshProjectList === 'function') refreshProjectList();
+    if(id === 'page-workdir' && typeof window.wdRefreshList === 'function') window.wdRefreshList();
   }
 
   function onNameInput(){
@@ -3506,6 +3748,7 @@
     '<button data-act="copy">Copy</button>' +
     '<button data-act="paste">Paste</button>' +
     '<button data-act="move">Move</button>' +
+    '<button data-act="motion">Add motion</button>' +
     '<button data-act="delete" class="danger">Delete</button>' +
     '<button data-act="paste-back" class="arrow-choice" aria-label="Paste behind this frame"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>' +
     '<button data-act="paste-front" class="arrow-choice" aria-label="Paste in front of this frame">Front<svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
@@ -4711,6 +4954,12 @@
     setMoreSheet(false);
     openFramesViewer();
   });
+  document.querySelector('.more-row[data-item="work-directory"]').addEventListener('click', () => {
+    setMoreSheet(false);
+    if(isPlaying) stopPlayback();
+    window.wdFrom = 'page-editor';          // so Back in the Work directory returns to this project
+    showPage('page-workdir');
+  });
   document.querySelector('.more-row[data-item="project-settings"]').addEventListener('click', () => {
     setMoreSheet(false);
     openProjectSettings();
@@ -5550,7 +5799,13 @@
 
   function hidePlaybackVideo(){
     if(playbackVideoWrap){ playbackVideoWrap.remove(); playbackVideoWrap = null; }
-    if(playbackVideoEl){ playbackVideoEl.pause(); playbackVideoEl = null; }
+    if(playbackVideoEl){
+      const v = playbackVideoEl;
+      playbackVideoEl = null;
+      v.pause();
+      v.removeAttribute('src');          // let go of the video decoder / its memory right away
+      try{ v.load(); }catch(_){}
+    }
   }
 
   // Nothing gets drawn or edited while playback is running, so a frame's layer names, thumbnails
@@ -5586,17 +5841,118 @@
         : '<path d="M7 5l12 7-12 7z"/>';
     });
   }
+  // ---- LIGHT PLAYBACK ----
+  // Playing used to swap every layer canvas of every frame in and out of the page on each tick,
+  // and keep loading / dropping full-size canvases, which ran low-RAM phones out of memory and
+  // closed the app. Now Play draws into ONE canvas: each frame is flattened (layers stacked) into
+  // a small pool of reusable canvases, a few frames ahead of the playhead, and copied onto the
+  // single play canvas. Nothing is re-created per tick, so memory stays flat.
+  const PLAY_AHEAD = 3;
+  const PLAY_POOL = PLAY_AHEAD + 4;
+  const playCache = new Map();      // frame -> { canvas, p (promise), used }
+  let playUse = 0;
+  let playCanvasEl = null, playCtx = null;
+  let playShownFrame = null;
+  let playRun = 0;
+  let playScrollTick = 0;
+
+  function ensurePlayCanvas(){
+    const surface = document.getElementById('editor-canvas');
+    if(!playCanvasEl){
+      playCanvasEl = document.createElement('canvas');
+      playCanvasEl.className = 'play-canvas';
+    }
+    if(playCanvasEl.width !== currentCanvasSize.w || playCanvasEl.height !== currentCanvasSize.h){
+      playCanvasEl.width = currentCanvasSize.w;
+      playCanvasEl.height = currentCanvasSize.h;
+    }
+    playCtx = playCanvasEl.getContext('2d');
+    if(playCanvasEl.parentNode !== surface) surface.appendChild(playCanvasEl);
+  }
+  function removePlayCanvas(){
+    if(playCanvasEl && playCanvasEl.parentNode) playCanvasEl.parentNode.removeChild(playCanvasEl);
+  }
+  function clearPlayCache(){
+    playCache.forEach(e => { e.canvas.width = 1; e.canvas.height = 1; });
+    playCache.clear();
+  }
+  async function buildPlayFrame(frame, cv){
+    if(cv.width !== currentCanvasSize.w || cv.height !== currentCanvasSize.h){
+      cv.width = currentCanvasSize.w; cv.height = currentCanvasSize.h;
+    }
+    const ctx = cv.getContext('2d');
+    ctx.globalAlpha = 1;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#f4f2ee';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    for(const l of frame.layers){
+      if(!l.visible) continue;
+      ctx.globalAlpha = l.opacity / 100;
+      if(!l._unloaded){ ctx.drawImage(l.canvas, 0, 0); continue; }
+      // not in memory: decode its saved picture straight onto the pooled canvas (no layer canvas created)
+      let blob = l._blobP ? await l._blobP : null;
+      if(!blob && l._lazyKey){ const got = await idbGetBlobs([l._lazyKey]); blob = got[0]; }
+      if(!blob) continue;
+      const bmp = await createImageBitmap(blob);
+      ctx.drawImage(bmp, 0, 0);
+      if(bmp.close) bmp.close();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function getPlayFrame(frame){
+    let e = playCache.get(frame);
+    if(e){ e.used = ++playUse; return e.p; }
+    let cv, after = Promise.resolve();
+    if(playCache.size >= PLAY_POOL){
+      let oldK = null, old = null;
+      playCache.forEach((v, k) => { if(!old || v.used < old.used){ old = v; oldK = k; } });
+      playCache.delete(oldK);
+      cv = old.canvas;
+      after = old.p.catch(() => {});      // never reuse a canvas that is still being drawn on
+    } else {
+      cv = document.createElement('canvas');
+      cv.width = currentCanvasSize.w; cv.height = currentCanvasSize.h;
+    }
+    e = { canvas: cv, used: ++playUse, p: null };
+    e.p = after.then(() => buildPlayFrame(frame, cv)).then(() => cv);
+    playCache.set(frame, e);
+    return e.p;
+  }
+  function markPlayThumb(n){
+    const doScroll = (++playScrollTick % 3) === 1;
+    frameStripEls.forEach(el => {
+      const prevSel = el.querySelector('.frame-thumb.selected');
+      const thumb = el.querySelector(`.frame-thumb[data-n="${n}"]`);
+      if(prevSel && prevSel !== thumb) prevSel.classList.remove('selected');
+      if(thumb){
+        thumb.classList.add('selected');
+        if(doScroll) thumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    });
+  }
+
   function stopPlayback(){
     isPlaying = false;
+    playRun++;
     setPlayIcon(false);
     if(playTimer){ clearTimeout(playTimer); playTimer = null; }
     hidePlaybackVideo();
-    // playback ran on the lightweight per-tick switch, which skips things like the frame-strip
-    // thumbnails' scroll position and the full layer list — do one full, unhurried resync now
-    // that we're back to sitting on a single frame instead of racing through them.
-    renderFrameStrips();
-    renderLayers();
-    updateOnionOverlay();
+    // land on the frame that was showing when Pause was pressed
+    const shown = playShownFrame;
+    playShownFrame = null;
+    if(shown && frames.includes(shown) && !shown.selected){
+      frames.forEach(x => x.selected = (x === shown));
+    }
+    const f = currentFrame();
+    const finish = () => {
+      if(isPlaying) return;                  // Play was pressed again meanwhile
+      renderFrameStrips();
+      renderLayers();
+      updateOnionOverlay();
+      removePlayCanvas();
+      clearPlayCache();
+    };
+    if(frameIsLoaded(f)) finish(); else ensureFrameLoaded(f).then(finish);
   }
   function playVideoFrame(frame, onDone){
     hidePlaybackVideo();
@@ -5617,7 +5973,7 @@
     surface.appendChild(wrap);
     playbackVideoWrap = wrap;
     playbackVideoEl = vid;
-    const finish = () => { if(isPlaying) onDone(); };
+    const finish = () => { if(isPlaying && playbackVideoEl === vid) onDone(); };
     vid.addEventListener('ended', finish, { once: true });
     vid.addEventListener('error', () => setTimeout(finish, 300), { once: true });   // unreadable clip — move on instead of sticking
     const p = vid.play();
@@ -5628,24 +5984,25 @@
     const next = frames[idx + 1] || frames[0];   // loop back to the start instead of freezing on the last frame
     playSequenceFrom(next);
   }
-  function playSequenceFrom(frame){
+  async function playSequenceFrom(frame){
     if(!isPlaying) return;
     const idx = frames.indexOf(frame);
     if(idx === -1){ stopPlayback(); return; }
-    if(!frameIsLoaded(frame)){        // its pictures aren't in memory yet: wait a moment, then carry on at an even pace
-      playTimer = null;
-      ensureFrameLoaded(frame).then(() => {
-        if(!isPlaying) return;
-        playAnchorTime = performance.now(); playTickCount = 0;
-        playSequenceFrom(frame);
-      });
-      return;
+    const run = playRun;
+    playTimer = null;
+    const t0 = performance.now();
+    let cv = null;
+    try{ cv = await getPlayFrame(frame); }catch(e){ console.warn('playback frame failed', e); }
+    if(!isPlaying || run !== playRun) return;
+    // only had to wait for the picture? start the even pacing again from here
+    if(performance.now() - t0 > 12){ playAnchorTime = performance.now(); playTickCount = 0; }
+    if(cv){ playCtx.drawImage(cv, 0, 0); }
+    playShownFrame = frame;
+    markPlayThumb(frame.n);
+    for(let k = 1; k <= PLAY_AHEAD; k++){          // get the next few ready while this one shows
+      getPlayFrame(frames[(idx + k) % frames.length]).catch(() => {});
     }
-    if(!frame.selected) selectFrameForPlayback(frame.n);
-    for(let k = 1; k <= PLAY_LOOKAHEAD; k++) ensureFrameLoaded(frames[(idx + k) % frames.length]);   // load ahead while playing
-    trimFrames();
     if(frame.type === 'video'){
-      playTimer = null;
       playVideoFrame(frame, () => {
         // a video frame's length isn't tied to the FPS clock, so re-anchor the steady-tempo
         // timer here — otherwise every picture frame after it would try to catch up all at once
@@ -5657,10 +6014,7 @@
       hidePlaybackVideo();
       const interval = Math.max(30, Math.round(1000 / (selectedFps || 12)));
       playTickCount++;
-      // Schedule against an absolute target time rather than "interval from now": if a tick's
-      // work takes a few ms, the next delay shrinks to compensate instead of stacking that delay
-      // on top of every future tick. That's what keeps the frames landing at an even 12-per-second
-      // pace instead of speeding up/stalling — the "cracking"/stepping feeling you were seeing.
+      // schedule against an absolute target time so frames land at an even pace
       const target = playAnchorTime + playTickCount * interval;
       const delay = Math.max(0, target - performance.now());
       playTimer = setTimeout(() => advancePlayback(idx), delay);
@@ -5671,11 +6025,16 @@
     if(videoPlaceState) commitVideoPlacement();
     if(pasteState) commitPasteTransform();
     isPlaying = true;
+    playRun++;
     setPlayIcon(true);
+    trimFrames();                 // free what we can before the run starts
+    ensurePlayCanvas();
     playAnchorTime = performance.now();
     playTickCount = 0;
     playSequenceFrom(currentFrame());
   }
+  // leaving the app mid-play: stop, so nothing keeps decoding in the background
+  document.addEventListener('visibilitychange', () => { if(document.hidden && isPlaying) stopPlayback(); });
   playBtns.forEach(b => b.addEventListener('click', () => { isPlaying ? stopPlayback() : startPlayback(); }));
 
   function stepFrame(dir){
@@ -5739,11 +6098,34 @@
     ctx.globalAlpha = 1;
   }
 
+  // Work directory bridge: expose numbered project frames and render all visible layers
+  // together into a transferable image without changing the existing gallery import.
+  window.dgListProjectFrames = function(){
+    return frames.map((f, i) => ({ number: i + 1, type: f.type || 'picture' }));
+  };
+  window.dgRenderProjectFrame = async function(index){
+    const f = frames[index];
+    if(!f) throw new Error('That frame no longer exists.');
+    await ensureFrameLoaded(f);
+    const w = currentCanvasSize.w, h = currentCanvasSize.h;
+    const out = document.createElement('canvas'); out.width = w; out.height = h;
+    const c = out.getContext('2d');
+    // Keep transparency so characters can be edited on any background in the work directory.
+    c.clearRect(0, 0, w, h);
+    f.layers.forEach(l => {
+      if(!l.visible || !l.canvas) return;
+      c.globalAlpha = Math.max(0, Math.min(1, (Number(l.opacity) || 0) / 100));
+      c.drawImage(l.canvas, 0, 0, w, h);
+    });
+    c.globalAlpha = 1;
+    return { canvas: out, width: w, height: h, number: index + 1 };
+  };
+
   // Plays a video frame's actual file (real motion + audio) into the export canvas until it
   // ends, mirroring what playVideoFrame shows on screen during a live Play.
-  function exportVideoFrame(ctx, frame, w, h, audioDest){
+  function exportVideoFrame(ctx, frame, w, h, audioDest, poster){
     return new Promise(resolve => {
-      drawStaticFrame(ctx, frame, w, h);   // poster underneath in case the video is slow to start
+      if(poster) ctx.drawImage(poster, 0, 0); else drawStaticFrame(ctx, frame, w, h);   // poster underneath in case the video is slow to start
       const vid = document.createElement('video');
       vid.src = frame.video.src;
       vid.playsInline = true;
@@ -5895,7 +6277,6 @@
       // — write the export straight into the device's gallery/Movies via MediaStore, the same
       // way CapCut/FlipaClip do it, so it just appears there with no dialog.
       try{
-        const base64 = await blobToBase64(blob);
         const { Filesystem, Media } = cap.Plugins;
         if(!Filesystem || !Media){
           throw new Error('Filesystem/Media plugin not available — check they are installed and synced into the native project.');
@@ -5905,7 +6286,16 @@
         // string the enum resolves to instead.
         // Media.saveVideo needs a real file path to copy from, not a blob, so stage it in the
         // app's own private cache first — this part never touches public storage.
-        const staged = await Filesystem.writeFile({ path: filename, data: base64, directory: 'CACHE' });
+        // Written in 3 MB pieces (a multiple of 3 bytes so the base64 pieces join cleanly) instead of
+        // turning the whole movie into one huge string, which could run the phone out of memory.
+        const CHUNK = 3 * 1024 * 1024;
+        let staged = null;
+        for(let off = 0; off < blob.size; off += CHUNK){
+          const part = await blobToBase64(blob.slice(off, Math.min(off + CHUNK, blob.size)));
+          if(off === 0) staged = await Filesystem.writeFile({ path: filename, data: part, directory: 'CACHE' });
+          else await Filesystem.appendFile({ path: filename, data: part, directory: 'CACHE' });
+        }
+        if(!staged) throw new Error('The movie was empty.');
 
         // Since plugin v5+, Android requires an album *identifier*, not a name — createAlbum()
         // doesn't hand one back either, so find-or-create, then look it up via getAlbums().
@@ -5997,31 +6387,57 @@
     const chunks = [];
     const recorder = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: bitrate });
     recorder.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
-
     const stopped = new Promise(resolve => { recorder.onstop = resolve; });
-    recorder.start();
 
-    for(let i = 0; i < frames.length; i++){
-      if(exportCancelled) break;
-      const frame = frames[i];
-      await ensureFrameLoaded(frame);
-      if(i + 1 < frames.length) ensureFrameLoaded(frames[i + 1]);
-      if(frame.type === 'video'){
-        await exportVideoFrame(ctx, frame, w, h, audioDest);
-      } else {
-        drawStaticFrame(ctx, frame, w, h);
-        await new Promise(res => setTimeout(res, Math.max(30, Math.round(1000 / fps))));
+    // keep the screen on so the phone doesn't slow the export down or pause it halfway
+    let wakeLock = null;
+    try{ if(navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); }catch(_){}
+
+    // Two small staging canvases. While frame N is on the recording canvas, frame N+1 is being
+    // put together on the other one. A frame's saved pictures are decoded straight onto the staging
+    // canvas — no layer canvases are created, nothing piles up in memory, so a long project exports
+    // with the same memory as a short one (before, every frame kept its full-size layers in RAM
+    // and the phone closed the app around the 50th frame).
+    const stages = [0, 1].map(() => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+    const build = i => buildPlayFrame(frames[i], stages[i % 2]).catch(e => { console.warn('export frame failed', i, e); });
+    const interval = Math.max(30, Math.round(1000 / fps));
+    let anchor = 0, count = 0;
+
+    try{
+      recorder.start(1000);        // hand over finished data every second instead of holding it all until the end
+      let pending = build(0);
+      for(let i = 0; i < frames.length; i++){
+        if(exportCancelled) break;
+        const frame = frames[i];
+        await pending;
+        pending = (i + 1 < frames.length) ? build(i + 1) : Promise.resolve();
+        const cur = stages[i % 2];
+        if(frame.type === 'video'){
+          await exportVideoFrame(ctx, frame, w, h, audioDest, cur);
+          anchor = 0; count = 0;                // a video frame sets its own length — restart the even pacing after it
+        } else {
+          ctx.drawImage(cur, 0, 0);
+          if(!anchor){ anchor = performance.now(); count = 0; }
+          count++;
+          const delay = Math.max(0, anchor + count * interval - performance.now());
+          await new Promise(res => setTimeout(res, delay));
+        }
+        updateExportOverlay(i + 1, frames.length, formatLabel);
+        await pending;                          // next frame is finished before we loop on
       }
-      updateExportOverlay(i + 1, frames.length, formatLabel);
-      trimFrames();
+    }finally{
+      try{ if(recorder.state !== 'inactive') recorder.stop(); }catch(_){}
+      await stopped;
+      combined.getTracks().forEach(t => { try{ t.stop(); }catch(_){} });
+      if(wakeLock){ try{ wakeLock.release(); }catch(_){} }
+      stages.forEach(c => { c.width = 1; c.height = 1; });
+      canvas.width = 1; canvas.height = 1;
     }
-
-    recorder.stop();
-    await stopped;
     if(exportAudioCtx){ exportAudioCtx.close(); exportAudioCtx = null; }
 
     if(!exportCancelled){
       const blob = new Blob(chunks, { type: mimeType });
+      chunks.length = 0;
       await saveOrShareBlob(blob, 'movie.' + ext);
     }
 
@@ -6182,6 +6598,11 @@
   const BRUSHES = [
     { id:'pen',           name:'Pen' },
     { id:'pen-soft',      name:'Pen (Soft)' },
+    { id:'pointed-pen',   name:'Pointed Pen (Smooth)' },
+    { id:'needle',        name:'Needle Liner' },
+    { id:'sharp-pencil',  name:'Sharp Pencil (Pointed)' },
+    { id:'brush-pen',     name:'Brush Pen (Flick)' },
+    { id:'feather-liner', name:'Feather Liner (Soft Point)' },
     { id:'blend',         name:'Blend (Ultra Soft)' },
     { id:'pen-choppy',    name:'Pen (Choppy)' },
     { id:'sketch',        name:'Sketch' },
@@ -6287,6 +6708,149 @@
     return c;
   }
 
+  // ---- paint texture: a tileable grainy colour tile (blotchy + fine speckle), cached per colour ----
+  let textureOn = false;
+  const paintTiles = new Map();
+  function paintTile(rgb){
+    let c = paintTiles.get(rgb);
+    if(c) return c;
+    if(paintTiles.size > 30) paintTiles.clear();
+    const S = 96, cell = 8, G = S / cell;
+    c = document.createElement('canvas'); c.width = c.height = S;
+    const g = c.getContext('2d'), img = g.createImageData(S, S), d = img.data;
+    const [r, gr, b] = rgb.split(',').map(Number);
+    const lv = (gx, gy) => (hash2(((gx % G) + G) % G + 7000, ((gy % G) + G) % G + 9000) & 255) / 255;
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
+      const fx = x / cell, fy = y / cell, x0 = Math.floor(fx), y0 = Math.floor(fy);
+      const tx = fx - x0, ty = fy - y0, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+      const blotch = (lv(x0, y0) * (1 - sx) + lv(x0 + 1, y0) * sx) * (1 - sy) + (lv(x0, y0 + 1) * (1 - sx) + lv(x0 + 1, y0 + 1) * sx) * sy;
+      const fine = (hash2(x, y) & 255) / 255;
+      const a = 0.45 + blotch * 0.35 + fine * 0.2 - (fine > 0.93 ? 0.4 : 0);
+      const i = (y * S + x) * 4;
+      d[i] = r; d[i + 1] = gr; d[i + 2] = b; d[i + 3] = Math.max(0, Math.min(1, a)) * 255;
+    }
+    g.putImageData(img, 0, 0);
+    paintTiles.set(rgb, c);
+    return c;
+  }
+  try{ textureOn = localStorage.getItem('dg_texture') === '1'; }catch(_){}
+  function setTexture(on){
+    textureOn = on;
+    const t = document.getElementById('texture-toggle');
+    t.classList.toggle('on', on); t.setAttribute('aria-checked', on);
+    try{ localStorage.setItem('dg_texture', on ? '1' : '0'); }catch(_){}
+  }
+  setTexture(textureOn);
+  document.getElementById('texture-toggle').addEventListener('click', e => { e.stopPropagation(); setTexture(!textureOn); });
+  document.querySelector('.more-row[data-item="paint-texture"]').addEventListener('click', () => setTexture(!textureOn));
+
+  // ================= CEL SHADING =================
+  // Looks at every visible layer of the current frame, treats everything drawn as one solid shape,
+  // and paints anime-style lighting onto the colour fills: a hard-edged shadow band on the side away
+  // from the light, a highlight on the side facing it, a cool rim light on the far edge, and small
+  // cast shadows under ink lines. Dark ink lines themselves are never touched.
+  function boxBlur(src, W, H, r){
+    const tmp = new Float32Array(src.length), out = new Float32Array(src.length), n = 2 * r + 1;
+    for(let y = 0; y < H; y++){
+      let s = 0; const o = y * W;
+      for(let x = -r; x <= r; x++) if(x >= 0 && x < W) s += src[o + x];
+      for(let x = 0; x < W; x++){
+        tmp[o + x] = s / n;
+        const a = x + r + 1, b = x - r;
+        if(a < W) s += src[o + a];
+        if(b >= 0) s -= src[o + b];
+      }
+    }
+    for(let x = 0; x < W; x++){
+      let s = 0;
+      for(let y = -r; y <= r; y++) if(y >= 0 && y < H) s += tmp[y * W + x];
+      for(let y = 0; y < H; y++){
+        out[y * W + x] = s / n;
+        const a = y + r + 1, b = y - r;
+        if(a < H) s += tmp[a * W + x];
+        if(b >= 0) s -= tmp[b * W + x];
+      }
+    }
+    return out;
+  }
+  function celShadePixels(datas, lockedFlags, W, H){
+    const N = W * H, sil = new Float32Array(N), ink = new Uint8Array(N);
+    for(const d of datas){
+      for(let i = 0, p = 0; i < N; i++, p += 4){
+        const a = d[p + 3];
+        if(a > 20){
+          if(a / 255 > sil[i]) sil[i] = a / 255;
+          if(a > 150 && 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2] < 80) ink[i] = 1;
+        }
+      }
+    }
+    const sg = Math.max(6, Math.min(W, H) * 0.07), r = Math.max(2, Math.round(sg * 0.9));
+    let h = sil;
+    for(let k = 0; k < 3; k++) h = boxBlur(h, W, H, r);
+    const ox = Math.max(3, Math.round(sg * 0.14)), oy = Math.max(3, Math.round(sg * 0.2));
+    const K = sg * 1.15;
+    let Lx = -0.5, Ly = -0.62, Lz = 0.6; const ln = Math.hypot(Lx, Ly, Lz); Lx /= ln; Ly /= ln; Lz /= ln;
+    let Rx = 0.62, Ry = 0.7, Rz = 0.3; const rn = Math.hypot(Rx, Ry, Rz); Rx /= rn; Ry /= rn; Rz /= rn;
+    const ss = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    datas.forEach((d, li) => {
+      if(lockedFlags[li]) return;
+      for(let y = 1; y < H - 1; y++){
+        for(let x = 1; x < W - 1; x++){
+          const i = y * W + x, p = i * 4, a = d[p + 3];
+          if(a < 8) continue;
+          const R = d[p], G = d[p + 1], B = d[p + 2];
+          if(0.299 * R + 0.587 * G + 0.114 * B < 80) continue;      // ink stays crisp
+          const gx = (h[i + 1] - h[i - 1]) * 0.5, gy = (h[i + W] - h[i - W]) * 0.5;
+          const nx = -gx * K, ny = -gy * K, inv = 1 / Math.sqrt(nx * nx + ny * ny + 1);
+          const dl = (nx * Lx + ny * Ly + Lz) * inv;
+          const dr = (nx * Rx + ny * Ry + Rz) * inv;
+          let cast = 0;
+          if(x - ox >= 0 && y - oy >= 0 && ink[i - oy * W - ox]) cast = 1;
+          const shade = Math.max(ss(0.50, 0.46, dl), cast * 0.9);
+          const lite = ss(0.69, 0.72, dl) * (1 - cast);
+          const rim = ss(0.5, 0.58, dr) * (1 - ss(0.56, 0.64, h[i])) * (1 - lite);
+          let r = R, g = G, b = B;
+          const soft = 0.9 + 0.1 * Math.max(0, Math.min(1.5, dl)) / 0.6;      // gentle gradient under the bands
+          r *= soft; g *= soft; b *= soft;
+          r += (r * 0.72 - r) * shade; g += (g * 0.62 - g) * shade; b += (b * 0.80 - b) * shade;
+          r += (255 - r) * 0.30 * lite; g += (255 - g) * 0.27 * lite; b += (255 - b) * 0.20 * lite;
+          const rm = 0.75 * rim;
+          r += (150 - r) * rm; g += (215 - g) * rm; b += (255 - b) * rm;
+          const nz = (Math.imul(Math.imul(x, 73856093) ^ Math.imul(y, 19349663), 2654435761) >>> 28) - 7.5;
+          d[p] = r + nz * 0.35; d[p + 1] = g + nz * 0.35; d[p + 2] = b + nz * 0.35;
+        }
+      }
+    });
+  }
+  function celShadeFrame(){
+    const fr = currentFrame();
+    const layers = (fr.layers || []).filter(l => l.canvas && l.visible !== false);
+    if(!layers.length) return false;
+    const W = layers[0].canvas.width, H = layers[0].canvas.height;
+    const datas = layers.map(l => l.canvas.getContext('2d').getImageData(0, 0, W, H));
+    const locked = layers.map(l => !!l.locked);
+    const targets = layers.filter(l => !l.locked);
+    if(!targets.length) return false;
+    pushUndoSnapshot(targets);
+    celShadePixels(datas.map(im => im.data), locked, W, H);
+    layers.forEach((l, i) => { if(!locked[i]) l.canvas.getContext('2d').putImageData(datas[i], 0, 0); });
+    refreshThumbnails();
+    markProjectChanged();
+    return true;
+  }
+  (function(){
+    const row = document.querySelector('.more-row[data-item="cel-shade"]');
+    const label = row.querySelector('.more-row-label');
+    row.addEventListener('click', () => {
+      setMoreSheet(false);
+      setTimeout(() => {
+        const ok = celShadeFrame();
+        label.textContent = ok ? 'Cel shading ✓ (undo to revert)' : 'Cel shading (no unlocked layer)';
+        setTimeout(() => { label.textContent = 'Cel shading'; }, 2500);
+      }, 60);
+    });
+  })();
+
   // ---- how each brush behaves ----
   // e = the engine. e.px = brush diameter in canvas px, e.k = canvas resolution scale,
   // e.p = smoothed pressure (0-1; from the pen, or from drawing speed for finger / mouse),
@@ -6298,12 +6862,28 @@
     'pencil-hb': { cell:1.35, dens:0.82, edge:2, alpha:0.3,  dr:[0.45, 0.9]  },
     charcoal:    { cell:2.1,  dens:0.5,  edge:2, alpha:0.5,  dr:[0.3, 0.85]  },
     drybrush:    { cell:0.65, dens:0.4,  edge:6, alpha:0.85, dr:[0.3, 0.55]  },
+    sharp:       { cell:0.7,  dens:0.9,  edge:4, alpha:0.55, dr:[0.45, 0.8]  },
   };
   const SPRAY = {
     airbrush:        { flow:0.09, hard:0.0,  core:1.0,  dens:0.012, dotA:0.5 },
     'airbrush-dark': { flow:0.18, hard:0.22, core:0.9,  dens:0.022, dotA:0.75 },
   };
 
+  // Width multiplier (0..1) for the pointed pens: thin at the start of the stroke, full in the middle, thin again at
+  // the end. The end part only kicks in when the whole stroke is known (the pen re-draws a finished stroke once the
+  // finger lifts, see replayTaperedStroke), so the point is made out of your own line, not tacked on.
+  function tpShape(e, startLen, endLen, minK){
+    if(e.noTaper) return 1;
+    let sl = e.px * startLen, el = e.px * endLen;
+    if(e.total){ const cap = e.total * 0.45; sl = Math.min(sl, cap); el = Math.min(el, cap); }
+    const ts = Math.min(1, (e.trav || 0) / Math.max(1, sl));
+    let k = minK + (1 - minK) * ts * ts * (3 - 2 * ts);
+    if(e.total){
+      const te = Math.min(1, Math.max(0, e.total - (e.trav || 0)) / Math.max(1, el));
+      k *= minK + (1 - minK) * te * te * (3 - 2 * te);
+    }
+    return k;
+  }
   const BRUSH_DEFS = {
     // crisp ink: solid round line, thinner when you draw fast (or press lightly with a pen)
     'pen': {
@@ -6390,6 +6970,30 @@
     },
 
     // waxy crayon: opaque and grainy, paper shows through, ragged edge
+    // ---- pointed, smooth pens: drawn entirely by your own hand ----
+    // The line follows exactly the path you drew. It starts thin, swells as you go, and when you lift
+    // the end narrows to a point over the last stretch of YOUR stroke (nothing is added past it).
+    'pointed-pen': {
+      spacing: 0.06, taperEnd: true,
+      stamp(e, x, y){ e.disc(x, y, e.px * 0.5 * (0.7 + 0.3 * e.p) * tpShape(e, 4.5, 6, 0.08)); }
+    },
+    'needle': {
+      spacing: 0.06, taperEnd: true,
+      stamp(e, x, y){ e.disc(x, y, e.px * 0.26 * (0.8 + 0.2 * e.p) * tpShape(e, 7, 9, 0.05)); }
+    },
+    'sharp-pencil': {
+      spacing: 0.1, taperEnd: true,
+      stamp(e, x, y){ const r = e.px * 0.5 * tpShape(e, 4, 6, 0.1); e.grain(x, y, r * (0.7 + 0.3 * e.p) + 0.4, GRAIN.sharp, 0.6 + 0.4 * e.p, 1); }
+    },
+    'brush-pen': {
+      spacing: 0.05, taperEnd: true,
+      stamp(e, x, y){ e.disc(x, y, e.px * 0.5 * (0.18 + 0.82 * Math.pow(e.p, 1.35)) * tpShape(e, 5.5, 8, 0.05)); }
+    },
+    'feather-liner': {
+      spacing: 0.05, taperEnd: true,
+      stamp(e, x, y){ e.soft(x, y, e.px * (0.75 + 0.25 * e.p) * tpShape(e, 4.5, 6, 0.08) * 1.08, 0.9, 0.55); }
+    },
+
     'crayon': {
       spacing: 0.18,
       stamp(e, x, y){
@@ -6500,6 +7104,7 @@
       this.p = 1;
       this.ang = 0;
       this.active = false;
+      this.tex = false;
       this.lastMoveWall = 0;
       this.setColor('#000000');
     }
@@ -6516,6 +7121,19 @@
     disc(x, y, r){
       const ctx = this.ctx;
       ctx.globalAlpha = 1;
+      if(this.tex){
+        // painted look: canvas-anchored grain + slightly wobbly edge, so overlapping dabs build up like gouache
+        if(this._patCtx !== ctx || this._patRgb !== this.rgb){
+          this._pat = ctx.createPattern(paintTile(this.rgb), 'repeat');
+          this._patCtx = ctx; this._patRgb = this.rgb;
+        }
+        const j = 1 + ((hash2((x / 1.5) | 0, (y / 1.5) | 0) & 255) / 255 - 0.5) * 0.14;
+        ctx.fillStyle = this._pat || this.color;
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(0.3, r * j), 0, TAU);
+        ctx.fill();
+        return;
+      }
       ctx.fillStyle = this.color;
       ctx.beginPath();
       ctx.arc(x, y, Math.max(0.3, r), 0, TAU);
@@ -6574,6 +7192,8 @@
       this.acc = 0;
       this.ang = 0;
       this.hasEmit = false;
+      this.trav = 0;
+      this.rec = this.def.taperEnd ? [{ x: x, y: y, p: pressure, t: t }] : null;
       this.lastT = t;
       this.lastMoveWall = performance.now();
       if(this.def.begin) this.def.begin(this);
@@ -6581,6 +7201,7 @@
     }
     move(x, y, pressure, isPen, t){
       if(!this.active) return;
+      if(this.rec) this.rec.push({ x: x, y: y, p: pressure, t: t });
       const dx = x - this.prevX, dy = y - this.prevY, dist = Math.hypot(dx, dy);
       if(dist < 0.25) return;
       const dt = Math.max(1, t - this.lastT);
@@ -6607,7 +7228,7 @@
     _emit(x, y){
       if(this.hasEmit){
         const dx = x - this.ex, dy = y - this.ey;
-        if(dx || dy) this.ang = Math.atan2(dy, dx);
+        if(dx || dy){ this.ang = Math.atan2(dy, dx); this.trav += Math.hypot(dx, dy); }
       }
       this.ex = x; this.ey = y; this.hasEmit = true;
       this.def.stamp(this, x, y);
@@ -6646,6 +7267,7 @@
     eng.k = k;
     const x0 = Math.max(10, h * 0.3), x1 = w - x0, cy = h / 2;
     const n = Math.max(30, Math.round((x1 - x0) / 4));
+    eng.total = (x1 - x0) * 1.03;     // the demo stroke's length, so the pointed pens show their pointed end
     for(let i = 0; i <= n; i++){
       const t = i / n;
       const x = x0 + (x1 - x0) * t;
@@ -7002,6 +7624,24 @@
     if(drawEngine.def.hold && performance.now() - drawEngine.lastMoveWall > 45) drawEngine.hold();   // airbrush keeps spraying while held still
     holdRaf = requestAnimationFrame(holdTick);
   }
+  // The pointed pens know where a stroke ends only once the finger lifts. So: put the layer back the way it was
+  // before the stroke, then draw the very same hand path again, this time with the point built into its ends.
+  function replayTaperedStroke(){
+    const eng = drawEngine, rec = eng.rec, isPen = eng.isPen;
+    eng.rec = null;
+    const ctx = eng.ctx;
+    let total = 0;
+    for(let i = 1; i < rec.length; i++) total += Math.hypot(rec[i].x - rec[i - 1].x, rec[i].y - rec[i - 1].y);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'copy';
+    ctx.drawImage(strokeSnapCanvas, 0, 0);
+    ctx.restore();
+    eng.total = total * 0.992;
+    eng.noTaper = total < eng.px * 0.8;               // a tap or a tiny scratch just makes a normal round dot
+    eng.begin(rec[0].x, rec[0].y, rec[0].p, isPen, rec[0].t);
+    for(let i = 1; i < rec.length; i++) eng.move(rec[i].x, rec[i].y, rec[i].p, isPen, rec[i].t);
+    eng.end();
+    eng.rec = null; eng.total = 0; eng.noTaper = false;
+  }
   function stopStroke(skipThumb){
     if(drawPointer === null) return;
     drawPointer = null;
@@ -7012,6 +7652,7 @@
     else {
       drawEngine.end();
       if(currentStrokeIsLock) barrierEngine.end();
+      if(drawEngine.rec && drawEngine.rec.length && strokeSnapCanvas && !currentStrokeIsLock) replayTaperedStroke();
     }
     if(clipRegionMask){    // final, unthrottled pass so the committed stroke never has a sliver past the line
       applyClipCorrection();
@@ -7256,6 +7897,7 @@
     }
   }
 
+  let strokeSnapCanvas = null;
   function beginDraw(e){
     const layer = getActiveLayer();
     if(!layer || !layer.visible) return;
@@ -7266,6 +7908,7 @@
     const barrierCanvas = (isLock || frame.barrier) ? getBarrierCanvas(frame) : null;
     // save this layer's (and, for Lock Pencil, the barrier's) pixels as they were, right before this stroke touches them
     const undoGroup = pushUndoSnapshot(isLock ? [layer, { canvas: barrierCanvas }] : layer);
+    strokeSnapCanvas = undoGroup[0] && undoGroup[0].canvas;
     strokeStartWall = performance.now();
     drawPointer = e.pointerId;
     try{ drawSurface.setPointerCapture(e.pointerId); }catch(_){}
@@ -7287,6 +7930,7 @@
     drawEngine.k = k;
     drawEngine.px = (isErasing ? eraserSize : brushSize) * k;
     drawEngine.setBrush(isErasing ? selectedEraserBrushId : selectedBrushId);
+    drawEngine.tex = textureOn && !isErasing;
     drawEngine.setColor(isErasing && !eraseToAlpha ? '#ffffff' : brushColor);
     if(rulerType && rulerGuide){
       strokeRulerAnchor = { x: px0, y: py0 };
@@ -7364,6 +8008,7 @@
     if(gestureLock || activeTouchIds.size > 1) return;                 // pinch / pan in progress -> never draw
     if(e.pointerType === 'mouse' && e.button !== 0) return;
     if(popsOpen()){ closePops(); e.preventDefault(); return; }         // first tap only closes the size / colour box
+    if(curveMode && activeTool === 'Brush'){ curveDown(e); return; }
     if(activeTool === 'Select'){ e.preventDefault(); beginLasso(e); return; }
     if(activeTool === 'Fill'){ e.preventDefault(); doFloodFill(e); return; }
     if(activeTool === 'Picker'){ e.preventDefault(); doEyedropper(e); return; }
@@ -7406,6 +8051,234 @@
     });
   });
   drawSurface.addEventListener('contextmenu', e => e.preventDefault());
+
+  // ================= CURVE PEN (like ibisPaint's curve tool) =================
+  // Turn on "Curve" in the brush panel. Touch + drag to lay points: the first touch drops the
+  // starting point, and every drag after that drops a new point where you let go. The line bends
+  // smoothly through all the points. Tap (without dragging) to finish, or press Done. The finished
+  // curve is drawn with your current brush, size and colour, thinning out at both ends.
+  let curveMode = false;
+  let curvePts = [];
+  let curveGesture = null;
+  const bpCurveBtn = document.getElementById('bp-curve');
+  const curveBarEl = document.getElementById('curve-bar');
+  function curveLayerSize(){
+    const l = getActiveLayer();
+    return l ? { w: l.canvas.width, h: l.canvas.height } : { w: lassoOverlay.width, h: lassoOverlay.height };
+  }
+  function curveBezierSegs(pts){
+    const segs = [], n = pts.length;
+    for(let i = 0; i < n - 1; i++){
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(n - 1, i + 2)];
+      segs.push([p1, { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 }, { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 }, p2]);
+    }
+    return segs;
+  }
+  function renderCurvePreview(){
+    const ov = lassoOverlay, ctx = ov.getContext('2d');
+    ctx.clearRect(0, 0, ov.width, ov.height);
+    curveBarEl.classList.toggle('open', curvePts.length > 0);
+    if(!curvePts.length) return;
+    const sz = curveLayerSize(), sx = ov.width / sz.w, sy = ov.height / sz.h, k = canvasK() * sx;
+    ctx.save(); ctx.scale(sx, sy);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const segs = curveBezierSegs(curvePts);
+    const trace = () => { ctx.beginPath(); segs.forEach((s, i) => { if(!i) ctx.moveTo(s[0].x, s[0].y); ctx.bezierCurveTo(s[1].x, s[1].y, s[2].x, s[2].y, s[3].x, s[3].y); }); };
+    if(segs.length){
+      ctx.globalAlpha = 0.28; ctx.strokeStyle = brushColor; ctx.lineWidth = Math.max(1, brushSize * canvasK());
+      trace(); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.strokeStyle = '#ff4f8b'; ctx.lineWidth = Math.max(1.5, 2.2 * canvasK());
+      trace(); ctx.stroke();
+    }
+    curvePts.forEach((p, i) => {
+      const last = i === (curveSel >= 0 && curveSel < curvePts.length ? curveSel : curvePts.length - 1), r = (last ? 9 : 7) * canvasK();
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = last ? '#ff4f8b' : '#ffffff'; ctx.fill();
+      ctx.lineWidth = 2.2 * canvasK(); ctx.strokeStyle = last ? '#ffffff' : '#ff4f8b'; ctx.stroke();
+    });
+    ctx.restore();
+  }
+  function curveClear(){
+    curvePts = []; curveGesture = null; curveSel = -1;
+    lassoOverlay.getContext('2d').clearRect(0, 0, lassoOverlay.width, lassoOverlay.height);
+    curveBarEl.classList.remove('open');
+  }
+  function curveCommit(){
+    const pts = curvePts.slice();
+    curveClear();
+    if(pts.length < 2) return;
+    const layer = getActiveLayer();
+    if(!layer || !layer.visible) return;
+    // sample the curve into small steps
+    const k = canvasK(), step = Math.max(0.8, 1.4 * k), samples = [];
+    curveBezierSegs(pts).forEach((s, si) => {
+      const len = Math.hypot(s[1].x - s[0].x, s[1].y - s[0].y) + Math.hypot(s[2].x - s[1].x, s[2].y - s[1].y) + Math.hypot(s[3].x - s[2].x, s[3].y - s[2].y);
+      const n = Math.max(2, Math.ceil(len / step));
+      for(let i = (si ? 1 : 0); i <= n; i++){
+        const t = i / n, u = 1 - t;
+        samples.push({
+          x: u * u * u * s[0].x + 3 * u * u * t * s[1].x + 3 * u * t * t * s[2].x + t * t * t * s[3].x,
+          y: u * u * u * s[0].y + 3 * u * u * t * s[1].y + 3 * u * t * t * s[2].y + t * t * t * s[3].y
+        });
+      }
+    });
+    const cum = [0];
+    for(let i = 1; i < samples.length; i++) cum.push(cum[i - 1] + Math.hypot(samples[i].x - samples[i - 1].x, samples[i].y - samples[i - 1].y));
+    const total = cum[cum.length - 1] || 1;
+    const taper = Math.max(1, Math.min(total * 0.2, brushSize * k * 3));
+    pushUndoSnapshot(layer);
+    const ctx = layer.canvas.getContext('2d');
+    drawEngine.ctx = ctx;
+    ctx.globalCompositeOperation = layer.locked ? 'source-atop' : 'source-over';
+    drawEngine.k = k; drawEngine.px = brushSize * k;
+    drawEngine.setBrush(selectedBrushId);
+    drawEngine.tex = textureOn;
+    drawEngine.setColor(brushColor);
+    const pr = i => { const e = Math.max(0, Math.min(1, Math.min(cum[i], total - cum[i]) / taper)); return 0.22 + 0.78 * e * e * (3 - 2 * e); };
+    drawEngine.begin(samples[0].x, samples[0].y, pr(0), true, 0);
+    for(let i = 1; i < samples.length; i++) drawEngine.move(samples[i].x, samples[i].y, pr(i), true, i * 6);
+    drawEngine.end();
+    refreshThumbnails();
+    markProjectChanged();
+  }
+  let curveSel = -1;
+  function curveHit(p, sz){
+    const rect = drawSurface.getBoundingClientRect(), per = sz.w / Math.max(1, rect.width);
+    const R = Math.max(28 * per, 14 * canvasK());
+    let best = -1, bd = 1e9;
+    curvePts.forEach((q, i) => { const d = Math.hypot(q.x - p.x, q.y - p.y); if(d <= R && d <= bd){ bd = d; best = i; } });
+    return best;
+  }
+  function curveAbort(g){          // a second finger landed (zoom / pan): undo whatever this touch did
+    curvePts = g.backup; curveGesture = null; renderCurvePreview();
+  }
+  function curveDown(e){
+    e.preventDefault();
+    const sz = curveLayerSize(), p = canvasPointFromEvent(e, sz.w, sz.h), hit = curveHit(p, sz);
+    curveGesture = { id: e.pointerId, sx: p.x, sy: p.y, moved: false, idx: -1, grab: hit,
+      ox: hit >= 0 ? curvePts[hit].x - p.x : 0, oy: hit >= 0 ? curvePts[hit].y - p.y : 0,
+      backup: curvePts.map(q => ({ x: q.x, y: q.y })), first: curvePts.length === 0 };
+    if(hit >= 0) curveSel = hit;
+    try{ drawSurface.setPointerCapture(e.pointerId); }catch(_){}
+    renderCurvePreview();
+  }
+  drawSurface.addEventListener('pointermove', e => {
+    const g = curveGesture;
+    if(!g || e.pointerId !== g.id) return;
+    if(gestureLock || activeTouchIds.size > 1){ curveAbort(g); return; }
+    e.preventDefault();
+    const sz = curveLayerSize(), p = canvasPointFromEvent(e, sz.w, sz.h), dist = Math.hypot(p.x - g.sx, p.y - g.sy);
+    if(g.grab >= 0){                                   // dragging an existing dot to a new spot
+      if(!g.moved && dist > 5 * canvasK()) g.moved = true;
+      if(g.moved){ curvePts[g.grab].x = p.x + g.ox; curvePts[g.grab].y = p.y + g.oy; renderCurvePreview(); }
+      return;
+    }
+    if(!g.moved && dist > 10 * canvasK()){
+      g.moved = true;
+      if(g.first) curvePts.push({ x: g.sx, y: g.sy });   // the starting point only lands once it's clearly a drag, never a pinch
+      g.idx = curvePts.length; curvePts.push({ x: p.x, y: p.y }); curveSel = g.idx;
+    }
+    if(g.moved){ curvePts[g.idx].x = p.x; curvePts[g.idx].y = p.y; renderCurvePreview(); }
+  });
+  ['pointerup', 'pointercancel'].forEach(type => {
+    drawSurface.addEventListener(type, e => {
+      const g = curveGesture;
+      if(!g || e.pointerId !== g.id) return;
+      curveGesture = null;
+      if(type === 'pointercancel' || gestureLock || activeTouchIds.size > 1){ curvePts = g.backup; renderCurvePreview(); return; }
+      if(g.grab >= 0){ renderCurvePreview(); return; }   // tapped or moved a dot: never finishes the curve
+      if(!g.moved){
+        if(g.first || curvePts.length === 1){ curvePts.push({ x: g.sx, y: g.sy }); curveSel = curvePts.length - 1; renderCurvePreview(); }   // first tap = start point, 2nd tap = straight line
+        else curveCommit();                                                                                                              // tap on empty canvas = finish
+        return;
+      }
+      renderCurvePreview();
+    });
+  });
+  document.getElementById('curve-done').addEventListener('click', curveCommit);
+  document.getElementById('curve-cancel').addEventListener('click', curveClear);
+  curveBarEl.addEventListener('pointerdown', e => e.stopPropagation());
+  bpCurveBtn.addEventListener('click', () => {
+    if(curveMode && curvePts.length > 1) curveCommit(); else if(curveMode) curveClear();
+    curveMode = !curveMode;
+    bpCurveBtn.classList.toggle('active', curveMode);
+  });
+
+  // ================= ADD MOTION (motion blur / speed trail) =================
+  // Compares a frame with the one before it. Every layer that moved gets a soft, fading smear of
+  // itself trailing back toward where it was, drawn BEHIND the crisp drawing, so a bouncing ball or
+  // a swinging arm reads as smooth motion. Works on one frame at a time and can be undone.
+  let _motionToast = null, _motionToastT = 0;
+  function motionToast(msg){
+    if(!_motionToast){
+      _motionToast = document.createElement('div');
+      _motionToast.style.cssText = 'position:fixed;left:50%;bottom:calc(190px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;font:600 13px Inter,sans-serif;padding:10px 16px;border-radius:18px;z-index:900;pointer-events:none;transition:opacity .2s;max-width:86%;text-align:center;';
+      document.body.appendChild(_motionToast);
+    }
+    _motionToast.textContent = msg; _motionToast.style.opacity = '1';
+    clearTimeout(_motionToastT); _motionToastT = setTimeout(() => { _motionToast.style.opacity = '0'; }, 2400);
+  }
+  function layerCentroid(canvas){
+    const w = canvas.width, h = canvas.height, d = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+    let sx = 0, sy = 0, sw = 0;
+    for(let y = 0; y < h; y += 2){
+      for(let x = 0, i = y * w * 4 + 3; x < w; x += 2, i += 8){
+        const a = d[i];
+        if(a > 24){ sx += x * a; sy += y * a; sw += a; }
+      }
+    }
+    return sw ? { x: sx / sw, y: sy / sw, mass: sw } : null;
+  }
+  async function addMotionToFrame(n){
+    const idx = frames.findIndex(f => f.n === n);
+    const fr = frames[idx], pr = idx > 0 ? frames[idx - 1] : null;
+    if(!fr || fr.type === 'video'){ motionToast('Pick a drawn frame'); return; }
+    if(!pr || pr.type === 'video'){ motionToast('Needs a frame before it to compare with'); return; }
+    await ensureFrameLoaded(fr); await ensureFrameLoaded(pr);
+    const k = canvasK(), jobs = [];
+    for(const l of fr.layers){
+      if(l.locked || l.visible === false || !l.canvas) continue;
+      const pl = pr.layers.find(x => x.id === l.id);
+      if(!pl || !pl.canvas || pl.visible === false) continue;
+      const c = layerCentroid(l.canvas), p = layerCentroid(pl.canvas);
+      if(!c || !p) continue;
+      const dx = p.x - c.x, dy = p.y - c.y, dist = Math.hypot(dx, dy);
+      const big = Math.max(l.canvas.width, l.canvas.height);
+      if(dist < 3 * k || dist > big * 0.5) continue;                 // didn't move, or it's a scene cut
+      jobs.push({ l, dx, dy, dist });
+    }
+    if(!jobs.length){ motionToast('Nothing moved between this frame and the one before'); return; }
+    pushUndoSnapshot(jobs.map(j => j.l));
+    for(const { l, dx, dy, dist } of jobs){
+      const w = l.canvas.width, h = l.canvas.height, ghosts = Math.max(3, Math.min(10, Math.round(dist / (7 * k))));
+      const trail = document.createElement('canvas'); trail.width = w; trail.height = h;
+      const tc = trail.getContext('2d');
+      for(let i = 1; i <= ghosts; i++){
+        const f = i / (ghosts + 1);
+        tc.globalAlpha = 0.34 * (1 - f) * (1 - f * 0.4);
+        tc.drawImage(l.canvas, dx * f, dy * f);
+      }
+      tc.globalAlpha = 1;
+      let src = trail;
+      if('filter' in tc){                                              // soften the smear (skipped on browsers without canvas blur)
+        const sm = document.createElement('canvas'); sm.width = w; sm.height = h;
+        const sc = sm.getContext('2d');
+        sc.filter = 'blur(' + Math.max(1.5, Math.min(9, dist * 0.05 / Math.max(0.5, k * 0.5))).toFixed(1) + 'px)';
+        sc.drawImage(trail, 0, 0);
+        src = sm;
+      }
+      const ctx = l.canvas.getContext('2d');
+      ctx.save(); ctx.globalCompositeOperation = 'destination-over'; ctx.globalAlpha = 1; ctx.drawImage(src, 0, 0); ctx.restore();
+    }
+    refreshThumbnails();
+    markProjectChanged();
+    motionToast('Motion added ✓  (Undo to remove)');
+  }
+  frameMenuEl.querySelector('[data-act="motion"]').onclick = () => { const n = frameMenuTargetN; closeFrameMenu(); addMotionToFrame(n); };
+  (function(){
+    const row = document.querySelector('.more-row[data-item="add-motion"]');
+    row.addEventListener('click', () => { setMoreSheet(false); const f = currentFrame(); if(f) setTimeout(() => addMotionToFrame(f.n), 60); });
+  })();
 
   // ================= CANVAS ZOOM & PAN =================
   // One finger still draws exactly as before. Two fingers (or a trackpad/mouse-wheel pinch)
@@ -8459,6 +9332,1140 @@
   // Everything is set up — show the projects saved on this device.
   refreshProjectList();
   seedSampleProject().then(made => { if(made) refreshProjectList(); });   // first launch only: adds the sample fight
+</script>
+
+<script>
+/* ================= WORK DIRECTORY + WORKSPACE =================
+   Self-contained: its own storage (IndexedDB "dg_workdir"), its own canvas and a light pencil / eraser,
+   so it never touches the frame editor's memory or projects. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const MIN_SIDE = 256, MAX_SIDE = 3072;
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+  // ---------- storage ----------
+  let dbP = null;
+  function wdDb(){
+    if(!dbP) dbP = new Promise((res, rej) => {
+      const r = indexedDB.open('dg_workdir', 1);
+      r.onupgradeneeded = () => { r.result.createObjectStore('items', { keyPath: 'id' }); };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    return dbP;
+  }
+  function tx(mode, fn){
+    return wdDb().then(db => new Promise((res, rej) => {
+      const t = db.transaction('items', mode);
+      let out;
+      const r = fn(t.objectStore('items'));
+      if(r) r.onsuccess = () => { out = r.result; };
+      t.oncomplete = () => res(out);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error);
+    }));
+  }
+  const dbAll = () => tx('readonly', s => s.getAll());
+  const dbGet = id => tx('readonly', s => s.get(id));
+  const dbPut = item => tx('readwrite', s => s.put(item));
+  const dbDel = id => tx('readwrite', s => s.delete(id));
+
+  // ---------- the list (Work directory page) ----------
+  let thumbUrls = [];
+  async function refreshList(){
+    const grid = $('wd-grid'), empty = $('wd-empty'), content = $('wd-content');
+    let items = [];
+    try{ items = await dbAll(); }catch(_){ items = []; }
+    thumbUrls.forEach(u => URL.revokeObjectURL(u)); thumbUrls = [];
+    grid.innerHTML = '';
+    if(!items.length){ content.classList.remove('has-projects'); empty.style.display = ''; grid.style.display = 'none'; return; }
+    items.sort((a, b) => (b.updated || 0) - (a.updated || 0));
+    empty.style.display = 'none'; grid.style.display = ''; content.classList.add('has-projects');
+    items.forEach(m => {
+      const card = document.createElement('div'); card.className = 'proj-card';
+      const th = document.createElement('div'); th.className = 'proj-thumb';
+      if(m.thumb){
+        const u = URL.createObjectURL(m.thumb); thumbUrls.push(u);
+        const im = document.createElement('img'); im.src = u; im.alt = ''; th.appendChild(im);
+      }
+      const info = document.createElement('div'); info.className = 'proj-info';
+      const nm = document.createElement('div'); nm.className = 'proj-name'; nm.textContent = m.name || 'Untitled';
+      const mt = document.createElement('div'); mt.className = 'proj-meta'; mt.textContent = m.w + ' × ' + m.h;
+      info.appendChild(nm); info.appendChild(mt);
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'proj-del'; del.setAttribute('aria-label', 'Delete');
+      del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      del.addEventListener('click', async e => {
+        e.stopPropagation();
+        if(!confirm('Delete "' + (m.name || 'Untitled') + '"? This cannot be undone.')) return;
+        try{ await dbDel(m.id); }catch(_){}
+        refreshList();
+      });
+      card.appendChild(th); card.appendChild(info); card.appendChild(del);
+      card.addEventListener('click', () => openItem(m.id));
+      grid.appendChild(card);
+    });
+  }
+  window.wdRefreshList = refreshList;
+
+  // ---------- "new drawing space" sheet ----------
+  const PRESETS = [
+    { label: 'Square 2048', w: 2048, h: 2048 },
+    { label: 'Wide 2560×1440', w: 2560, h: 1440 },
+    { label: 'Tall 1440×2560', w: 1440, h: 2560 },
+    { label: 'Huge 3072', w: 3072, h: 3072 }
+  ];
+  const clampSide = v => Math.max(MIN_SIDE, Math.min(MAX_SIDE, Math.round(+v) || 2048));
+  function renderPresets(){
+    const box = $('wd-presets'); box.innerHTML = '';
+    const w = +$('wd-new-w').value, h = +$('wd-new-h').value;
+    PRESETS.forEach(p => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'wd-chip' + (p.w === w && p.h === h ? ' sel' : ''); b.textContent = p.label;
+      b.onclick = () => { $('wd-new-w').value = p.w; $('wd-new-h').value = p.h; renderPresets(); };
+      box.appendChild(b);
+    });
+  }
+  ['wd-new-w', 'wd-new-h'].forEach(id => $(id).addEventListener('input', renderPresets));
+  async function openNewSheet(){
+    let n = 0; try{ n = (await dbAll()).length; }catch(_){}
+    $('wd-new-name').value = 'Work ' + (n + 1);
+    $('wd-new-w').value = 2048; $('wd-new-h').value = 2048;
+    renderPresets();
+    $('wd-new').classList.add('open');
+  }
+  const closeNewSheet = () => $('wd-new').classList.remove('open');
+  $('wd-add-btn').addEventListener('click', openNewSheet);
+  $('wd-new-cancel').addEventListener('click', closeNewSheet);
+  $('wd-new').addEventListener('click', e => { if(e.target === $('wd-new')) closeNewSheet(); });
+  $('wd-create').addEventListener('click', async () => {
+    const w = clampSide($('wd-new-w').value), h = clampSide($('wd-new-h').value);
+    const name = ($('wd-new-name').value || '').trim() || 'Untitled';
+    closeNewSheet();
+    const item = { id: uid(), name, w, h, updated: Date.now(), png: null, thumb: null };
+    try{ await dbPut(item); }catch(_){}
+    openItem(item.id, item);
+  });
+
+  const framePicker = $('wd-frame-picker');
+  $('wd-import-frame-btn').addEventListener('click', () => {
+    const list = $('wd-frame-list'); list.innerHTML = '';
+    const projectFrames = (typeof window.dgListProjectFrames === 'function') ? window.dgListProjectFrames() : [];
+    if(!projectFrames.length){
+      const msg = document.createElement('p'); msg.textContent = 'Open a project with frames first, then return here to import one.';
+      msg.style.cssText = 'grid-column:1/-1;color:var(--muted);font-size:13px;'; list.appendChild(msg);
+    }else{
+      projectFrames.forEach(f => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'wd-chip';
+        b.style.cssText = 'min-height:58px;border-radius:12px;font-size:15px;';
+        b.textContent = 'Frame ' + f.number;
+        b.addEventListener('click', async () => {
+          b.disabled = true; b.textContent = 'Loading…';
+          try{
+            if(typeof window.dgRenderProjectFrame !== 'function') throw new Error('Project frames are unavailable.');
+            const rendered = await window.dgRenderProjectFrame(f.number - 1);
+            const max = 3072, scale = Math.min(1, max / Math.max(rendered.width, rendered.height));
+            const w = Math.max(256, Math.round(rendered.width * scale));
+            const h = Math.max(256, Math.round(rendered.height * scale));
+            const item = { id: uid(), name: 'Imported Frame ' + f.number, w, h, updated: Date.now(), png: null, thumb: null };
+            const pngCanvas = document.createElement('canvas'); pngCanvas.width = w; pngCanvas.height = h;
+            pngCanvas.getContext('2d').drawImage(rendered.canvas, 0, 0, w, h);
+            item.png = await blobOf(pngCanvas);
+            const ts = 320 / Math.max(w, h), thumbCanvas = document.createElement('canvas');
+            thumbCanvas.width = Math.max(1, Math.round(w * ts)); thumbCanvas.height = Math.max(1, Math.round(h * ts));
+            thumbCanvas.getContext('2d').drawImage(pngCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+            item.thumb = await blobOf(thumbCanvas);
+            await dbPut(item);
+            framePicker.classList.remove('open');
+            await openItem(item.id, item);
+            toast('Frame ' + f.number + ' imported with all visible layers');
+          }catch(err){
+            alert('Could not import that frame: ' + (err && err.message ? err.message : err));
+            b.disabled = false; b.textContent = 'Frame ' + f.number;
+          }
+        });
+        list.appendChild(b);
+      });
+    }
+    framePicker.classList.add('open');
+  });
+  $('wd-frame-cancel').addEventListener('click', () => framePicker.classList.remove('open'));
+  framePicker.addEventListener('click', e => { if(e.target === framePicker) framePicker.classList.remove('open'); });
+  let importForNew = false;
+  window.wdBack = () => showPage(window.wdFrom || 'page-home');
+
+  // ---------- picking an image from the phone's gallery ----------
+  // Order: (1) the system photo picker, if the Camera plugin is installed (shows every album);
+  // (2) our own gallery built on the Media plugin, which the app already uses to save movies (album list + thumbnails);
+  // (3) the plain file chooser (which on some phones only opens Downloads).
+  const capNative = () => { const c = window.Capacitor; return (c && c.isNativePlatform && c.isNativePlatform()) ? c : null; };
+  function fileInputPick(){
+    return new Promise(res => {
+      const inp = $('wd-file'); inp.value = '';
+      inp.onchange = () => res((inp.files && inp.files[0]) || null);
+      inp.addEventListener('cancel', () => res(null), { once: true });
+      inp.click();
+    });
+  }
+  async function blobFromPath(path){
+    const cap = window.Capacitor;
+    try{
+      const r = await fetch(cap.convertFileSrc(/^(file|content):/.test(path) ? path : 'file://' + path));
+      if(r.ok) return await r.blob();
+    }catch(_){}
+    const { Filesystem } = cap.Plugins;
+    const out = await Filesystem.readFile({ path });
+    const bin = atob(out.data), arr = new Uint8Array(bin.length);
+    for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: 'image/jpeg' });
+  }
+  function thumbSrc(m){
+    const d = m && m.data;
+    if(d){ return /^(data:|https?:|blob:)/.test(d) ? d : 'data:image/jpeg;base64,' + d; }
+    if(m && m.path) return window.Capacitor.convertFileSrc(m.path);
+    return '';
+  }
+  function galleryPick(Media){
+    return new Promise(resolve => {
+      const modal = $('wd-gallery'), grid = $('wd-gal-grid'), sel = $('wd-gal-albums'), msg = $('wd-gal-msg');
+      let closed = false, limit = 90;
+      const close = v => { if(closed) return; closed = true; modal.classList.remove('open'); grid.innerHTML = ''; sel.onchange = null; resolve(v); };
+      $('wd-gal-close').onclick = () => close(null);
+      $('wd-gal-files').onclick = async () => { close(await fileInputPick()); };
+      modal.classList.add('open');
+      async function load(){
+        grid.innerHTML = ''; msg.textContent = 'Loading…';
+        let r;
+        try{
+          const opts = { quantity: limit, types: 'photos', thumbnailWidth: 240, thumbnailHeight: 240, thumbnailQuality: 60 };
+          if(sel.value) opts.albumIdentifier = sel.value;
+          r = await Media.getMedias(opts);
+        }catch(e){ msg.textContent = 'Could not read the gallery: ' + (e && e.message ? e.message : e) + '. Tap Files to browse instead.'; return; }
+        if(closed) return;
+        const medias = (r && r.medias) || [];
+        msg.textContent = medias.length ? '' : "No photos found here. If you expected some, allow photo access for this app in your phone's settings, or tap Files.";
+        medias.forEach(m => {
+          const b = document.createElement('button'); b.type = 'button';
+          const im = document.createElement('img'); im.alt = ''; im.loading = 'lazy'; im.src = thumbSrc(m);
+          b.appendChild(im);
+          b.onclick = async () => {
+            msg.textContent = 'Opening…';
+            try{
+              const { path } = await Media.getMediaByIdentifier({ identifier: m.identifier });
+              close(await blobFromPath(path));
+            }catch(e){ msg.textContent = "Couldn't open that photo: " + (e && e.message ? e.message : e); }
+          };
+          grid.appendChild(b);
+        });
+        if(medias.length >= limit && limit < 450){
+          const more = document.createElement('button'); more.type = 'button'; more.className = 'wd-gal-more'; more.textContent = 'Load more';
+          more.onclick = () => { limit += 90; load(); };
+          grid.appendChild(more);
+        }
+      }
+      (async () => {
+        sel.innerHTML = '<option value="">All photos</option>';
+        try{
+          const r = await Media.getAlbums();
+          ((r && r.albums) || []).slice().sort((a, b) => String(a.name).localeCompare(String(b.name))).forEach(a => {
+            const o = document.createElement('option'); o.value = a.identifier; o.textContent = a.name; sel.appendChild(o);
+          });
+        }catch(_){}
+        sel.onchange = () => { limit = 90; load(); };
+        load();
+      })();
+    });
+  }
+  async function pickImage(){
+    const cap = capNative();
+    if(cap && cap.Plugins){
+      const P = cap.Plugins;
+      // our own gallery first: it lists EVERY album on the phone (Android's built-in photo picker only shows a few)
+      if(P.Media && P.Media.getMedias) return await galleryPick(P.Media);
+      if(P.Camera && P.Camera.pickImages){
+        try{
+          const r = await P.Camera.pickImages({ limit: 1, quality: 100 });
+          const ph = r && r.photos && r.photos[0];
+          if(!ph) return null;
+          return await (await fetch(ph.webPath)).blob();
+        }catch(e){ if(/cancel/i.test(String(e && e.message || e))) return null; }
+      }
+    }
+    return await fileInputPick();
+  }
+  $('wd-import-new').addEventListener('click', async () => { importForNew = true; const f = await pickImage(); if(f) importPicked(f); });
+
+  // ---------- workspace ----------
+  const stage = $('ws-stage'), cv = $('wd-canvas');
+  let ctx = null, base = null, bctx = null, cur = null;
+  let view = { x: 0, y: 0, k: 1 };
+  let tool = 'pencil', color = '#111111';
+  let lastImport = null; // most recent imported picture, retained so Easy Cut edits that image rather than the whole canvas
+  const sizes = { pencil: 6, eraser: 30 };
+  let undo = [], redo = [];
+  const MAX_STEPS = 40, MAX_UNDO_BYTES = 80 * 1024 * 1024;
+
+  function toast(msg){
+    const t = $('ws-toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+  function applyView(){
+    cv.style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.k + ')';
+    cv.style.imageRendering = view.k >= 3 ? 'pixelated' : 'auto';
+    sklRender();
+  }
+  function fitView(){
+    const r = stage.getBoundingClientRect();
+    const k = Math.min(r.width / cv.width, r.height / cv.height) * 0.92;
+    view.k = k; view.x = (r.width - cv.width * k) / 2; view.y = (r.height - cv.height * k) / 2;
+    applyView();
+  }
+  function setupCanvases(w, h){
+    cv.width = w; cv.height = h;
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    ctx = cv.getContext('2d');
+    base = document.createElement('canvas'); base.width = w; base.height = h;
+    bctx = base.getContext('2d');
+    undo = []; redo = []; updateUndoBtns();
+  }
+  function freeCanvases(){
+    cv.width = 1; cv.height = 1;
+    if(base){ base.width = 1; base.height = 1; }
+    base = null; bctx = null; ctx = null; undo = []; redo = [];
+  }
+  function updateUndoBtns(){ $('ws-undo').disabled = !undo.length; $('ws-redo').disabled = !redo.length; }
+
+  // saving: PNG + small thumbnail, a few seconds after you stop drawing, and whenever you leave
+  let dirty = false, saveTimer = null, saveChain = Promise.resolve();
+  const blobOf = (c, type) => new Promise(r => c.toBlob(r, type || 'image/png'));
+  function markDirty(){ dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 3000); }
+  function saveNow(){
+    clearTimeout(saveTimer);
+    if(!cur || !dirty || !ctx) return saveChain;
+    dirty = false;
+    const item = cur;
+    saveChain = saveChain.then(async () => {
+      if(!ctx || cur !== item) return;
+      const png = await blobOf(cv);
+      const s = 320 / Math.max(cv.width, cv.height);
+      const t = document.createElement('canvas');
+      t.width = Math.max(1, Math.round(cv.width * s)); t.height = Math.max(1, Math.round(cv.height * s));
+      t.getContext('2d').drawImage(cv, 0, 0, t.width, t.height);
+      const thumb = await blobOf(t);
+      t.width = 1; t.height = 1;
+      item.png = png; item.thumb = thumb; item.updated = Date.now();
+      await dbPut(item);
+    }).catch(e => console.warn('work save failed', e));
+    return saveChain;
+  }
+
+  async function openItem(id, known){
+    let item = known || null;
+    try{ const found = await dbGet(id); if(found) item = found; }catch(_){}
+    if(!item) return;
+    cur = item;
+    lastImport = null;
+    sklLoad(item);
+    ptrs.clear(); mode = 'idle'; st = null;
+    showPage('page-workspace');
+    setupCanvases(item.w, item.h);
+    $('ws-title').textContent = item.name || 'Untitled';
+    await new Promise(r => requestAnimationFrame(r));   // let the page lay out so we can fit the canvas
+    fitView();
+    if(item.png){
+      try{ const bmp = await createImageBitmap(item.png); ctx.drawImage(bmp, 0, 0); bctx.drawImage(bmp, 0, 0); if(bmp.close) bmp.close(); }
+      catch(e){ console.warn('could not load', e); }
+    }
+    dirty = false;
+  }
+  async function leave(){
+    if(st) cancelStroke();
+    sklCommit();
+    await saveNow();
+    await saveChain;
+    sklReset();
+    cur = null;
+    freeCanvases();
+    showPage('page-workdir');
+  }
+  $('ws-back').addEventListener('click', leave);
+  document.addEventListener('visibilitychange', () => { if(document.hidden) saveNow(); });
+  window.addEventListener('pagehide', () => { saveNow(); });
+
+  $('ws-title').addEventListener('click', async () => {
+    if(!cur) return;
+    const n = prompt('Name', cur.name || '');
+    if(n === null) return;
+    cur.name = n.trim() || cur.name || 'Untitled';
+    $('ws-title').textContent = cur.name;
+    dirty = true; saveNow();
+  });
+
+  // ---------- undo / redo (only the changed rectangle is kept, so it stays light) ----------
+  function patchBytes(e){ return e.w * e.h * 8; }
+  function commitPatch(x0, y0, w, h){
+    const x1 = Math.min(cv.width, Math.ceil(x0 + w)), y1 = Math.min(cv.height, Math.ceil(y0 + h));
+    x0 = Math.max(0, Math.floor(x0)); y0 = Math.max(0, Math.floor(y0));
+    w = x1 - x0; h = y1 - y0;
+    if(w <= 0 || h <= 0) return;
+    const before = document.createElement('canvas'); before.width = w; before.height = h;
+    before.getContext('2d').drawImage(base, x0, y0, w, h, 0, 0, w, h);
+    const after = document.createElement('canvas'); after.width = w; after.height = h;
+    after.getContext('2d').drawImage(cv, x0, y0, w, h, 0, 0, w, h);
+    bctx.clearRect(x0, y0, w, h);
+    bctx.drawImage(cv, x0, y0, w, h, x0, y0, w, h);
+    undo.push({ x: x0, y: y0, w, h, before, after });
+    redo.forEach(e => { e.before.width = 1; e.after.width = 1; }); redo = [];
+    let total = undo.reduce((a, e) => a + patchBytes(e), 0);
+    while(undo.length > MAX_STEPS || (total > MAX_UNDO_BYTES && undo.length > 1)){
+      const old = undo.shift(); total -= patchBytes(old); old.before.width = 1; old.after.width = 1;
+    }
+    updateUndoBtns(); markDirty();
+  }
+  function applyPatch(e, which){
+    const src = e[which];
+    ctx.clearRect(e.x, e.y, e.w, e.h); ctx.drawImage(src, e.x, e.y);
+    bctx.clearRect(e.x, e.y, e.w, e.h); bctx.drawImage(src, e.x, e.y);
+  }
+  $('ws-undo').addEventListener('click', () => { if(st) return; sklCommit(); const e = undo.pop(); if(!e) return; applyPatch(e, 'before'); redo.push(e); updateUndoBtns(); markDirty(); });
+  $('ws-redo').addEventListener('click', () => { if(st) return; sklCommit(); const e = redo.pop(); if(!e) return; applyPatch(e, 'after'); undo.push(e); updateUndoBtns(); markDirty(); });
+
+  // ---------- drawing ----------
+  let st = null;   // the stroke being drawn
+  const penWidth = (e, size) => size * (e.pointerType === 'pen' && e.pressure ? 0.35 + 0.65 * e.pressure : 1);
+  function toCanvas(e){
+    const r = stage.getBoundingClientRect();
+    return { x: (e.clientX - r.left - view.x) / view.k, y: (e.clientY - r.top - view.y) / view.k };
+  }
+  function grow(x, y, pad){
+    st.minx = Math.min(st.minx, x - pad); st.miny = Math.min(st.miny, y - pad);
+    st.maxx = Math.max(st.maxx, x + pad); st.maxy = Math.max(st.maxy, y + pad);
+  }
+  function startStroke(e){
+    const p = toCanvas(e), size = sizes[tool], erase = tool === 'eraser';
+    const w = penWidth(e, size);
+    st = { id: e.pointerId, erase, size, lx: p.x, ly: p.y, mx: p.x, my: p.y, minx: p.x, miny: p.y, maxx: p.x, maxy: p.y };
+    ctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over';
+    ctx.fillStyle = ctx.strokeStyle = erase ? '#000' : color;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.arc(p.x, p.y, w / 2, 0, Math.PI * 2); ctx.fill();
+    grow(p.x, p.y, size / 2 + 2);
+  }
+  function extendStroke(e){
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    (evs.length ? evs : [e]).forEach(ev => {
+      const p = toCanvas(ev), w = penWidth(ev, st.size);
+      const mx = (st.lx + p.x) / 2, my = (st.ly + p.y) / 2;
+      ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(st.mx, st.my); ctx.quadraticCurveTo(st.lx, st.ly, mx, my); ctx.stroke();
+      st.mx = mx; st.my = my; st.lx = p.x; st.ly = p.y;
+      grow(p.x, p.y, st.size / 2 + 2);
+    });
+  }
+  function resetCtx(){ ctx.globalCompositeOperation = 'source-over'; }
+  function endStroke(){
+    if(!st) return;
+    ctx.lineWidth = st.size;
+    ctx.beginPath(); ctx.moveTo(st.mx, st.my); ctx.lineTo(st.lx, st.ly); ctx.stroke();
+    resetCtx();
+    const s = st; st = null;
+    commitPatch(s.minx, s.miny, s.maxx - s.minx, s.maxy - s.miny);
+  }
+  function cancelStroke(){      // a second finger landed: it's a pinch, not a line
+    if(!st) return;
+    const s = st; st = null; resetCtx();
+    const x = Math.max(0, Math.floor(s.minx)), y = Math.max(0, Math.floor(s.miny));
+    const w = Math.min(cv.width - x, Math.ceil(s.maxx - s.minx) + 1), h = Math.min(cv.height - y, Math.ceil(s.maxy - s.miny) + 1);
+    if(w > 0 && h > 0){ ctx.clearRect(x, y, w, h); ctx.drawImage(base, x, y, w, h, x, y, w, h); }
+  }
+
+  // ---------- touch: one finger draws (or moves, in Move mode), two fingers pinch / pan ----------
+  const ptrs = new Map();
+  let mode = 'idle', g = null, panLast = null;
+  const clampK = k => Math.max(0.05, Math.min(16, k));
+  function gestureInit(){
+    const [a, b] = [...ptrs.values()];
+    g = { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, d: Math.hypot(a.x - b.x, a.y - b.y) || 1 };
+  }
+  stage.addEventListener('pointerdown', e => {
+    if(!ctx) return;
+    try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if(ptrs.size === 1){
+      if(sklOn){ mode = 'skel'; sklDown(e); }
+      else if(tool === 'hand'){ mode = 'pan'; panLast = { x: e.clientX, y: e.clientY }; }
+      else { mode = 'stroke'; startStroke(e); }
+    } else if(ptrs.size === 2){
+      sklCancel(); cancelStroke(); mode = 'pinch'; gestureInit();
+    }
+  });
+  stage.addEventListener('pointermove', e => {
+    if(!ptrs.has(e.pointerId) || !ctx) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if(mode === 'skel'){ sklMove(e); }
+    else if(mode === 'stroke' && st && e.pointerId === st.id){ extendStroke(e); }
+    else if(mode === 'pan' && panLast){
+      view.x += e.clientX - panLast.x; view.y += e.clientY - panLast.y;
+      panLast = { x: e.clientX, y: e.clientY }; applyView();
+    } else if(mode === 'pinch' && ptrs.size >= 2){
+      const [a, b] = [...ptrs.values()];
+      const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2, d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      const r = stage.getBoundingClientRect();
+      const ax = (g.cx - r.left - view.x) / view.k, ay = (g.cy - r.top - view.y) / view.k;
+      view.k = clampK(view.k * d / g.d);
+      view.x = cx - r.left - ax * view.k; view.y = cy - r.top - ay * view.k;
+      g = { cx, cy, d }; applyView();
+    }
+  });
+  function pointerEnd(e){
+    if(!ptrs.has(e.pointerId)) return;
+    if(mode === 'skel') sklUp(e);
+    if(mode === 'stroke' && st && e.pointerId === st.id) endStroke();
+    ptrs.delete(e.pointerId);
+    if(ptrs.size === 0){ mode = 'idle'; panLast = null; }
+    else if(mode === 'pinch' && ptrs.size < 2){ mode = 'idle'; }   // wait until every finger is up before drawing again
+  }
+  stage.addEventListener('pointerup', pointerEnd);
+  stage.addEventListener('pointercancel', e => { if(mode === 'skel') sklCancel(); if(mode === 'stroke') cancelStroke(); pointerEnd(e); });
+  stage.addEventListener('wheel', e => {
+    if(!ctx) return; e.preventDefault();
+    const r = stage.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    const ax = (px - view.x) / view.k, ay = (py - view.y) / view.k;
+    view.k = clampK(view.k * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
+    view.x = px - ax * view.k; view.y = py - ay * view.k; applyView();
+  }, { passive: false });
+  window.addEventListener('resize', () => { if(ctx && $('page-workspace').classList.contains('active')) fitView(); });
+
+  // ---------- tool bar ----------
+  const sizeEl = $('ws-size'), sizeV = $('ws-size-v');
+  function syncSize(){
+    const t = tool === 'eraser' ? 'eraser' : 'pencil';
+    sizeEl.value = sizes[t]; sizeV.textContent = sizes[t];
+  }
+  function setTool(t){
+    tool = t;
+    document.querySelectorAll('.ws-tool[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+    syncSize();
+  }
+  document.querySelectorAll('.ws-tool[data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+  sizeEl.addEventListener('input', () => {
+    const t = tool === 'eraser' ? 'eraser' : 'pencil';
+    sizes[t] = +sizeEl.value; sizeV.textContent = sizeEl.value;
+  });
+  const SWATCHES = ['#111111', '#ffffff', '#ff4f8b', '#ff8a1f', '#ffd23f', '#2ecc71', '#3b8cff', '#7c5cff', '#8b5a2b', '#f1c9a5'];
+  function buildColors(){
+    const box = $('ws-colors'); box.innerHTML = '';
+    SWATCHES.forEach(c => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ws-sw' + (c === color ? ' sel' : ''); b.style.background = c;
+      b.setAttribute('aria-label', c);
+      b.onclick = () => { color = c; if(tool !== 'pencil') setTool('pencil'); buildColors(); };
+      box.appendChild(b);
+    });
+    const cu = document.createElement('label'); cu.className = 'ws-sw'; cu.style.background = 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)';
+    cu.innerHTML = '<input type="color" value="' + (/^#[0-9a-f]{6}$/i.test(color) ? color : '#111111') + '">';
+    cu.querySelector('input').addEventListener('input', ev => { color = ev.target.value; if(tool !== 'pencil') setTool('pencil'); });
+    cu.querySelector('input').addEventListener('change', buildColors);
+    box.appendChild(cu);
+  }
+  buildColors(); syncSize();
+
+  // ---------- SKELETON (point-to-point bones, saved with the project) ----------
+  var sklOn = false, sk = { joints: [], bones: [], nid: 1 }, sklActive = null, sklUndo = [], sklDrag = null;
+  var sklMode = 'draw', sklBound = null, sklMark = 0, sklRaf = 0;
+  const sklCv = $('wd-skel'), sklBar = $('skl-bar');
+  function sklSize(){
+    const r = stage.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+    if(sklCv.width !== w || sklCv.height !== h){ sklCv.width = w; sklCv.height = h; }
+    return d;
+  }
+  function sklRender(){
+    if(!sklCv) return;
+    const d = sklSize(), c = sklCv.getContext('2d');
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, sklCv.width, sklCv.height);
+    if(!cur || !sk.joints.length) return;
+    c.setTransform(d, 0, 0, d, 0, 0);
+    const P = j => ({ x: view.x + j.x * view.k, y: view.y + j.y * view.k });
+    const by = id => sk.joints.find(j => j.id === id);
+    c.lineCap = 'round';
+    [['rgba(0,0,0,.65)', 7], ['#ffffff', 3.5]].forEach(([col, w]) => {
+      c.strokeStyle = col; c.lineWidth = w;
+      sk.bones.forEach(b => { const a = by(b.a), z = by(b.b); if(!a || !z) return; const pa = P(a), pz = P(z); c.beginPath(); c.moveTo(pa.x, pa.y); c.lineTo(pz.x, pz.y); c.stroke(); });
+    });
+    sk.joints.forEach(j => {
+      const q = P(j);
+      c.beginPath(); c.arc(q.x, q.y, j.id === sklActive ? 11 : 9, 0, Math.PI * 2);
+      c.fillStyle = j.id === sklActive ? '#2ecc71' : '#ff4f8b'; c.fill();
+      c.lineWidth = 2.5; c.strokeStyle = '#000'; c.stroke();
+    });
+  }
+  function sklUi(){
+    sklBar.classList.toggle('show', sklOn);
+    $('ws-skel').classList.toggle('on', sklOn);
+    const mv = sklMode === 'move' && sklBound;
+    $('skl-mode').textContent = mv ? '✏️ Points' : '✋ Move skin';
+    $('skl-clear').textContent = mv ? 'Reset' : 'Clear';
+    $('skl-undo').disabled = mv ? sklUndo.length <= sklMark : !sklUndo.length;
+    $('skl-clear').disabled = mv ? !sklBound.changed : !sk.joints.length;
+  }
+  function sklSave(){ if(!cur) return; cur.skel = JSON.parse(JSON.stringify(sk)); markDirty(); }
+  function sklLoad(item){
+    sk = item && item.skel && item.skel.joints ? JSON.parse(JSON.stringify(item.skel)) : { joints: [], bones: [], nid: 1 };
+    if(!sk.nid) sk.nid = sk.joints.reduce((m, j) => Math.max(m, j.id), 0) + 1;
+    sklFree(); sklActive = null; sklUndo = []; sklDrag = null; sklOn = false; sklMode = 'draw'; sklUi(); sklRender();
+  }
+  function sklReset(){
+    sklFree(); sk = { joints: [], bones: [], nid: 1 }; sklActive = null; sklUndo = []; sklDrag = null; sklOn = false; sklMode = 'draw';
+    sklUi(); sklRender();
+  }
+  function sklHit(p){
+    const r = 26 / view.k; let best = null, bd = r;
+    sk.joints.forEach(j => { const d = Math.hypot(j.x - p.x, j.y - p.y); if(d <= bd){ bd = d; best = j; } });
+    return best;
+  }
+  function sklDown(e){
+    const p = toCanvas(e), h = sklHit(p);
+    if(sklMode === 'move' && sklBound){
+      if(!h){ sklDrag = null; return; }
+      const ids = sklSubtree(h.id);
+      sklDrag = { pid: e.pointerId, move: true, p0: p, moved: false, start: ids.map(id => { const j = sk.joints.find(j => j.id === id); return { id, x: j.x, y: j.y }; }) };
+      return;
+    }
+    sklDrag = { pid: e.pointerId, cx: e.clientX, cy: e.clientY, id: h ? h.id : null, from: h ? { x: h.x, y: h.y } : null, moved: false };
+  }
+  function sklMove(e){
+    const d = sklDrag; if(!d || e.pointerId !== d.pid) return;
+    if(d.move){
+      const p = toCanvas(e), dx = p.x - d.p0.x, dy = p.y - d.p0.y;
+      if(!d.moved && Math.hypot(dx, dy) * view.k < 3) return;
+      d.moved = true;
+      d.start.forEach(o => { const j = sk.joints.find(j => j.id === o.id); if(j){ j.x = o.x + dx; j.y = o.y + dy; } });
+      sklWarpSoon(); return;
+    }
+    if(!d.moved && Math.hypot(e.clientX - d.cx, e.clientY - d.cy) > 8) d.moved = true;
+    if(d.moved && d.id !== null){
+      const p = toCanvas(e), j = sk.joints.find(j => j.id === d.id);
+      if(j){ j.x = p.x; j.y = p.y; sklRender(); }
+    }
+  }
+  function sklUp(e){
+    const d = sklDrag; if(!d || e.pointerId !== d.pid){ return; }
+    sklDrag = null;
+    if(d.move){
+      if(d.moved){ sklUndo.push({ t: 'pose', from: d.start }); sklBound.changed = true; sklWarpNow(); sklSave(); }
+      sklUi(); return;
+    }
+    if(d.id !== null){
+      const j = sk.joints.find(j => j.id === d.id);
+      if(d.moved && j){ sklUndo.push({ t: 'move', id: d.id, from: d.from, to: { x: j.x, y: j.y } }); }
+      else { sklActive = d.id; }                       // tap a joint = start the next bone from it
+    } else if(!d.moved){
+      const p = toCanvas(e), id = sk.nid++;
+      sk.joints.push({ id, x: p.x, y: p.y });
+      if(sklActive !== null) sk.bones.push({ a: sklActive, b: id });
+      sklUndo.push({ t: 'add', id, prev: sklActive });
+      sklActive = id;
+    }
+    sklUi(); sklRender(); sklSave();
+  }
+  function sklCancel(){
+    const d = sklDrag; if(!d) return;
+    sklDrag = null;
+    if(d.move){ d.start.forEach(o => { const j = sk.joints.find(j => j.id === o.id); if(j){ j.x = o.x; j.y = o.y; } }); sklWarpNow(); return; }
+    if(d.moved && d.id !== null && d.from){ const j = sk.joints.find(j => j.id === d.id); if(j){ j.x = d.from.x; j.y = d.from.y; } }
+    sklRender();
+  }
+  $('skl-undo').addEventListener('click', () => {
+    if(sklBound && sklMode === 'move' && sklUndo.length <= sklMark) return;
+    const a = sklUndo.pop(); if(!a) return;
+    if(a.t === 'pose'){
+      a.from.forEach(o => { const j = sk.joints.find(j => j.id === o.id); if(j){ j.x = o.x; j.y = o.y; } });
+      if(sklBound) sklBound.changed = true;
+      sklUi(); sklWarpNow(); sklSave(); return;
+    }
+    if(a.t === 'add'){
+      sk.joints = sk.joints.filter(j => j.id !== a.id);
+      sk.bones = sk.bones.filter(b => b.a !== a.id && b.b !== a.id);
+      sklActive = a.prev;
+    } else if(a.t === 'move'){
+      const j = sk.joints.find(j => j.id === a.id); if(j){ j.x = a.from.x; j.y = a.from.y; }
+    } else if(a.t === 'clear'){
+      sk = JSON.parse(a.data); sklActive = a.active;
+    }
+    sklUi(); sklRender(); sklSave();
+  });
+  $('skl-clear').addEventListener('click', () => {
+    if(sklBound && sklMode === 'move'){       // Reset pose: every joint back to where the skin was bound
+      sklUndo.push({ t: 'pose', from: sk.joints.map(j => ({ id: j.id, x: j.x, y: j.y })) });
+      sk.joints.forEach(j => { const r = sklBound.rest[j.id]; if(r){ j.x = r.x; j.y = r.y; } });
+      sklUi(); sklWarpNow(); sklSave(); return;
+    }
+    if(!sk.joints.length) return;
+    sklUndo.push({ t: 'clear', data: JSON.stringify(sk), active: sklActive });
+    sk = { joints: [], bones: [], nid: 1 }; sklActive = null;
+    sklUi(); sklRender(); sklSave();
+  });
+  sklBar.addEventListener('pointerdown', e => e.stopPropagation());
+  function sklToggle(on){
+    if(!cur) return;
+    if(!on){ sklCommit(); sklMode = 'draw'; }
+    sklOn = on; sklDrag = null;
+    sklUi(); sklRender();
+    if(on) toast('Skeleton ON: tap to add points. Tap a point to branch from it. Drag a point to move it.');
+  }
+
+  // ---- skin movement: the drawing is a rubber sheet pulled by the bones ----
+  function sklSubtree(id){
+    const out = [], seen = {}; const walk = i => { if(seen[i]) return; seen[i] = 1; out.push(i); sk.bones.forEach(b => { if(b.a === i) walk(b.b); }); };
+    walk(id); return out;
+  }
+  function sklFree(){ if(sklBound){ sklBound.img.width = 1; sklBound.img.height = 1; sklBound = null; } }
+  function sklBind(){
+    if(!cv || !sk.bones.length){ toast('Add at least one bone first'); return false; }
+    const W = cv.width, H = cv.height;
+    const img = document.createElement('canvas'); img.width = W; img.height = H; img.getContext('2d').drawImage(cv, 0, 0);
+    const rest = {}; sk.joints.forEach(j => rest[j.id] = { x: j.x, y: j.y });
+    const bones = [];
+    sk.bones.forEach(b => {
+      const A = rest[b.a], B = rest[b.b]; if(!A || !B) return;
+      let dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy);
+      if(len < 1){ len = 1; dx = 1; dy = 0; } else { dx /= len; dy /= len; }
+      bones.push({ a: b.a, b: b.b, ax: A.x, ay: A.y, dx, dy, len });
+    });
+    const cell = Math.max(20, Math.ceil(Math.sqrt(W * H / 1800)));
+    const cols = Math.ceil(W / cell), rows = Math.ceil(H / cell), nb = bones.length, nv = (cols + 1) * (rows + 1);
+    const vx = new Float32Array(nv), vy = new Float32Array(nv), wn = new Float32Array(nv * nb), lu = new Float32Array(nv * nb), lv = new Float32Array(nv * nb), anc = new Float32Array(nv);
+    const R = Math.max(60, 0.1 * Math.max(W, H)), w0 = 1 / (R * R * R), eps = 64;
+    for(let r = 0; r <= rows; r++) for(let c = 0; c <= cols; c++){
+      const i = r * (cols + 1) + c, x = Math.min(c * cell, W), y = Math.min(r * cell, H);
+      vx[i] = x; vy[i] = y;
+      let sum = w0;
+      for(let k = 0; k < nb; k++){
+        const o = bones[k], px = x - o.ax, py = y - o.ay;
+        const u = px * o.dx + py * o.dy, v = -px * o.dy + py * o.dx;
+        const t = Math.max(0, Math.min(o.len, u)), d2 = (u - t) * (u - t) + v * v;
+        const w = 1 / Math.pow(d2 + eps, 1.5);
+        wn[i * nb + k] = w; lu[i * nb + k] = u; lv[i * nb + k] = v; sum += w;
+      }
+      for(let k = 0; k < nb; k++) wn[i * nb + k] /= sum;
+      anc[i] = w0 / sum;
+    }
+    sklBound = { img, rest, bones, cell, cols, rows, nb, vx, vy, wn, lu, lv, anc, px: new Float32Array(nv), py: new Float32Array(nv), changed: false };
+    sklMark = sklUndo.length;
+    return true;
+  }
+  function sklWarpSoon(){ if(sklRaf) return; sklRaf = requestAnimationFrame(() => { sklRaf = 0; sklWarpNow(); }); }
+  function sklTri(img, x0, y0, x1, y1, x2, y2, X0, Y0, X1, Y1, X2, Y2, bx, by, bw, bh){
+    const det = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0); if(Math.abs(det) < 1e-6) return;
+    const a = ((X1 - X0) * (y2 - y0) - (X2 - X0) * (y1 - y0)) / det, c = ((X2 - X0) * (x1 - x0) - (X1 - X0) * (x2 - x0)) / det;
+    const b = ((Y1 - Y0) * (y2 - y0) - (Y2 - Y0) * (y1 - y0)) / det, d = ((Y2 - Y0) * (x1 - x0) - (Y1 - Y0) * (x2 - x0)) / det;
+    const e = X0 - a * x0 - c * y0, f = Y0 - b * x0 - d * y0;
+    const mx = (X0 + X1 + X2) / 3, my = (Y0 + Y1 + Y2) / 3;
+    const ex = (X, Y) => { const dx = X - mx, dy = Y - my, l = Math.hypot(dx, dy) || 1; return [X + dx / l * 0.7, Y + dy / l * 0.7]; };
+    const q0 = ex(X0, Y0), q1 = ex(X1, Y1), q2 = ex(X2, Y2);
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.lineTo(q2[0], q2[1]); ctx.closePath(); ctx.clip();
+    ctx.setTransform(a, b, c, d, e, f);
+    ctx.drawImage(img, bx, by, bw, bh, bx, by, bw, bh);
+    ctx.restore();
+  }
+  function sklWarpNow(){
+    const B = sklBound; if(B && ctx){
+      const W = cv.width, H = cv.height, nb = B.nb, cur2 = [];
+      const J = {}; sk.joints.forEach(j => J[j.id] = j);
+      B.bones.forEach(o => {
+        const A = J[o.a], Z = J[o.b]; if(!A || !Z){ cur2.push(null); return; }
+        let dx = Z.x - A.x, dy = Z.y - A.y, len = Math.hypot(dx, dy);
+        if(len < 1){ len = 1; dx = o.dx; dy = o.dy; } else { dx /= len; dy /= len; }
+        cur2.push({ ax: A.x, ay: A.y, dx, dy, s: len / o.len });
+      });
+      const nv = B.px.length;
+      for(let i = 0; i < nv; i++){
+        let x = B.anc[i] * B.vx[i], y = B.anc[i] * B.vy[i];
+        for(let k = 0; k < nb; k++){
+          const w = B.wn[i * nb + k], c = cur2[k]; if(!c){ x += w * B.vx[i]; y += w * B.vy[i]; continue; }
+          const o = B.bones[k], u = B.lu[i * nb + k], v = B.lv[i * nb + k];
+          const us = u < 0 ? u : (u > o.len ? o.len * c.s + (u - o.len) : u * c.s);
+          x += w * (c.ax + c.dx * us - c.dy * v); y += w * (c.ay + c.dy * us + c.dx * v);
+        }
+        B.px[i] = x; B.py[i] = y;
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, W, H);
+      const cols = B.cols, rows = B.rows, cs = B.cell;
+      for(let r = 0; r < rows; r++) for(let c = 0; c < cols; c++){
+        const i00 = r * (cols + 1) + c, i10 = i00 + 1, i01 = i00 + cols + 1, i11 = i01 + 1;
+        const bx = Math.max(0, B.vx[i00] - 1), by = Math.max(0, B.vy[i00] - 1);
+        const bw = Math.min(W, B.vx[i11] + 1) - bx, bh = Math.min(H, B.vy[i11] + 1) - by;
+        if(bw <= 0 || bh <= 0) continue;
+        sklTri(B.img, B.vx[i00], B.vy[i00], B.vx[i10], B.vy[i10], B.vx[i01], B.vy[i01], B.px[i00], B.py[i00], B.px[i10], B.py[i10], B.px[i01], B.py[i01], bx, by, bw, bh);
+        sklTri(B.img, B.vx[i10], B.vy[i10], B.vx[i11], B.vy[i11], B.vx[i01], B.vy[i01], B.px[i10], B.py[i10], B.px[i11], B.py[i11], B.px[i01], B.py[i01], bx, by, bw, bh);
+      }
+    }
+    sklRender();
+  }
+  function sklCommit(){
+    if(!sklBound) return;
+    if(sklRaf){ cancelAnimationFrame(sklRaf); sklRaf = 0; }
+    const changed = sklBound.changed;
+    if(changed) sklWarpNow();
+    sklFree();
+    if(changed) commitPatch(0, 0, cv.width, cv.height);   // the pose becomes real pixels (and can be undone with the top Undo)
+    sklUndo = sklUndo.filter(a => a.t !== 'pose');
+    sklUi();
+  }
+  $('skl-mode').addEventListener('click', () => {
+    if(!cur || !sklOn) return;
+    if(sklMode === 'move'){ sklCommit(); sklMode = 'draw'; sklUi(); toast('Add points: tap to place, drag to adjust'); }
+    else if(sklBind()){ sklMode = 'move'; sklUi(); toast('Drag a point to pull the skin like rubber'); }
+  });
+
+  $('skl-done').addEventListener('click', () => sklToggle(false));
+  $('ws-skel').addEventListener('click', () => sklToggle(!sklOn));
+  window.addEventListener('resize', () => sklRender());
+
+  // ---------- import an image (into the open space, or to start a new one) ----------
+  async function decodeImage(file){
+    try{ return await createImageBitmap(file); }
+    catch(_){
+      return await new Promise((res, rej) => {
+        const u = URL.createObjectURL(file), im = new Image();
+        im.onload = () => { URL.revokeObjectURL(u); res(im); };
+        im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Could not read that image')); };
+        im.src = u;
+      });
+    }
+  }
+  $('ws-import').addEventListener('click', async () => { importForNew = false; const f = await pickImage(); if(f) importPicked(f); });
+  async function importPicked(file){
+    if(!file) return;
+    try{
+      const bmp = await decodeImage(file);
+      const bw = bmp.width, bh = bmp.height;
+      if(importForNew){
+        importForNew = false;
+        const scale = Math.min(1, MAX_SIDE / Math.max(bw, bh));
+        const w = Math.max(MIN_SIDE, Math.round(bw * scale)), h = Math.max(MIN_SIDE, Math.round(bh * scale));
+        const name = ($('wd-new-name').value || '').trim() || (file.name || 'Imported').replace(/\.[^.]+$/, '');
+        closeNewSheet();
+        const item = { id: uid(), name, w, h, updated: Date.now(), png: null, thumb: null };
+        try{ await dbPut(item); }catch(_){}
+        await openItem(item.id, item);
+        const dw = Math.round(bw * scale), dh = Math.round(bh * scale);
+        const dx = Math.round((w - dw) / 2), dy = Math.round((h - dh) / 2);
+        ctx.drawImage(bmp, dx, dy, dw, dh);
+        const src = document.createElement('canvas'); src.width = dw; src.height = dh;
+        src.getContext('2d').drawImage(bmp, 0, 0, dw, dh);
+        lastImport = { source: src, x: dx, y: dy, w: dw, h: dh };
+        commitPatch(0, 0, w, h);
+      } else if(ctx){
+        const scale = Math.min(1, (cv.width * 0.8) / bw, (cv.height * 0.8) / bh);
+        const dw = Math.round(bw * scale), dh = Math.round(bh * scale);
+        const dx = Math.round((cv.width - dw) / 2), dy = Math.round((cv.height - dh) / 2);
+        ctx.drawImage(bmp, dx, dy, dw, dh);
+        const src = document.createElement('canvas'); src.width = dw; src.height = dh;
+        src.getContext('2d').drawImage(bmp, 0, 0, dw, dh);
+        lastImport = { source: src, x: dx, y: dy, w: dw, h: dh };
+        commitPatch(dx, dy, dw, dh);
+        toast('Image added — Easy Cut is ready');
+      }
+      if(bmp.close) bmp.close();
+    }catch(err){ alert("Couldn't import that image: " + (err && err.message ? err.message : err)); }
+
+  }
+
+  // ---------- Easy Cut: cuts the latest imported picture, or the current canvas if no image was imported ----------
+  const ec = { w:0, h:0, src:null, img:null, auto:null, taps:null, stack:null, history:[],
+               tol:26, brush:24, mode:'magic', autoCount:0, raf:0, target:null, originalW:0, originalH:0, model:null };
+  const ecScreen = $('ec-screen'), ecCanvas = $('ec-canvas'), ecCtx = ecCanvas.getContext('2d', { willReadFrequently:true });
+  const ecHint = $('ec-hint'), ecUndo = $('ec-undo'), ecTol = $('ec-tol'), ecBrush = $('ec-brush'), ecScale = $('ec-scale');
+  const EC_MAX_SIDE = 1400;
+  function ecDist2(d, i, j){
+    const r=d[i]-d[j], g=d[i+1]-d[j+1], b=d[i+2]-d[j+2], a=d[i+3]-d[j+3];
+    return r*r+g*g+b*b+a*a;
+  }
+  function ecMedian(a){ a.sort((x,y)=>x-y); return a[a.length>>1]; }
+  // ---------- Easy Cut auto-detect ----------
+  // 1) Learn what the background looks like from the picture's border (a few colours).
+  // 2) Give every pixel a "cost": how un-background-like it is (colour distance to the
+  //    background colours, or how sharp an edge it sits on, whichever is bigger).
+  // 3) Spread inward from the border, always taking the cheapest pixel next. Every pixel ends
+  //    up with ONE number: the hardest obstacle you must cross to reach it from outside.
+  //    Background = low number. The character's body lines = high number.
+  // The sliders only pick a cut-off on that number, so dragging Cutout size grows the cut
+  // smoothly from the outside toward the character and stops at the body lines.
+  // The heavy work (steps 1-3) runs once per picture, not on every slider move.
+  function ecBlur3(d,w,h,op){
+    // 3x3 average that ignores transparent pixels (kills JPEG noise, keeps real edges)
+    const N=w*h,hr=new Uint16Array(N),hg=new Uint16Array(N),hb=new Uint16Array(N),hn=new Uint8Array(N);
+    for(let y=0;y<h;y++){
+      const row=y*w;
+      for(let x=0;x<w;x++){
+        let sr=0,sg=0,sb=0,n=0;
+        const x0=x>0?x-1:0,x1=x<w-1?x+1:w-1;
+        for(let xx=x0;xx<=x1;xx++){const q=row+xx;if(op[q]){const i=q*4;sr+=d[i];sg+=d[i+1];sb+=d[i+2];n++;}}
+        const p=row+x;hr[p]=sr;hg[p]=sg;hb[p]=sb;hn[p]=n;
+      }
+    }
+    const R=new Uint8Array(N),G=new Uint8Array(N),B=new Uint8Array(N);
+    for(let y=0;y<h;y++){
+      const y0=y>0?y-1:0,y1=y<h-1?y+1:h-1;
+      for(let x=0;x<w;x++){
+        let sr=0,sg=0,sb=0,n=0;
+        for(let yy=y0;yy<=y1;yy++){const q=yy*w+x;sr+=hr[q];sg+=hg[q];sb+=hb[q];n+=hn[q];}
+        const p=y*w+x;
+        if(n){R[p]=(sr/n)|0;G[p]=(sg/n)|0;B[p]=(sb/n)|0;}
+      }
+    }
+    return {R,G,B};
+  }
+  function ecBorderPalette(R,G,B,op,w,h){
+    // The few colours that make up the picture's outer border = "what background looks like".
+    // Stops once ~85% of the border is explained, so a character whose feet touch the edge
+    // is not mistaken for background.
+    const bw=Math.max(2,Math.round(Math.min(w,h)*0.01));
+    const cnt=new Uint32Array(4096),sr=new Float64Array(4096),sg=new Float64Array(4096),sb=new Float64Array(4096);
+    let total=0;
+    const take=p=>{
+      if(!op[p])return;
+      const r=R[p],g=G[p],b=B[p],k=((r>>4)<<8)|((g>>4)<<4)|(b>>4);
+      cnt[k]++;sr[k]+=r;sg[k]+=g;sb[k]+=b;total++;
+    };
+    for(let y=0;y<h;y++){
+      if(y<bw||y>=h-bw){for(let x=0;x<w;x++)take(y*w+x);}
+      else{for(let x=0;x<bw;x++){take(y*w+x);take(y*w+w-1-x);}}
+    }
+    if(!total)return [];
+    const order=[];for(let k=0;k<4096;k++)if(cnt[k])order.push(k);
+    order.sort((a,b)=>cnt[b]-cnt[a]);
+    const centres=[];let covered=0;
+    for(const k of order){
+      if(covered>=0.85*total||centres.length>=8)break;
+      if(covered>=0.6*total&&cnt[k]<0.02*total)break;
+      const r=sr[k]/cnt[k],g=sg[k]/cnt[k],b=sb[k]/cnt[k];
+      let near=false;
+      for(const c of centres){const dr=c[0]-r,dg=c[1]-g,db=c[2]-b;if(dr*dr+dg*dg+db*db<1296){near=true;break;}}
+      covered+=cnt[k];
+      if(!near)centres.push([r,g,b]);
+    }
+    return centres;
+  }
+  function ecEstimate(hist,N){
+    // Looks at "how much gets removed" as the cut-off rises. Removing the background is a fast
+    // rise, then a long FLAT stretch (the cut is sitting on the character's outline), then it
+    // rises again once it starts leaking into the body. The flat stretch is the sweet spot.
+    const f=new Float32Array(255);let c=0;
+    for(let t=0;t<255;t++){c+=hist[t];f[t]=c/N;}
+    const EPS=0.0015,SLACK=0.004,LO=4,HI=100,MAXE=200,MINLEN=5;
+    let bs=-1,be=-1;
+    for(let s=LO;s<=HI;s++){
+      const base=f[s-1];
+      if(base<0.02||base>=0.995)continue;
+      let e=s;
+      while(e+1<=MAXE&&f[e+1]-base<=EPS*(e+2-s)+SLACK)e++;
+      if(e-s+1>=MINLEN&&e-s>be-bs){bs=s;be=e;}
+    }
+    if(bs<0)return {tStar:30,tEnd:60,found:false};
+    // stay well inside the flat stretch: 100% sits early in it, 150% stops before its far end
+    const len=be-bs;
+    const tStar=Math.min(60,Math.max(6,bs+Math.round(0.25*len)));
+    const tEnd=Math.min(140,Math.max(tStar+8,bs+Math.round(0.6*len)));
+    return {tStar,tEnd,found:true};
+  }
+  function ecBuildModel(){
+    const w=ec.w,h=ec.h,d=ec.src,N=w*h;
+    const op=new Uint8Array(N);
+    for(let p=0;p<N;p++)op[p]=d[p*4+3]>=8?1:0;
+    const bl=ecBlur3(d,w,h,op),R=bl.R,G=bl.G,B=bl.B;
+    const pal=ecBorderPalette(R,G,B,op,w,h);
+    // cost per pixel (0..254)
+    const lvl=new Uint8Array(N);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const p=y*w+x;
+      if(!op[p]){lvl[p]=0;continue;}
+      if(!pal.length){lvl[p]=254;continue;}
+      const r=R[p],g=G[p],b=B[p];
+      let best=1e9;
+      for(let k=0;k<pal.length;k++){const c=pal[k],dr=r-c[0],dg=g-c[1],db=b-c[2],v=dr*dr+dg*dg+db*db;if(v<best)best=v;}
+      let eg=0,q,dr,dg,db,v;
+      if(x>0&&op[q=p-1]){dr=r-R[q];dg=g-G[q];db=b-B[q];v=dr*dr+dg*dg+db*db;if(v>eg)eg=v;}
+      if(x<w-1&&op[q=p+1]){dr=r-R[q];dg=g-G[q];db=b-B[q];v=dr*dr+dg*dg+db*db;if(v>eg)eg=v;}
+      if(y>0&&op[q=p-w]){dr=r-R[q];dg=g-G[q];db=b-B[q];v=dr*dr+dg*dg+db*db;if(v>eg)eg=v;}
+      if(y<h-1&&op[q=p+w]){dr=r-R[q];dg=g-G[q];db=b-B[q];v=dr*dr+dg*dg+db*db;if(v>eg)eg=v;}
+      const c=Math.max(Math.sqrt(best),2*Math.sqrt(eg));
+      lvl[p]=c>=254?254:(c+0.5)|0;
+    }
+    // cheapest-first spread from the border (bucket queue; every pixel is queued exactly once)
+    const bott=new Uint8Array(N),seen=new Uint8Array(N),next=ec.stack;
+    const head=new Int32Array(255).fill(-1);
+    const push=(q,l)=>{seen[q]=1;bott[q]=l;next[q]=head[l];head[l]=q;};
+    for(let x=0;x<w;x++){
+      if(!seen[x])push(x,lvl[x]);
+      const q=(h-1)*w+x;if(!seen[q])push(q,lvl[q]);
+    }
+    for(let y=1;y<h-1;y++){
+      const a=y*w,b=y*w+w-1;
+      if(!seen[a])push(a,lvl[a]);
+      if(!seen[b])push(b,lvl[b]);
+    }
+    for(let cur=0;cur<255;cur++){
+      while(head[cur]!==-1){
+        const p=head[cur];head[cur]=next[p];
+        const x=p%w,y=(p/w)|0;
+        let q;
+        if(x>0&&!seen[q=p-1])push(q,lvl[q]>cur?lvl[q]:cur);
+        if(x<w-1&&!seen[q=p+1])push(q,lvl[q]>cur?lvl[q]:cur);
+        if(y>0&&!seen[q=p-w])push(q,lvl[q]>cur?lvl[q]:cur);
+        if(y<h-1&&!seen[q=p+w])push(q,lvl[q]>cur?lvl[q]:cur);
+      }
+    }
+    const hist=new Uint32Array(255);
+    for(let p=0;p<N;p++)hist[bott[p]]++;
+    const est=ecEstimate(hist,N);
+    ec.model={bott,hist,tStar:est.tStar,tEnd:est.tEnd,found:est.found,hasPalette:pal.length>0};
+  }
+  function ecThreshold(){
+    // Cutout size: 25% = barely any cut, 100% = the auto-estimated background edge,
+    // 150% = the far end of the safe zone just before it would start eating the body.
+    // Cut strength nudges the same cut-off (26 = neutral, higher = more aggressive).
+    const m=ec.model;if(!m)return 0;
+    const pct=Math.max(25,Math.min(150,Number(ecScale&&ecScale.value)||100));
+    const t=pct<=100?m.tStar*((pct-25)/75):m.tStar+(m.tEnd-m.tStar)*((pct-100)/50);
+    const sf=1+((Number(ec.tol)||26)-26)/64;
+    return Math.min(250,t*sf);
+  }
+  function ecComputeAuto(){
+    if(!ec.model)ecBuildModel();
+    const b=ec.model.bott,N=ec.w*ec.h,t=ecThreshold();
+    let mask=ec.auto;
+    if(!mask||mask.length!==N)mask=ec.auto=new Uint8Array(N);
+    let count=0;
+    for(let p=0;p<N;p++){const m=b[p]<=t?1:0;mask[p]=m;count+=m;}
+    ec.autoCount=count;
+  }
+  function ecRender(){
+    if(!ec.img||!ec.src)return;
+    const w=ec.w,h=ec.h,od=ec.img.data,a=ec.auto,t=ec.taps;
+    od.set(ec.src);
+    for(let p=0,n=w*h;p<n;p++)if(a[p]||t[p])od[p*4+3]=0;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const p=y*w+x;if(a[p]||t[p]||od[p*4+3]===0)continue;
+      if((x>0&&(a[p-1]||t[p-1]))||(x<w-1&&(a[p+1]||t[p+1]))||(y>0&&(a[p-w]||t[p-w]))||(y<h-1&&(a[p+w]||t[p+w])))od[p*4+3]=od[p*4+3]>>1;
+    }
+    ecCtx.putImageData(ec.img,0,0);
+    ecUndo.disabled=!ec.history.length;
+    if(ec.mode==='magic' && +ecScale.value>=100 && ec.autoCount/(w*h)<.01) ecHint.textContent='Could not detect a plain edge background. Tap leftover areas or use Manual cut.';
+    else ecHint.textContent=ec.mode==='magic'?'Drag Cutout size right to grow the cut toward the character. Tap a leftover patch to remove it.':'Drag your finger over anything you want to erase.';
+  }
+  function ecRefresh(){ecComputeAuto();ecRender();}
+  function ecSetMode(mode){
+    ec.mode=mode;
+    $('ec-mode-magic').classList.toggle('active',mode==='magic');
+    $('ec-mode-scissors').classList.toggle('active',mode==='scissors');
+    $('ec-tol-row').style.display=mode==='magic'?'':'none';
+    $('ec-brush-row').style.display=mode==='scissors'?'':'none';
+    ecRender();
+  }
+  function ecLoadSource(source, target){
+    const ow=source.width,oh=source.height,k=Math.min(1,EC_MAX_SIDE/Math.max(ow,oh));
+    ec.originalW=ow;ec.originalH=oh;ec.target=target;
+    ec.w=Math.max(1,Math.round(ow*k));ec.h=Math.max(1,Math.round(oh*k));
+    ecCanvas.width=ec.w;ecCanvas.height=ec.h;
+    const temp=document.createElement('canvas');temp.width=ec.w;temp.height=ec.h;
+    temp.getContext('2d').drawImage(source,0,0,ec.w,ec.h);
+    ec.img=temp.getContext('2d',{willReadFrequently:true}).getImageData(0,0,ec.w,ec.h);
+    ec.src=new Uint8ClampedArray(ec.img.data);
+    ec.taps=new Uint8Array(ec.w*ec.h);ec.stack=new Int32Array(ec.w*ec.h);ec.history=[];ec.model=null;ec.auto=null;
+    ec.tol=26;ec.brush=24;ecScale.value=100;$('ec-scale-val').textContent='100%';
+    ecTol.value=26;$('ec-tol-val').textContent='26';ecBrush.value=24;$('ec-brush-val').textContent='24';
+    ec.mode='magic';
+    $('ec-mode-magic').classList.add('active');$('ec-mode-scissors').classList.remove('active');
+    $('ec-tol-row').style.display='';$('ec-brush-row').style.display='none';
+    ecRefresh();ecScreen.classList.add('open');
+  }
+  function openEasyCut(){
+    if(!ctx||!cur){toast('Open a drawing space first');return;}
+    if(st)endStroke();
+    const source=document.createElement('canvas'), target=lastImport?{...lastImport, kind:'import'}:{x:0,y:0,w:cv.width,h:cv.height,kind:'canvas'};
+    source.width=target.w;source.height=target.h;
+    if(lastImport&&lastImport.source) source.getContext('2d').drawImage(lastImport.source,0,0,target.w,target.h);
+    else source.getContext('2d').drawImage(cv,0,0,cv.width,cv.height);
+    ecLoadSource(source,target);
+  }
+  function ecTapAt(x,y){
+    const w=ec.w,h=ec.h,d=ec.src,p0=y*w+x;
+    if(ec.auto[p0]||ec.taps[p0])return;
+    const ref=p0*4,lim=(ec.tol*1.6)*(ec.tol*1.6)*3,stack=ec.stack,added=[];let sp=0;
+    ec.taps[p0]=1;stack[sp++]=p0;added.push(p0);
+    while(sp>0){
+      const p=stack[--sp],px=p%w,py=(p/w)|0;
+      const tryPush=q=>{if(ec.auto[q]||ec.taps[q])return;if(ecDist2(d,ref,q*4)<=lim){ec.taps[q]=1;stack[sp++]=q;added.push(q);}};
+      if(px>0)tryPush(p-1);if(px<w-1)tryPush(p+1);if(py>0)tryPush(p-w);if(py<h-1)tryPush(p+w);
+    }
+    ec.history.push(Int32Array.from(added));ecRender();
+  }
+  function ecBrushStamp(cx,cy,radius,added){
+    const r2=radius*radius,x0=Math.max(0,Math.floor(cx-radius)),x1=Math.min(ec.w-1,Math.ceil(cx+radius)),y0=Math.max(0,Math.floor(cy-radius)),y1=Math.min(ec.h-1,Math.ceil(cy+radius));
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x-cx,dy=y-cy;if(dx*dx+dy*dy>r2)continue;const p=y*ec.w+x;if(ec.taps[p])continue;ec.taps[p]=1;added.push(p);}
+  }
+  let ecPointer=null;
+  ecCanvas.addEventListener('pointerdown',e=>{
+    if(!ec.src)return;e.preventDefault();ecCanvas.setPointerCapture(e.pointerId);
+    const r=ecCanvas.getBoundingClientRect(),x=Math.max(0,Math.min(ec.w-1,Math.floor((e.clientX-r.left)*ec.w/r.width))),y=Math.max(0,Math.min(ec.h-1,Math.floor((e.clientY-r.top)*ec.h/r.height)));
+    if(ec.mode==='magic'){ecTapAt(x,y);return;}
+    ecPointer={id:e.pointerId,x,y,added:[]};ecBrushStamp(x,y,ec.brush/2,ecPointer.added);ecRender();
+  });
+  ecCanvas.addEventListener('pointermove',e=>{
+    if(!ecPointer||ecPointer.id!==e.pointerId)return;e.preventDefault();
+    const r=ecCanvas.getBoundingClientRect(),x=Math.max(0,Math.min(ec.w-1,(e.clientX-r.left)*ec.w/r.width)),y=Math.max(0,Math.min(ec.h-1,(e.clientY-r.top)*ec.h/r.height));
+    const dx=x-ecPointer.x,dy=y-ecPointer.y,dist=Math.hypot(dx,dy),steps=Math.max(1,Math.ceil(dist/Math.max(2,ec.brush/4)));
+    for(let i=1;i<=steps;i++){const t=i/steps;ecBrushStamp(ecPointer.x+dx*t,ecPointer.y+dy*t,ec.brush/2,ecPointer.added);}
+    ecPointer.x=x;ecPointer.y=y;ecRender();
+  });
+  function ecPointerEnd(e){if(!ecPointer||ecPointer.id!==e.pointerId)return;if(ecPointer.added.length)ec.history.push(Int32Array.from(ecPointer.added));ecPointer=null;ecUndo.disabled=!ec.history.length;}
+  ecCanvas.addEventListener('pointerup',ecPointerEnd);ecCanvas.addEventListener('pointercancel',ecPointerEnd);
+  ecUndo.addEventListener('click',()=>{
+    const last=ec.history.pop();if(!last)return;
+    for(let i=0;i<last.length;i++)ec.taps[last[i]]=0;
+    ecRender();
+  });
+  $('ec-reset').addEventListener('click',()=>{
+    if(!ec.src)return;ec.taps.fill(0);ec.history=[];ec.tol=26;ecTol.value=26;$('ec-tol-val').textContent='26';
+    ec.brush=24;ecBrush.value=24;$('ec-brush-val').textContent='24';ecScale.value=100;$('ec-scale-val').textContent='100%';ecRefresh();
+  });
+  $('ec-fit').addEventListener('click',()=>{ecScale.value=100;$('ec-scale-val').textContent='100%';if(ec.src)ecRefresh();});
+  ecTol.addEventListener('input',()=>{ec.tol=+ecTol.value;$('ec-tol-val').textContent=ec.tol;ecRefresh();});
+  ecBrush.addEventListener('input',()=>{ec.brush=+ecBrush.value;$('ec-brush-val').textContent=ec.brush;});
+  ecScale.addEventListener('input',()=>{$('ec-scale-val').textContent=ecScale.value+'%';ecRefresh();});
+  $('ec-mode-magic').addEventListener('click',()=>ecSetMode('magic'));
+  $('ec-mode-scissors').addEventListener('click',()=>ecSetMode('scissors'));
+  $('ec-close').addEventListener('click',()=>{ecScreen.classList.remove('open');ecPointer=null;});
+  $('ec-apply').addEventListener('click',()=>{
+    if(!ec.img||!ctx||!ec.target)return;
+    const out=document.createElement('canvas');out.width=ec.w;out.height=ec.h;out.getContext('2d').putImageData(ec.img,0,0);
+    let minX=out.width,minY=out.height,maxX=-1,maxY=-1;
+    const id=out.getContext('2d',{willReadFrequently:true}).getImageData(0,0,out.width,out.height).data;
+    for(let y=0;y<out.height;y++)for(let x=0;x<out.width;x++)if(id[(y*out.width+x)*4+3]>8){if(x<minX)minX=x;if(y<minY)minY=y;if(x>maxX)maxX=x;if(y>maxY)maxY=y;}
+    if(maxX<minX||maxY<minY){ecHint.textContent='Everything is transparent. Tap Reset or lower Cut strength, then try again.';return;}
+    const trimmed=document.createElement('canvas');trimmed.width=maxX-minX+1;trimmed.height=maxY-minY+1;
+    trimmed.getContext('2d').drawImage(out,minX,minY,trimmed.width,trimmed.height,0,0,trimmed.width,trimmed.height);
+    const target=ec.target,scale=(ec.originalW/ec.w);
+    const dw=Math.max(1,Math.round(trimmed.width*scale)),dh=Math.max(1,Math.round(trimmed.height*scale));
+    // Keep the cutout at its original position. Cutout size controls background-removal reach,
+    // not the final artwork scale.
+    const sourceScale=ec.originalW/ec.w;
+    const cx=target.x+(minX+trimmed.width/2)*sourceScale,cy=target.y+(minY+trimmed.height/2)*sourceScale;
+    const dx=Math.round(cx-dw/2),dy=Math.round(cy-dh/2);
+    const x0=Math.max(0,Math.min(target.x,dx)),y0=Math.max(0,Math.min(target.y,dy));
+    const x1=Math.min(cv.width,Math.max(target.x+target.w,dx+dw)),y1=Math.min(cv.height,Math.max(target.y+target.h,dy+dh));
+    ctx.clearRect(target.x,target.y,target.w,target.h);
+    ctx.drawImage(trimmed,dx,dy,dw,dh);
+    commitPatch(x0,y0,x1-x0,y1-y0);
+    if(target.kind==='import')lastImport=null;
+    ecScreen.classList.remove('open');toast('Cutout applied to drawing');
+  });
+  $('ws-easycut').addEventListener('click',openEasyCut);
+})();
 </script>
 
 </body>
