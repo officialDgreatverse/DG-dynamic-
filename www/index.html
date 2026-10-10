@@ -2472,6 +2472,9 @@
       <button class="icon-btn expand-btn" aria-label="Fullscreen">
         <svg viewBox="0 0 24 24" fill="none"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
+      <button class="icon-btn" id="save-btn" aria-label="Save project">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 4h11l3 3v13H5V4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 4v5h7V4M8 20v-6h8v6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
       <button class="icon-btn" aria-label="Share">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="2.4" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="19" r="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6" stroke="currentColor" stroke-width="1.8"/></svg>
       </button>
@@ -2707,6 +2710,7 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <div class="picker-title">Layers</div>
+          <button type="button" id="layer-copy-btn" style="margin-left:auto;border:0;border-radius:16px;padding:7px 12px;background:#2a2a2e;color:#fff;font:inherit;font-size:13px;cursor:pointer">Copy layer</button>
         </div>
         <div class="layer-list" id="layer-list"></div>
         <button class="layer-add" id="layer-add" aria-label="Add layer">
@@ -3079,6 +3083,7 @@
     const framesSnap = frames.map(f => {
       const isVideo = f.type === 'video' && f.video;
       if(isVideo && !f.video.assetId){ f.video.assetId = uid(); f.video.assetSaved = false; }
+      if(f.audio && !f.audio.assetId){ f.audio.assetId = uid(); f.audio.assetSaved = false; }
       // the frame's small preview picture: only re-made when the frame actually changed
       if(!f._tkey) f._tkey = uid();
       if(frameIsLoaded(f) && (f._thumbBlobP === undefined || f._thumbSig !== thumbSig(f) || f.layers.some(l => l._dirty || !l._blobP))){
@@ -3100,9 +3105,11 @@
           ref: l, key: l._key, name: l.name, opacity: l.opacity, visible: l.visible !== false,
           locked: !!l.locked, blobP: l._blobP, write: !!l._needsWrite
         })),
+        audio: f.audio ? { ref: f.audio, assetId: f.audio.assetId, frames: f.audio.frames, offset: f.audio.offset || 0, blob: f.audio.blob || null,
+                           write: !f.audio.assetSaved && !!f.audio.blob } : null,
         video: isVideo ? {
           ref: f.video, assetId: f.video.assetId, natW: f.video.natW, natH: f.video.natH,
-          duration: f.video.duration, zoom: f.video.zoom || 1,
+          duration: f.video.duration, zoom: f.video.zoom || 1, trimStart: f.video.trimStart || 0, trimEnd: f.video.trimEnd || 0,
           box: f.video.box ? Object.assign({}, f.video.box) : null,
           blob: f.video.blob || null, write: !f.video.assetSaved && !!f.video.blob
         } : null
@@ -3148,7 +3155,14 @@
         keep.add(vk);
         if(f.video.write) writes.push({ key: vk, blob: f.video.blob, video: f.video });
         videoOut = { assetId: f.video.assetId, natW: f.video.natW, natH: f.video.natH,
-                     duration: f.video.duration, zoom: f.video.zoom, box: f.video.box };
+                     duration: f.video.duration, zoom: f.video.zoom, box: f.video.box, trimStart: f.video.trimStart || 0, trimEnd: f.video.trimEnd || 0 };
+      }
+      let audioOut = null;
+      if(f.audio){
+        const ak = pid + '|A|' + f.audio.assetId;
+        keep.add(ak);
+        if(f.audio.write) writes.push({ key: ak, blob: f.audio.blob, audio: f.audio });
+        audioOut = { assetId: f.audio.assetId, frames: f.audio.frames, offset: f.audio.offset || 0 };
       }
       let tkeyOut = null;
       if(f.tkey && f.thumbP){
@@ -3158,7 +3172,7 @@
           if(tb){ writes.push({ key: tk, blob: tb, thumbFrame: f }); keep.add(tk); tkeyOut = f.tkey; }
         } else { keep.add(tk); tkeyOut = f.tkey; }
       }
-      dataFrames.push({ type: f.type, layerSeq: f.layerSeq, activeIdx: f.activeIdx, layers: layersOut, video: videoOut, tkey: tkeyOut });
+      dataFrames.push({ type: f.type, layerSeq: f.layerSeq, activeIdx: f.activeIdx, layers: layersOut, video: videoOut, audio: audioOut, tkey: tkeyOut });
     }
     const meta = {
       id: pid, name: s.proj.name, created: s.proj.created, updated: Date.now(),
@@ -3180,7 +3194,8 @@
       tx.onabort = () => reject(tx.error);
     });
     writes.forEach(w => {
-      if(w.video) w.video.ref.assetSaved = true;
+      if(w.audio) w.audio.ref.assetSaved = true;
+      else if(w.video) w.video.ref.assetSaved = true;
       else if(w.thumbFrame){ if(w.thumbFrame.ref._thumbBlobP === w.thumbFrame.thumbP) w.thumbFrame.ref._thumbWrite = false; }
       else if(w.layer.ref._blobP === w.layer.blobP) w.layer.ref._needsWrite = false;
     });
@@ -3524,6 +3539,7 @@
       data.frames.forEach((f, fi) => {
         if(Math.abs(fi - selIdx) <= 1) f.layers.forEach(l => keys.push(id + '|L|' + l.key));   // only the frame you were on + neighbours
         if(f.video) keys.push(id + '|V|' + f.video.assetId);
+        if(f.audio) keys.push(id + '|A|' + f.audio.assetId);
         if(f.tkey) keys.push(id + '|T|' + f.tkey);                                              // small pictures for the whole timeline
       });
       const blobs = await idbGetBlobs(keys);
@@ -3581,9 +3597,10 @@
           const vblob = B[id + '|V|' + fd.video.assetId];
           f.type = 'video';
           f.video = { src: vblob ? URL.createObjectURL(vblob) : '', natW: fd.video.natW, natH: fd.video.natH,
-                      duration: fd.video.duration, box: fd.video.box, zoom: fd.video.zoom || 1,
+                      duration: fd.video.duration, box: fd.video.box, zoom: fd.video.zoom || 1, trimStart: fd.video.trimStart || 0, trimEnd: fd.video.trimEnd || 0,
                       blob: vblob, assetId: fd.video.assetId, assetSaved: true };
         }
+        if(fd.audio){ const ab = B[id + '|A|' + fd.audio.assetId]; if(ab) f.audio = { blob: ab, frames: fd.audio.frames, offset: fd.audio.offset || 0, assetId: fd.audio.assetId, assetSaved: true }; }
         f._thumbSig = thumbSig(f);
         f._used = 0;
         frames.push(f);
@@ -4420,6 +4437,9 @@
   const layerNameInput = document.getElementById('layer-name-input');
   const layerSaveBtn = document.getElementById('layer-save');
 
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    try{ await flushSave(); toast('Project saved'); }catch(e){ toast('Could not save'); }
+  });
   function currentFrame(){
     return frames.find(f => f.selected) || frames[0];
   }
@@ -5579,6 +5599,32 @@
   addVideoInput.addEventListener('change', () => {
     const file = addVideoInput.files && addVideoInput.files[0];
     if(!file) return;
+    askVideoMode(mode => { if(mode) loadPickedVideo(file, mode === 'split'); });
+  });
+
+  // Small chooser shown right after a video is picked: paste it whole, or split into frames.
+  function askVideoMode(cb){
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;padding:16px;';
+    const box = document.createElement('div');
+    box.style.cssText = 'width:100%;max-width:420px;background:#1c1c20;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;color:var(--text);';
+    const mk = (label, sub, val, primary) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.style.cssText = 'text-align:left;border:0;border-radius:12px;padding:14px;color:#fff;font:inherit;cursor:pointer;' +
+        (primary ? 'background:linear-gradient(135deg,var(--accent-1),var(--accent-2));' : 'background:#2a2a2e;');
+      b.innerHTML = '<div style="font-weight:600;font-size:15px">' + label + '</div><div style="font-size:12px;opacity:.75;margin-top:2px">' + sub + '</div>';
+      b.addEventListener('click', () => { ov.remove(); cb(val); });
+      return b;
+    };
+    box.appendChild(mk('Paste full video', 'One frame, plays the whole video', 'full', false));
+    box.appendChild(mk('Separate in layers', 'Break the video into frames at the project FPS', 'split', true));
+    ov.appendChild(box);
+    ov.addEventListener('pointerdown', e => { if(e.target === ov){ ov.remove(); cb(null); } });
+    document.body.appendChild(ov);
+  }
+
+  function loadPickedVideo(file, split){
     const url = URL.createObjectURL(file);
     const probe = document.createElement('video');
     probe.preload = 'auto';
@@ -5590,19 +5636,20 @@
       off.width = probe.videoWidth || 640;
       off.height = probe.videoHeight || 360;
       try{ off.getContext('2d').drawImage(probe, 0, 0, off.width, off.height); }catch(_){}
-      addVideoFrame(url, off.width, off.height, probe.duration || 0, off, file);
+      if(probe._grabbed) return; probe._grabbed = true;
+      addVideoFrame(url, off.width, off.height, probe.duration || 0, off, file, split);
     };
     probe.addEventListener('loadedmetadata', () => {
       probe.addEventListener('seeked', grabPoster, { once: true });
       try{ probe.currentTime = Math.min(0.05, (probe.duration || 1) / 2); }
       catch(_){ grabPoster(); }
-      setTimeout(() => { if(probe.readyState >= 2 && !probe._grabbed){ probe._grabbed = true; grabPoster(); } }, 800);
+      setTimeout(() => { if(probe.readyState >= 2 && !probe._grabbed){ grabPoster(); } }, 800);
     }, { once: true });
-  });
+  }
 
   // Insert a new frame right after the current one, holding a single "Video" layer (its pixels
   // are a baked still — same as any other frame until you hit Play) plus the video metadata.
-  function addVideoFrame(src, natW, natH, duration, posterCanvas, file){
+  function addVideoFrame(src, natW, natH, duration, posterCanvas, file, split){
     const cur = currentFrame();
     const posterLayer = makeLayer('Video');
     const insertAt = frames.indexOf(cur) + 1;
@@ -5615,7 +5662,7 @@
       layerSeq: 1,
       undoStack: [],
       redoStack: [],
-      video: { src: src, natW: natW, natH: natH, duration: duration, box: null, zoom: 1, blob: file || null }
+      video: { src: src, natW: natW, natH: natH, duration: duration, box: null, zoom: 1, blob: file || null, split: !!split }
     };
     frames.splice(insertAt, 0, newFrame);
     frames.forEach((f, i) => f.n = i + 1);
@@ -5625,7 +5672,7 @@
 
   // ---- Video placement box: move, free-resize (crop) and zoom, then bake or discard ----
   let videoPlaceState = null;    // { frame, posterCanvas, box:{x,y,w,h}, zoom, isNew }
-  let videoBoxEl = null, videoActionsEl = null;
+  let videoBoxEl = null, videoActionsEl = null, videoTrimPv = null;
 
   function syncVideoBox(){
     if(!videoPlaceState || !videoBoxEl) return;
@@ -5635,22 +5682,21 @@
     videoBoxEl.style.top = (b.y * s) + 'px';
     videoBoxEl.style.width = (b.w * s) + 'px';
     videoBoxEl.style.height = (b.h * s) + 'px';
-    if(videoActionsEl){
-      videoActionsEl.style.left = (b.x * s + (b.w * s) / 2) + 'px';
-      videoActionsEl.style.top = (b.y * s) + 'px';
-    }
   }
   function removeVideoPlaceOverlay(){
+    document.removeEventListener('pointerdown', videoOutsideTap, true);
+    if(videoTrimPv){ try{ videoTrimPv.removeAttribute('src'); videoTrimPv.load(); }catch(_){} videoTrimPv = null; }
     if(videoBoxEl){ videoBoxEl.remove(); videoBoxEl = null; }
     if(videoActionsEl){ videoActionsEl.remove(); videoActionsEl = null; }
   }
   // Renders the box's current position/size/zoom onto the frame's poster layer — this is what
   // shows up when just browsing frames, and what the thumbnail is drawn from.
   function bakeVideoPoster(frame, posterCanvas, box, zoom){
-    const layer = frame.layers[0];
+    bakeInto(frame.layers[0], posterCanvas, frame.video.natW, frame.video.natH, box, zoom);
+  }
+  function bakeInto(layer, posterCanvas, natW, natH, box, zoom){
     const ctx = layer.canvas.getContext('2d');
     ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-    const natW = frame.video.natW, natH = frame.video.natH;
     const baseScale = Math.max(box.w / natW, box.h / natH);   // "cover" fit
     const scale = baseScale * (zoom || 1);
     const srcW = Math.min(natW, box.w / scale);
@@ -5661,12 +5707,96 @@
   function commitVideoPlacement(){
     if(!videoPlaceState) return;
     const { frame, posterCanvas, box, zoom } = videoPlaceState;
+    if(videoPlaceState.trim){ frame.video.trimStart = videoPlaceState.trim.start; frame.video.trimEnd = videoPlaceState.trim.end; }
+    if(frame.video.split){
+      const v = frame.video, b = { x: box.x, y: box.y, w: box.w, h: box.h };
+      removeVideoPlaceOverlay();
+      videoPlaceState = null;
+      splitVideoIntoFrames(frame, v, b, zoom);
+      return;
+    }
     bakeVideoPoster(frame, posterCanvas, box, zoom);
     frame.video.box = { x: box.x, y: box.y, w: box.w, h: box.h };
     frame.video.zoom = zoom;
     removeVideoPlaceOverlay();
     videoPlaceState = null;
     refreshThumbnails();
+  }
+  // Seek through the video at the project FPS and turn each sample into its own frame,
+  // all cropped/zoomed with the box the user set. The placeholder frame becomes frame #1.
+  let videoSplitBusy = false;
+  async function splitVideoIntoFrames(frame, v, box, zoom){
+    if(videoSplitBusy) return;
+    videoSplitBusy = true;
+    const MAX = 240;
+    const t0 = v.trimStart || 0, t1 = (v.trimEnd > 0 ? v.trimEnd : (v.duration || 0));
+    const dur = Math.max(0.1, t1 - t0);
+    let count = Math.max(1, Math.floor(dur * selectedFps));
+    let step = 1 / selectedFps;
+    if(count > MAX){ count = MAX; step = dur / MAX; }
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;';
+    ov.textContent = 'Separating video… 0/' + count;
+    document.body.appendChild(ov);
+    const vid = document.createElement('video');
+    vid.muted = true; vid.playsInline = true; vid.preload = 'auto'; vid.src = v.src;
+    const off = document.createElement('canvas');
+    off.width = v.natW; off.height = v.natH;
+    const octx = off.getContext('2d');
+    const seek = t => new Promise(res => {
+      let done = false;
+      const fin = () => { if(!done){ done = true; res(); } };
+      vid.addEventListener('seeked', fin, { once: true });
+      setTimeout(fin, 1200);
+      try{ vid.currentTime = t; }catch(_){ fin(); }
+    });
+    try{
+      await new Promise(res => { if(vid.readyState >= 1) res(); else vid.addEventListener('loadedmetadata', res, { once: true }); });
+      const made = [];
+      for(let i = 0; i < count; i++){
+        await seek(Math.min(Math.max(0, t1 - 0.01), t0 + i * step));
+        octx.clearRect(0, 0, off.width, off.height);
+        try{ octx.drawImage(vid, 0, 0, off.width, off.height); }catch(_){}
+        const f = (i === 0) ? frame : {
+          n: 0, selected: false, type: 'picture', layers: [makeLayer('Video')],
+          layerSeq: 1, undoStack: [], redoStack: [], video: null
+        };
+        f.layers[0].canvas.getContext('2d').clearRect(0, 0, f.layers[0].canvas.width, f.layers[0].canvas.height);
+        bakeInto(f.layers[0], off, v.natW, v.natH, box, zoom);
+        f.activeLayerId = f.layers[0].id;
+        made.push(f);
+        if(i > 0){                       // park finished frames on disk-backed pictures so memory stays flat
+          f.layers.forEach(prepareLayerForSave);
+          await evictFrame(f);
+        }
+        ov.textContent = 'Separating video… ' + (i + 1) + '/' + count;
+        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+      }
+      frame.type = 'picture'; frame.video = null;
+      // keep the video's sound: it starts on this frame and runs for exactly as many frames as were made
+      if(v.blob) frame.audio = { blob: v.blob, frames: count, offset: t0, assetId: uid(), assetSaved: false };
+      const at = frames.indexOf(frame);
+      frames.splice(at + 1, 0, ...made.slice(1));
+      frames.forEach((f, i) => f.n = i + 1);
+      renderLayers();
+      renderFrameStrips();               // rebuilds the strip now — no need to switch frames to see the new ones
+      refreshThumbnails();
+      markProjectChanged();
+      toast(count + ' frames added' + (dur * selectedFps > MAX ? ' (sampled)' : ''));
+    } finally {
+      vid.removeAttribute('src'); try{ vid.load(); }catch(_){}
+      try{ URL.revokeObjectURL(v.src); }catch(_){}
+      ov.remove();
+      try{ renderFrameStrips(); }catch(_){}
+      videoSplitBusy = false;
+    }
+  }
+  // Tapping anywhere outside the box (and its buttons) deselects it and keeps it as is.
+  function videoOutsideTap(e){
+    if(!videoPlaceState || videoPlaceState.frame.video.split) return;
+    if(videoBoxEl && videoBoxEl.contains(e.target)) return;
+    if(videoActionsEl && videoActionsEl.contains(e.target)) return;
+    commitVideoPlacement();
   }
   function cancelVideoPlacement(){
     if(!videoPlaceState) return;
@@ -5717,7 +5847,8 @@
           let newW = hOrig.w, newH = hOrig.h;
           if(anchor === 'se' || anchor === 'ne') newW = hOrig.w + d.dx; else newW = hOrig.w - d.dx;
           if(anchor === 'se' || anchor === 'sw') newH = hOrig.h + d.dy; else newH = hOrig.h - d.dy;
-          newW = Math.max(24, newW); newH = Math.max(24, newH);
+          newW = Math.max(24, newW); newH = newW * hOrig.h / hOrig.w;
+          if(newH < 24){ newH = 24; newW = newH * hOrig.w / hOrig.h; }
           let newX = hOrig.x, newY = hOrig.y;
           if(anchor === 'sw' || anchor === 'nw') newX = hOrig.x + (hOrig.w - newW);
           if(anchor === 'nw' || anchor === 'ne') newY = hOrig.y + (hOrig.h - newH);
@@ -5746,7 +5877,7 @@
       box = Object.assign({}, frame.video.box);
     } else {
       const maxW = currentCanvasSize.w * 0.8, maxH = currentCanvasSize.h * 0.8;
-      const fit = Math.min(1, maxW / frame.video.natW, maxH / frame.video.natH);
+      const fit = Math.min(currentCanvasSize.w / frame.video.natW, currentCanvasSize.h / frame.video.natH);
       const w = frame.video.natW * fit, h = frame.video.natH * fit;
       box = { x: (currentCanvasSize.w - w) / 2, y: (currentCanvasSize.h - h) / 2, w: w, h: h };
     }
@@ -5774,9 +5905,13 @@
     videoActionsEl.className = 'video-actions';
     videoActionsEl.innerHTML =
       '<button type="button" class="paste-action-btn cancel" aria-label="Cancel video placement"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>' +
+      '<button type="button" class="paste-action-btn vfit" style="width:auto;padding:0 10px;border-radius:16px;font-size:12px">Fit</button>' +
+      '<button type="button" class="paste-action-btn vfill" style="width:auto;padding:0 10px;border-radius:16px;font-size:12px">Fill</button>' +
       '<span class="video-zoom">Zoom<input type="range" min="100" max="300" value="' + Math.round(zoom * 100) + '"></span>' +
       '<button type="button" class="paste-action-btn confirm" aria-label="Confirm video placement"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
-    surface.appendChild(videoActionsEl);
+    // pinned to the screen (not the canvas) so it can never be clipped or covered, however the video is framed
+    videoActionsEl.style.cssText = 'position:fixed;left:50%;top:auto;bottom:calc(env(safe-area-inset-bottom, 0px) + 160px);transform:translateX(-50%);z-index:9998;max-width:96vw;flex-wrap:wrap;justify-content:center;border-radius:18px;white-space:normal;';
+    document.body.appendChild(videoActionsEl);
     videoActionsEl.addEventListener('pointerdown', e => e.stopPropagation());
     videoActionsEl.querySelector('.cancel').addEventListener('click', cancelVideoPlacement);
     videoActionsEl.querySelector('.confirm').addEventListener('click', commitVideoPlacement);
@@ -5785,8 +5920,54 @@
       img.style.transform = `scale(${videoPlaceState.zoom})`;
     });
 
+    // Trim: choose which part of the video to bring in (applies to both full paste and separate)
+    const vdur = frame.video.duration || 0;
+    if(vdur > 0.3){
+      const ts0 = frame.video.trimStart || 0, te0 = frame.video.trimEnd > 0 ? frame.video.trimEnd : vdur;
+      videoPlaceState.trim = { start: ts0, end: te0 };
+      const row = document.createElement('div');
+      row.style.cssText = 'flex-basis:100%;display:flex;flex-direction:column;gap:4px;font-size:12px;color:#fff;';
+      row.innerHTML = '<div class="vt-label" style="text-align:center;opacity:.85"></div>' +
+        '<div style="display:flex;gap:6px;align-items:center">Start<input class="vt-s" type="range" min="0" max="' + vdur + '" step="0.1" value="' + ts0 + '" style="flex:1;accent-color:var(--accent-1)">' +
+        'End<input class="vt-e" type="range" min="0" max="' + vdur + '" step="0.1" value="' + te0 + '" style="flex:1;accent-color:var(--accent-1)"></div>';
+      videoActionsEl.appendChild(row);
+      const sIn = row.querySelector('.vt-s'), eIn = row.querySelector('.vt-e'), lab = row.querySelector('.vt-label');
+      const upd = () => { const t = videoPlaceState.trim; lab.textContent = 'Trim ' + t.start.toFixed(1) + 's – ' + t.end.toFixed(1) + 's  (' + (t.end - t.start).toFixed(1) + 's of ' + vdur.toFixed(1) + 's)'; };
+      videoTrimPv = document.createElement('video');
+      videoTrimPv.muted = true; videoTrimPv.playsInline = true; videoTrimPv.preload = 'auto'; videoTrimPv.src = frame.video.src;
+      const pv = videoTrimPv;
+      const showAt = t => {
+        pv.addEventListener('seeked', () => {
+          try{ posterCanvas.getContext('2d').drawImage(pv, 0, 0, posterCanvas.width, posterCanvas.height); img.src = posterCanvas.toDataURL(); }catch(_){}
+        }, { once: true });
+        try{ pv.currentTime = Math.min(t, Math.max(0, vdur - 0.05)); }catch(_){}
+      };
+      sIn.addEventListener('input', () => {
+        let v = Number(sIn.value); if(v > videoPlaceState.trim.end - 0.2){ v = Math.max(0, videoPlaceState.trim.end - 0.2); sIn.value = v; }
+        videoPlaceState.trim.start = v; upd();
+      });
+      sIn.addEventListener('change', () => showAt(videoPlaceState.trim.start));   // preview the new first frame
+      eIn.addEventListener('input', () => {
+        let v = Number(eIn.value); if(v < videoPlaceState.trim.start + 0.2){ v = Math.min(vdur, videoPlaceState.trim.start + 0.2); eIn.value = v; }
+        videoPlaceState.trim.end = v; upd();
+      });
+      upd();
+      if(ts0 > 0) pv.addEventListener('loadedmetadata', () => showAt(ts0), { once: true });
+    }
+    const cw = () => currentCanvasSize.w, ch = () => currentCanvasSize.h;
+    videoActionsEl.querySelector('.vfit').addEventListener('click', () => {      // whole video visible, centered
+      const f = Math.min(cw() / frame.video.natW, ch() / frame.video.natH);
+      const w = frame.video.natW * f, h = frame.video.natH * f;
+      videoPlaceState.box = { x: (cw() - w) / 2, y: (ch() - h) / 2, w: w, h: h };
+      syncVideoBox();
+    });
+    videoActionsEl.querySelector('.vfill').addEventListener('click', () => {     // covers the canvas, edges cropped
+      videoPlaceState.box = { x: 0, y: 0, w: cw(), h: ch() };
+      syncVideoBox();
+    });
     syncVideoBox();
     wireVideoBoxDrag();
+    setTimeout(() => { if(videoPlaceState) document.addEventListener('pointerdown', videoOutsideTap, true); }, 0);
   }
 
   // ---- Playback: Prev / Play / Next. Picture frames each hold for one tick at the project's
@@ -5933,6 +6114,7 @@
 
   function stopPlayback(){
     isPlaying = false;
+    stopPlayAudio();
     playRun++;
     setPlayIcon(false);
     if(playTimer){ clearTimeout(playTimer); playTimer = null; }
@@ -5973,12 +6155,205 @@
     surface.appendChild(wrap);
     playbackVideoWrap = wrap;
     playbackVideoEl = vid;
-    const finish = () => { if(isPlaying && playbackVideoEl === vid) onDone(); };
+    let finished = false;
+    const finish = () => { if(finished) return; if(isPlaying && playbackVideoEl === vid){ finished = true; onDone(); } };
+    const ts = frame.video.trimStart || 0, te = frame.video.trimEnd || 0;
+    if(ts > 0) vid.addEventListener('loadedmetadata', () => { try{ vid.currentTime = ts; }catch(_){} }, { once: true });
+    if(te > 0) vid.addEventListener('timeupdate', () => { if(vid.currentTime >= te) finish(); });
     vid.addEventListener('ended', finish, { once: true });
     vid.addEventListener('error', () => setTimeout(finish, 300), { once: true });   // unreadable clip — move on instead of sticking
     const p = vid.play();
     if(p && p.catch) p.catch(finish);   // autoplay blocked — don't get stuck, just move on
   }
+
+  // ---- Audio clips (from separated videos or added with the Audio button) ----
+  // A clip lives on the frame it starts at (frame.audio = { blob, frames }) and covers that many frames.
+  let playAudioLive = [];     // { el, url, start, end }
+  function startClip(i, offsetFrames){
+    const f = frames[i];
+    if(!f || !f.audio || !f.audio.blob) return;
+    if(playAudioLive.some(a => a.start === i)) return;
+    try{
+      const url = URL.createObjectURL(f.audio.blob);
+      const el = new Audio(url);
+      const fps = selectedFps || 12;
+      const offSec = (f.audio.offset || 0) + (offsetFrames > 0 ? offsetFrames / fps : 0);
+      if(offSec > 0) el.currentTime = offSec;
+      el.play().catch(() => {});
+      playAudioLive.push({ el: el, url: url, start: i, end: i + f.audio.frames });
+    }catch(e){ console.warn('audio play failed', e); }
+  }
+  function stopLiveClip(a){ try{ a.el.pause(); }catch(_){} try{ URL.revokeObjectURL(a.url); }catch(_){} }
+  function stopPlayAudio(){ playAudioLive.forEach(stopLiveClip); playAudioLive = []; }
+  function updatePlayAudio(idx){
+    playAudioLive = playAudioLive.filter(a => {
+      if(idx < a.start || idx >= a.end){ stopLiveClip(a); return false; }
+      return true;
+    });
+    startClip(idx, 0);
+  }
+  function startCoveringAudio(idx){      // pressing Play in the middle of a clip: join it at the right moment
+    stopPlayAudio();
+    for(let j = 0; j <= idx; j++){
+      const f = frames[j];
+      if(f && f.audio && idx < j + f.audio.frames) startClip(j, idx - j);
+    }
+  }
+
+  // Audio button: lists the clips in this project, lets you add a sound file at the current frame, or remove one.
+  const addAudioInput = document.createElement('input');
+  addAudioInput.type = 'file'; addAudioInput.accept = 'audio/*'; addAudioInput.style.display = 'none';
+  document.body.appendChild(addAudioInput);
+  addAudioInput.addEventListener('change', () => {
+    const file = addAudioInput.files && addAudioInput.files[0];
+    if(!file) return;
+    const url = URL.createObjectURL(file);
+    const a = new Audio(url);
+    a.addEventListener('loadedmetadata', () => {
+      const cur = currentFrame();
+      const n = Math.max(1, Math.ceil((a.duration || 1) * (selectedFps || 12)));
+      cur.audio = { blob: file, frames: n, assetId: uid(), assetSaved: false };
+      URL.revokeObjectURL(url);
+      markProjectChanged();
+      toast('Audio added at frame ' + cur.n);
+    }, { once: true });
+    a.addEventListener('error', () => { URL.revokeObjectURL(url); toast('Could not read that audio file'); }, { once: true });
+  });
+  function openAudioSheet(){
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;padding:16px;';
+    const box = document.createElement('div');
+    box.style.cssText = 'width:100%;max-width:420px;max-height:70vh;overflow:auto;background:#1c1c20;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;color:var(--text);';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-weight:600;font-size:15px;';
+    title.textContent = 'Audio';
+    box.appendChild(title);
+    const clips = frames.filter(f => f.audio);
+    if(!clips.length){
+      const e = document.createElement('div');
+      e.style.cssText = 'font-size:13px;opacity:.7;';
+      e.textContent = 'No audio yet. Separated videos bring their sound here automatically.';
+      box.appendChild(e);
+    }
+    clips.forEach(f => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#2a2a2e;border-radius:12px;padding:10px 12px;font-size:13px;';
+      const dur = (f.audio.frames / (selectedFps || 12)).toFixed(1);
+      row.innerHTML = '<span>Frames ' + f.n + ' – ' + (f.n + f.audio.frames - 1) + ' · ' + dur + 's</span>';
+      const rm = document.createElement('button');
+      rm.type = 'button'; rm.textContent = 'Remove';
+      rm.style.cssText = 'border:0;border-radius:10px;padding:6px 10px;background:#3a2a2e;color:#ff7a8a;font:inherit;cursor:pointer;';
+      rm.addEventListener('click', () => { delete f.audio; markProjectChanged(); ov.remove(); openAudioSheet(); });
+      row.appendChild(rm);
+      box.appendChild(row);
+    });
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.style.cssText = 'border:0;border-radius:12px;padding:14px;color:#fff;font:inherit;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));';
+    add.textContent = 'Add audio at frame ' + currentFrame().n;
+    add.addEventListener('click', () => { ov.remove(); addAudioInput.value = ''; addAudioInput.click(); });
+    box.appendChild(add);
+    ov.appendChild(box);
+    ov.addEventListener('pointerdown', e => { if(e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
+  document.querySelectorAll('.util-btn').forEach(b => {
+    const sp = b.querySelector('span');
+    if(sp && sp.textContent.trim() === 'Audio') b.addEventListener('click', openAudioSheet);
+  });
+
+
+
+  // ---- Copy layer to other frames: pick Backward/Forward and how many frames, then paste ----
+  let layerCopyBarEl = null;
+  function closeLayerCopyBar(){ if(layerCopyBarEl){ layerCopyBarEl.remove(); layerCopyBarEl = null; } }
+  document.getElementById('layer-copy-btn').addEventListener('click', () => {
+    closeLayerCopyBar();
+    const src = currentFrame();
+    const layer = src.layers.find(l => l.id === src.activeLayerId);
+    if(!layer || layer._unloaded) return;
+    const srcIdx = frames.indexOf(src);
+    let dir = 1, count = 10;
+    const bar = document.createElement('div');
+    layerCopyBarEl = bar;
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom, 0px) + 150px);width:min(94vw,460px);z-index:9998;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:18px;background:rgba(20,20,22,0.96);color:#fff;font-size:13px;';
+    bar.innerHTML =
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button type="button" class="lc-cancel paste-action-btn cancel" aria-label="Cancel"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>' +
+        '<button type="button" class="lc-back" style="flex:1;border:0;border-radius:14px;padding:8px;font:inherit;color:#fff">◀ Backward</button>' +
+        '<button type="button" class="lc-fwd" style="flex:1;border:0;border-radius:14px;padding:8px;font:inherit;color:#fff">Forward ▶</button>' +
+        '<button type="button" class="lc-ok paste-action-btn confirm" aria-label="Paste"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;align-items:center"><input class="lc-range" type="range" min="1" max="1" value="1" style="flex:1;accent-color:var(--accent-1)"></div>' +
+      '<div class="lc-label" style="text-align:center;opacity:.85"></div>';
+    document.body.appendChild(bar);
+    bar.addEventListener('pointerdown', e => e.stopPropagation());
+    const range = bar.querySelector('.lc-range'), label = bar.querySelector('.lc-label');
+    const bBack = bar.querySelector('.lc-back'), bFwd = bar.querySelector('.lc-fwd');
+    function refresh(){
+      const room = dir > 0 ? frames.length - 1 - srcIdx : srcIdx;
+      range.max = Math.max(1, room);
+      count = Math.min(Math.max(1, count), Math.max(1, room));
+      range.value = count;
+      const g = 'linear-gradient(135deg,var(--accent-1),var(--accent-2))';
+      bFwd.style.background = dir > 0 ? g : '#2a2a2e';
+      bBack.style.background = dir < 0 ? g : '#2a2a2e';
+      if(room < 1){ label.textContent = 'No frames ' + (dir > 0 ? 'after' : 'before') + ' this one'; return; }
+      const from = dir > 0 ? src.n + 1 : src.n - count, to = dir > 0 ? src.n + count : src.n - 1;
+      label.textContent = '"' + layer.name + '" → ' + count + (count === 1 ? ' frame ' : ' frames ') + (dir > 0 ? 'forward' : 'backward') + ' (frames ' + from + '–' + to + ')';
+    }
+    bFwd.addEventListener('click', () => { dir = 1; refresh(); });
+    bBack.addEventListener('click', () => { dir = -1; refresh(); });
+    range.addEventListener('input', () => { count = Number(range.value); refresh(); });
+    bar.querySelector('.lc-cancel').addEventListener('click', closeLayerCopyBar);
+    bar.querySelector('.lc-ok').addEventListener('click', async () => {
+      const room = dir > 0 ? frames.length - 1 - srcIdx : srcIdx;
+      if(room < 1) return;
+      const n = count, d = dir;
+      closeLayerCopyBar();
+      await pasteLayerToFrames(src, layer, d, n);
+    });
+    refresh();
+    const back = document.getElementById('layer-back-btn');   // close the layer list so the canvas and bar are clear
+    if(back) back.click();
+  });
+  async function pasteLayerToFrames(src, layer, dir, n){
+    const srcIdx = frames.indexOf(src);
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;';
+    document.body.appendChild(ov);
+    try{
+      for(let k = 1; k <= n; k++){
+        const t = frames[srcIdx + dir * k];
+        if(!t) break;
+        ov.textContent = 'Pasting layer… ' + k + '/' + n;
+        if(t.type === 'video') continue;
+        await ensureFrameLoaded(t);
+        let tl = t.layers.find(l => l.id === layer.id);
+        if(!tl){
+          tl = makeLayer(layer.name, layer.id);
+          const pos = Math.min(src.layers.indexOf(layer), t.layers.length);
+          t.layers.splice(pos, 0, tl);
+        }
+        tl.opacity = layer.opacity; tl.visible = layer.visible !== false;
+        const c = tl.canvas.getContext('2d');
+        c.clearRect(0, 0, tl.canvas.width, tl.canvas.height);
+        c.drawImage(layer.canvas, 0, 0);
+        tl._dirty = true;
+        t._thumbC = null;
+        if(!t.selected){
+          t.layers.forEach(prepareLayerForSave);
+          await evictFrame(t);                 // keep memory flat on long ranges
+        }
+        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+      }
+      renderFrameStrips();
+      refreshThumbnails();
+      markProjectChanged();
+      toast('Layer pasted to ' + n + (n === 1 ? ' frame' : ' frames'));
+    } finally { ov.remove(); }
+  }
+
   function advancePlayback(idx){
     if(!isPlaying) return;
     const next = frames[idx + 1] || frames[0];   // loop back to the start instead of freezing on the last frame
@@ -5998,6 +6373,7 @@
     if(performance.now() - t0 > 12){ playAnchorTime = performance.now(); playTickCount = 0; }
     if(cv){ playCtx.drawImage(cv, 0, 0); }
     playShownFrame = frame;
+    updatePlayAudio(idx);
     markPlayThumb(frame.n);
     for(let k = 1; k <= PLAY_AHEAD; k++){          // get the next few ready while this one shows
       getPlayFrame(frames[(idx + k) % frames.length]).catch(() => {});
@@ -6027,6 +6403,7 @@
     isPlaying = true;
     playRun++;
     setPlayIcon(true);
+    startCoveringAudio(frames.indexOf(currentFrame()));
     trimFrames();                 // free what we can before the run starts
     ensurePlayCanvas();
     playAnchorTime = performance.now();
@@ -6133,7 +6510,7 @@
       document.body.appendChild(vid);
       let raf = 0, done = false;
       // safety net: never wait longer than the clip's length (plus slack) — a stalled file must not freeze the export
-      const watchdog = setTimeout(() => cleanup(), ((frame.video.duration || 0) * 1000 || 60000) + 10000);
+      const watchdog = setTimeout(() => cleanup(), (((frame.video.trimEnd || frame.video.duration || 0) - (frame.video.trimStart || 0)) * 1000 || 60000) + 10000);
       function cleanup(){
         if(done) return;
         done = true;
@@ -6146,6 +6523,7 @@
       function draw(){
         if(done) return;
         if(exportCancelled){ cleanup(); return; }
+        if(frame.video.trimEnd > 0 && vid.currentTime >= frame.video.trimEnd){ cleanup(); return; }
         if(vid.readyState >= 2){
           const { sx, sy, sw, sh, box } = exportCropRect(frame);
           ctx.drawImage(vid, sx, sy, sw, sh, box.x, box.y, box.w, box.h);
@@ -6161,6 +6539,7 @@
             src.connect(audioDest);
           }catch(_){ /* some browsers refuse a second source on the same element — safe to ignore */ }
         }
+        if(frame.video.trimStart > 0){ try{ vid.currentTime = frame.video.trimStart; }catch(_){} }
         const p = vid.play();
         draw();
         if(p && p.catch) p.catch(cleanup);   // autoplay blocked — don't hang the export, just skip it
@@ -6369,7 +6748,7 @@
     const ctx = canvas.getContext('2d');
     const fps = selectedFps || 12;
 
-    const needsAudio = frames.some(f => f.type === 'video');
+    const needsAudio = frames.some(f => f.type === 'video' || f.audio);
     let audioDest = null;
     if(needsAudio){
       exportAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -6403,6 +6782,8 @@
     const interval = Math.max(30, Math.round(1000 / fps));
     let anchor = 0, count = 0;
 
+    const liveAudio = [];     // sounds from separated videos currently playing: { el, url, end }
+    const stopAudio = a => { try{ a.el.pause(); }catch(_){} try{ URL.revokeObjectURL(a.url); }catch(_){} };
     try{
       recorder.start(1000);        // hand over finished data every second instead of holding it all until the end
       let pending = build(0);
@@ -6412,6 +6793,20 @@
         await pending;
         pending = (i + 1 < frames.length) ? build(i + 1) : Promise.resolve();
         const cur = stages[i % 2];
+        for(let k = liveAudio.length - 1; k >= 0; k--){          // sound stops when its frames stop
+          if(i >= liveAudio[k].end){ stopAudio(liveAudio[k]); liveAudio.splice(k, 1); }
+        }
+        if(frame.audio && audioDest && frame.audio.blob){        // ...and starts on the exact frame it was pasted at
+          try{
+            const url = URL.createObjectURL(frame.audio.blob);
+            const el = new Audio(url);
+            const node = exportAudioCtx.createMediaElementSource(el);
+            node.connect(audioDest);
+            if(frame.audio.offset > 0) el.currentTime = frame.audio.offset;
+            el.play().catch(() => {});
+            liveAudio.push({ el: el, url: url, end: i + frame.audio.frames });
+          }catch(e){ console.warn('audio start failed', e); }
+        }
         if(frame.type === 'video'){
           await exportVideoFrame(ctx, frame, w, h, audioDest, cur);
           anchor = 0; count = 0;                // a video frame sets its own length — restart the even pacing after it
@@ -6426,6 +6821,7 @@
         await pending;                          // next frame is finished before we loop on
       }
     }finally{
+      liveAudio.forEach(stopAudio);
       try{ if(recorder.state !== 'inactive') recorder.stop(); }catch(_){}
       await stopped;
       combined.getTracks().forEach(t => { try{ t.stop(); }catch(_){} });
