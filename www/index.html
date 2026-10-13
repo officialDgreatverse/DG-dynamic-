@@ -3291,7 +3291,8 @@
         activeIdx: Math.max(0, f.layers.findIndex(l => l.id === f.activeLayerId)),
         layers: f.layers.map(l => ({
           ref: l, key: l._key, name: l.name, opacity: l.opacity, visible: l.visible !== false,
-          locked: !!l.locked, blobP: l._blobP, write: !!l._needsWrite
+          locked: !!l.locked, blobP: l._blobP, write: !!l._needsWrite,
+          rig: l.rig ? rigSnap(l.rig) : (l._rigData || null), rigSrcs: l.rig ? rigSources(l.rig) : null
         })),
         audio: f.audio ? { ref: f.audio, assetId: f.audio.assetId, frames: f.audio.frames, offset: f.audio.offset || 0, blob: f.audio.blob || null,
                            write: !f.audio.assetSaved && !!f.audio.blob } : null,
@@ -3335,7 +3336,14 @@
           if(blob) writes.push({ key: k, blob: blob, layer: l });
           else if(l.ref) l.ref._blobP = null;   // encoding failed — force a fresh attempt on the next save
         }
-        layersOut.push({ key: l.key, name: l.name, opacity: l.opacity, visible: l.visible, locked: l.locked });
+        if(l.rig && l.rig.id){                       // the character's skeleton: its small description goes in the layer record, each part picture is stored once
+          for(const rk of Object.keys(l.rig.srcs || {})){
+            const bk = pid + '|R|' + l.rig.id + '|' + rk; keep.add(bk);
+            const sc = l.rigSrcs && l.rigSrcs[rk];
+            if(sc && !sc.saved && sc.blob) writes.push({ key: bk, blob: sc.blob, rigSrc: sc });
+          }
+        }
+        layersOut.push({ key: l.key, name: l.name, opacity: l.opacity, visible: l.visible, locked: l.locked, rig: l.rig || null });
       }
       let videoOut = null;
       if(f.video){
@@ -3385,6 +3393,7 @@
       if(w.audio) w.audio.ref.assetSaved = true;
       else if(w.video) w.video.ref.assetSaved = true;
       else if(w.thumbFrame){ if(w.thumbFrame.ref._thumbBlobP === w.thumbFrame.thumbP) w.thumbFrame.ref._thumbWrite = false; }
+      else if(w.rigSrc){ w.rigSrc.saved = true; }
       else if(w.layer.ref._blobP === w.layer.blobP) w.layer.ref._needsWrite = false;
     });
   }
@@ -3767,6 +3776,7 @@
           const blob = lazy ? null : B[id + '|L|' + ld.key];
           if(blob) decodeJobs.push({ blob: blob, canvas: l.canvas });   // decoded in parallel below
           l._key = ld.key;
+          l._rigData = ld.rig || null;
           l._blobP = Promise.resolve(blob);
           if(lazy) l._lazyKey = id + '|L|' + ld.key;                     // fetched from storage only when this frame is needed
           l._needsWrite = false;
@@ -4430,6 +4440,7 @@
     f._used = ++_frameTick;
     preloadAround(f);        // the next frame and the one before (onion skin) are ready before you tap them
     trimFrames();
+    if(activeTool === 'Skeleton') skelPrepare().then(() => { if(activeTool === 'Skeleton') skelOverlay(); });
   }
 
   // Add a new blank frame right after the current one. It gets the same layer setup as the
@@ -4510,7 +4521,7 @@
     };
     releaseFrameClipboard();
     frameClipboard = {
-      layers: f.layers.map(l => ({ id: l.id, name: l.name, canvas: clone(l.canvas) })),
+      layers: f.layers.map(l => ({ id: l.id, name: l.name, canvas: clone(l.canvas), rig: l.rig ? rigClone(l.rig) : null, rigData: l._rigData || null })),
       barrier: f.barrier ? clone(f.barrier) : null,
       type: f.type || null,
       video: f.video ? Object.assign({}, f.video) : null
@@ -4534,6 +4545,8 @@
       nl.locked = l.locked;
       const src = byId.get(l.id);
       if(src) nl.canvas.getContext('2d').drawImage(src.canvas, 0, 0, nl.canvas.width, nl.canvas.height);
+      if(src && src.rig){ nl.rig = rigClone(src.rig); nl.rig.sig = skelSig(nl.canvas); }
+      else if(src && src.rigData) nl._rigData = src.rigData;
       return nl;
     });
     const newFrame = {
@@ -4720,6 +4733,7 @@
     c.getContext('2d').drawImage(src, 0, 0);
     return {
       layer: layer, canvas: c, bytes: c.width * c.height * 4, _img: null,
+      rigRef: layer.rig || null, rigPose: layer.rig ? rigPose(layer.rig) : null,
       get data(){ return this._img || (this._img = c.getContext('2d').getImageData(0, 0, c.width, c.height)); }
     };
   }
@@ -4814,6 +4828,9 @@
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'copy';
       ctx.drawImage(s.canvas, 0, 0);
       ctx.restore();
+      if(s.rigRef && s.rigPose){ s.layer.rig = s.rigRef; rigApplyPose(s.layer.rig, s.rigPose); s.layer.rig.sig = skelSig(s.layer.canvas); s.layer.rig.stale = false; }
+      else if(s.layer.rig && !s.layer._rigData){ s.layer.rig = null; }   // undone back to before the character was imported
+      if(typeof activeTool !== 'undefined' && activeTool === 'Skeleton') skelOverlay();
     });
   }
   function undo(){
@@ -5254,7 +5271,7 @@
           const pi = await window.dgWork.get('sa_' + c.id + '_' + md.v + '_' + pid);
           if(pi && pi.png){
             const d = (pi.dots && pi.dots.length === 2 ? pi.dots : [{ x: .5, y: .1 }, { x: .5, y: .9 }]).map(q => Array.isArray(q) ? { x: q[0], y: q[1] } : { x: q.x, y: q.y });
-            src = { bmp: await createImageBitmap(pi.png), dots: d };
+            src = { bmp: await createImageBitmap(pi.png), dots: d, blob: pi.png, saved: false };
           }
         }catch(_){ src = null; }
         cache[r.k] = src;
@@ -5265,33 +5282,33 @@
     return out;
   }
   async function importCharacterToLayer(c, md, it){
+    let parts = [], oneJoint = false;
     if(md.rig && md.rig.length){
-      let parts = [];
       try{ parts = await loadRigParts(c, md); }catch(_){ parts = []; }
-      if(parts.some(Boolean)){
-        setChiSheet(false);
-        if(isPlaying) stopPlayback();
-        addLayerNamed(c.name + ' · ' + md.name);
-        const layer = getActiveLayer(), cw = layer.canvas.width, ch = layer.canvas.height;
-        const W = c.size, H = Math.round(c.size * 1.5), f = Math.min(cw * 0.8 / W, ch * 0.8 / H);
-        pushUndoSnapshot(layer);
-        layer.rig = { parts: parts, W: W, H: H, f: f, ox: (cw - W * f) / 2, oy: (ch - H * f) / 2, sig: null, sel: -1 };
-        skelPaint(layer);
-        refreshThumbnails(); markProjectChanged();
-        setActiveTool('Skeleton');
-        skelToast('Skeleton mode on. Drag a part to move or bend it. Tap the Skeleton tool again to finish.');
-        return;
-      }
     }
-    let bmp;
-    try{ bmp = await createImageBitmap(it.png); }catch(_){ alert('Could not read that character.'); return; }
-    const off = document.createElement('canvas'); off.width = bmp.width; off.height = bmp.height;
-    off.getContext('2d').drawImage(bmp, 0, 0);
-    if(bmp.close) try{ bmp.close(); }catch(_){}
+    if(!parts.some(Boolean)){
+      // This character was saved without its joints (older save, or the part pictures are gone).
+      // It still gets a skeleton: one joint for the whole body, so it can be moved, resized and saved like any other.
+      try{
+        const bmp = await createImageBitmap(it.png), WW = c.size, HH = Math.round(c.size * 1.5);
+        parts = [{ src: { bmp: bmp, dots: [{ x: .5, y: .5 }, { x: .5, y: .85 }], blob: it.png, saved: false }, key: 'whole', x: WW / 2, y: HH / 2, rot: 0, m: 1,
+                   base: Math.min(WW * 0.8 / bmp.width, HH * 0.8 / bmp.height), flip: false, p: -1 }];
+        oneJoint = true;
+      }catch(_){ alert('Could not read that character.'); return; }
+    }
     setChiSheet(false);
     if(isPlaying) stopPlayback();
     addLayerNamed(c.name + ' · ' + md.name);
-    startPasteTransform({ canvas: off, w: off.width, h: off.height });   // movable + resizable, tick to place it on the new layer
+    const layer = getActiveLayer(), cw = layer.canvas.width, ch = layer.canvas.height;
+    const W = c.size, H = Math.round(c.size * 1.5), f = Math.min(cw * 0.8 / W, ch * 0.8 / H);
+    pushUndoSnapshot(layer);
+    layer.rig = { id: uid(), parts: parts, W: W, H: H, f: f, ox: (cw - W * f) / 2, oy: (ch - H * f) / 2, sig: null, sel: -1 };
+    layer._rigData = null;
+    skelPaint(layer);
+    refreshThumbnails(); markProjectChanged();
+    setActiveTool('Skeleton');
+    skelToast(oneJoint ? 'Skeleton mode on. This character was saved without joints, so it has one joint for the whole body. Open it in Merge full body and save it again to get the full skeleton.'
+                       : 'Skeleton mode on. Drag a part to move or bend it. Tap the Skeleton tool again to finish.');
   }
   document.querySelector('.more-row[data-item="import-character"]').addEventListener('click', () => {
     setMoreSheet(false);
@@ -8507,6 +8524,13 @@
     if(layer.locked) return;
     const t = trimWithOffset(src);
     if(!t){ clearLassoSelection(); return; }
+    let rigXf = null;
+    if(layer.rig){                                       // whole figure lifted while the layer is exactly the posed character? then its skeleton can follow
+      try{
+        const fb = trimWithOffset(layer.canvas);
+        if(fb && layer.rig.sig === skelSig(layer.canvas) && t.w >= fb.w * 0.85 && t.h >= fb.h * 0.85) rigXf = { R: layer.rig };
+      }catch(_){}
+    }
     pushUndoSnapshot(layer);
     const ctx = layer.canvas.getContext('2d');
     // Remove the piece using the hard mask, not the piece itself: erasing a semi-transparent pixel with
@@ -8523,6 +8547,7 @@
     pasteState.x = t.x; pasteState.y = t.y; pasteState.w = t.w; pasteState.h = t.h;
     pasteState.layer = layer;
     pasteState.floatSource = { x: t.x, y: t.y, w: t.w, h: t.h };
+    pasteState.rigXf = rigXf;
     syncPasteBox();
   }
 
@@ -9164,6 +9189,75 @@
   // The imported layer keeps its body parts (layer.rig). While this tool is on, bones are shown; dragging a part
   // bends it from its joint (parts attached to it follow), dragging the root part moves the whole figure. The layer
   // is repainted from the parts after each move. Switching to another tool leaves the pose as the layer's pixels.
+  // ---- Skeleton memory: the skeleton belongs to the layer, is saved with the project, and survives undo, resize and move ----
+  function rigSnap(R){            // plain copy of the skeleton (no pictures) that can be stored with the layer
+    const srcs = {};
+    const parts = R.parts.map(p => {
+      if(!p) return null;
+      if(!srcs[p.key]) srcs[p.key] = { dots: p.src.dots.map(d => ({ x: d.x, y: d.y })) };
+      return { k: p.key, x: p.x, y: p.y, rot: p.rot, m: p.m, flip: p.flip ? 1 : 0, p: p.p, base: p.base };
+    });
+    return { id: R.id, W: R.W, H: R.H, f: R.f, ox: R.ox, oy: R.oy, parts: parts, srcs: srcs };
+  }
+  function rigSources(R){         // each distinct part picture once: { key: src }
+    const out = {};
+    R.parts.forEach(p => { if(p && !out[p.key]) out[p.key] = p.src; });
+    return out;
+  }
+  function rigClone(R){           // a twin of the skeleton for a copied frame (pictures are shared, poses are separate)
+    return { id: R.id, W: R.W, H: R.H, f: R.f, ox: R.ox, oy: R.oy, sig: null, sel: -1, parts: R.parts.map(p => p ? Object.assign({}, p) : null) };
+  }
+  function rigPose(R){
+    return { f: R.f, ox: R.ox, oy: R.oy, parts: R.parts.map(p => p ? { x: p.x, y: p.y, rot: p.rot, m: p.m } : null) };
+  }
+  function rigApplyPose(R, ps){
+    R.f = ps.f; R.ox = ps.ox; R.oy = ps.oy;
+    ps.parts.forEach((q, i) => { const p = R.parts[i]; if(p && q){ p.x = q.x; p.y = q.y; p.rot = q.rot; p.m = q.m; } });
+  }
+  // A saved skeleton is only a small description until it is needed; this loads its pictures and switches it on.
+  async function rigEnsure(layer){
+    if(!layer || layer.rig || !layer._rigData || !currentProject) return;
+    if(layer._rigP) return layer._rigP;
+    const d = layer._rigData, pid = currentProject.id;
+    layer._rigP = (async () => {
+      const ks = Object.keys(d.srcs || {});
+      const blobs = await idbGetBlobs(ks.map(k => pid + '|R|' + d.id + '|' + k));
+      const srcs = {};
+      for(let i = 0; i < ks.length; i++){
+        if(!blobs[i]) continue;
+        try{ srcs[ks[i]] = { bmp: await createImageBitmap(blobs[i]), dots: d.srcs[ks[i]].dots, blob: blobs[i], saved: true }; }catch(_){}
+      }
+      if(layer.rig) return;
+      const parts = d.parts.map(p => (p && srcs[p.k]) ? { src: srcs[p.k], key: p.k, x: p.x, y: p.y, rot: p.rot, m: p.m, base: p.base, flip: !!p.flip, p: p.p } : null);
+      if(!parts.some(Boolean)) return;
+      layer.rig = { id: d.id, parts: parts, W: d.W, H: d.H, f: d.f, ox: d.ox, oy: d.oy, sig: null, sel: -1 };
+      layer.rig.sig = skelSig(layer.canvas);
+    })().catch(e => { console.warn('skeleton load failed', e); }).then(() => { layer._rigP = null; });
+    return layer._rigP;
+  }
+  // Finds the character's skeleton on the frame you are on (loading it if it was saved) and makes its layer the active one.
+  async function skelPrepare(){
+    let f = currentFrame(); if(!f) return null;
+    if(!frameIsLoaded(f)) await ensureFrameLoaded(f);
+    f = currentFrame();
+    let layer = getActiveLayer();
+    if(layer && !layer.rig && layer._rigData) await rigEnsure(layer);
+    if(layer && layer.rig) return layer;
+    for(let i = f.layers.length - 1; i >= 0; i--){
+      const l = f.layers[i];
+      if(!l.rig && !l._rigData) continue;
+      await rigEnsure(l);
+      if(l.rig){ if(l.id !== f.activeLayerId) selectLayer(l.id); return l; }
+    }
+    return null;
+  }
+  // The whole figure was resized / moved with Select: carry the skeleton along with it.
+  function rigFollow(R, from, to){
+    const s = ((to.w / from.w) + (to.h / from.h)) / 2;
+    R.ox = to.x + (R.ox - from.x) * s;
+    R.oy = to.y + (R.oy - from.y) * s;
+    R.f = R.f * s;
+  }
   function skelSig(cv){
     const t = document.createElement('canvas'); t.width = 24; t.height = 24;
     const x = t.getContext('2d', { willReadFrequently: true }); x.drawImage(cv, 0, 0, 24, 24);
@@ -9182,7 +9276,7 @@
       ctx.drawImage(b, -p0.x * b.width, -p0.y * b.height); ctx.restore();
     });
     ctx.restore();
-    R.sig = skelSig(layer.canvas);
+    R.sig = skelSig(layer.canvas); R.stale = false;
   }
   function skelPt(it, k){
     const b = it.src.bmp, d = it.src.dots[k], p0 = it.src.dots[0];
@@ -9229,10 +9323,17 @@
   let skelDrag = null;
   function skelDown(e){
     const layer = getActiveLayer();
-    if(!layer || !layer.rig){ skelToast('No skeleton on this layer. Import a character (More menu) onto a new layer first.'); return; }
+    if(!layer || !layer.rig){
+      skelPrepare().then(l => { if(l && activeTool === 'Skeleton'){ skelOverlay(); skelToast('Skeleton ready. Drag a part to move or bend it.'); } else skelToast('No skeleton on this frame. Import a character (More menu) onto this frame first.'); });
+      return;
+    }
     if(layer.locked){ skelToast('This layer is locked.'); return; }
     const R = layer.rig;
-    if(R.sig !== skelSig(layer.canvas)){ layer.rig = null; skelClearOverlay(); skelToast('This layer was changed, so its skeleton was released.'); return; }
+    if(R.sig !== skelSig(layer.canvas) && !R.stale){          // drawn on since the last pose: the skeleton stays, but say what posing will do
+      R.stale = true; skelOverlay();
+      skelToast('This layer has extra drawing on it. Posing redraws the character from its parts and replaces that drawing (Undo brings it back). Drag again to continue.');
+      return;
+    }
     const cp = canvasPointFromEvent(e, layer.canvas.width, layer.canvas.height);
     const q = { x: (cp.x - R.ox) / R.f, y: (cp.y - R.oy) / R.f };
     const i = skelPick(R, q.x, q.y);
@@ -9266,12 +9367,14 @@
   };
   window.addEventListener('pointerup', skelEnd); window.addEventListener('pointercancel', skelEnd);
   document.querySelectorAll('.tool-btn[aria-label="Skeleton"]').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       closePops(); setBrushPanel(false);
       if(activeTool === 'Skeleton'){ setActiveTool('Brush'); updateBrushPanelForTool(); skelToast('Skeleton mode off. Pose kept.'); return; }
       setActiveTool('Skeleton');
-      const l = getActiveLayer();
-      toast(l && l.rig ? 'Skeleton mode on. Drag a part to move or bend it.' : 'Skeleton mode: select the layer of an imported character.');
+      const l = await skelPrepare();
+      if(activeTool !== 'Skeleton') return;
+      if(l){ skelOverlay(); toast('Skeleton mode on. Drag a part to move or bend it.'); }
+      else toast('No skeleton on this frame. Import a character (More menu) onto this frame first.');
     });
   });
 
@@ -9496,8 +9599,15 @@
     if(!pasteState) return;
     const layer = pasteState.layer || getActiveLayer();
     const wasFloat = !!pasteState.floatSource;
+    const fsrc = pasteState.floatSource, rigXf = pasteState.rigXf;
     pasteState.floatSource = null;      // committing, not cancelling: don't restore the original
-    if(layer){
+    if(layer && wasFloat && rigXf && fsrc && layer.rig === rigXf.R){
+      // the character was resized / moved as a whole: move its skeleton with it and redraw it from its parts (stays sharp)
+      rigFollow(layer.rig, fsrc, { x: pasteState.x, y: pasteState.y, w: pasteState.w, h: pasteState.h });
+      skelPaint(layer);
+      refreshThumbnails(); markProjectChanged();
+      if(activeTool === 'Skeleton') skelOverlay();
+    } else if(layer){
       if(!wasFloat) pushUndoSnapshot(layer);
       const ctx = layer.canvas.getContext('2d');
       if(layer.locked) ctx.globalCompositeOperation = 'source-atop';   // respect the layer's lock here too
