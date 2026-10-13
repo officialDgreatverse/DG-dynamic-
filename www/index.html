@@ -2042,6 +2042,8 @@
   .mci-thumb .mci-del svg{width:12px;height:12px;}
   .mci-thumb .mci-dl{bottom:4px;right:4px;}
   .mci-thumb .mci-del{top:4px;right:4px;}
+  .chi-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 20px;display:flex;flex-direction:column;gap:10px;}
+  .chi-empty{padding:44px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;}
   .mci-empty{grid-column:1/-1;padding:44px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;}
 
 
@@ -2150,6 +2152,64 @@
   .wd-gal-grid button{aspect-ratio:1;border:none;padding:0;background:#2c2c31;cursor:pointer;overflow:hidden;}
   .wd-gal-grid img{width:100%;height:100%;object-fit:cover;display:block;}
   .wd-gal-more{grid-column:1/-1;margin:8px;padding:12px;border:none;border-radius:12px;background:#2c2c31;color:var(--text);font-weight:700;font-size:13px;cursor:pointer;}
+
+  /* ================= SA MODE ================= */
+  .sa-actions{display:flex;gap:2px;}
+  .sa-menu{position:absolute;right:10px;top:calc(50px + env(safe-area-inset-top));z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px;display:none;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  .sa-menu.open{display:block;}
+  .sa-menu button{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:14px;font-weight:600;padding:12px 14px;border-radius:10px;cursor:pointer;}
+  .sa-menu button:active{background:var(--line);}
+  .sa-body{flex:1;overflow-y:auto;padding:16px 16px 40px;}
+  .sa-list{display:flex;flex-direction:column;gap:10px;width:100%;}
+  .sa-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--text);cursor:pointer;font-family:inherit;box-sizing:border-box;}
+  .sa-row:active{opacity:.75;}
+  .sa-row.done{border-color:#2ecc71;}
+  .sa-row.static{cursor:default;opacity:.6;}
+  .sa-th{width:52px;height:52px;border-radius:10px;flex:none;overflow:hidden;background:repeating-conic-gradient(#e9e7e2 0 25%,#f7f6f3 0 50%) 0 0/12px 12px;display:flex;align-items:center;justify-content:center;}
+  .sa-th img{width:100%;height:100%;object-fit:contain;display:block;}
+  .sa-txt{flex:1;min-width:0;}
+  .sa-txt b{display:block;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sa-txt small{display:block;color:var(--muted);font-size:11.5px;margin-top:3px;}
+  .sa-chev{color:var(--muted);font-size:20px;flex:none;}
+  .sa-tick{color:#2ecc71;font-size:20px;font-weight:700;flex:none;}
+  .sa-mini{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:16px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .sa-note{color:var(--muted);font-size:12px;line-height:1.5;margin:0 0 14px;}
+  .sa-h{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:18px 0 8px;}
+  .sa-del{margin-top:22px;width:100%;}
+  .sa-merge{margin-top:18px;width:100%;}
+  .sa-merge:disabled{opacity:.4;}
+  .sa-empty{color:var(--muted);font-size:12px;line-height:1.6;text-align:center;padding:60px 20px;}
+  #page-sa-dots{background:var(--bg);}
+  .sad-stage{flex:1;min-height:0;position:relative;background:#0e0e10;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #sad-cv{position:absolute;left:0;top:0;touch-action:none;}
+  .sad-hint{padding:12px 16px calc(14px + env(safe-area-inset-bottom));font-size:13px;line-height:1.7;background:var(--surface);border-top:1px solid var(--line);}
+  .sad-hint i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;border:2px solid #000;vertical-align:-1px;}
+  .sad-hint small{display:block;color:var(--muted);font-size:11.5px;}
+  /* SA pieces: show transparency as a checkerboard while drawing */
+  #page-editor.sa-piece .canvas-surface{background:repeating-conic-gradient(#e9e7e2 0 25%,#f7f6f3 0 50%) 0 0/24px 24px;}
+  .sa-acts{display:flex;gap:6px;flex:none;}
+  #page-sa-merge{background:var(--bg);}
+  .sam-stage{flex:1;min-height:0;position:relative;background:#0e0e10;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #sam-cv{position:absolute;left:0;top:0;touch-action:none;}
+  .sam-panel{background:var(--surface);border-top:1px solid var(--line);padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;}
+  .sam-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;}
+  .sam-chips .wd-chip{flex:none;white-space:nowrap;margin:0;}
+  .sam-sel{display:none;flex-direction:column;gap:8px;}
+  .sam-sel.on{display:flex;}
+  .sam-rng{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);}
+  .sam-rng span{width:48px;flex:none;}
+  .sam-rng input{flex:1;min-width:0;}
+  .sam-rng b{width:44px;text-align:right;color:var(--text);flex:none;font-size:12px;}
+  .sam-btns{display:flex;gap:6px;flex-wrap:wrap;}
+  .sam-save{display:flex;gap:8px;align-items:center;}
+  .sam-save .wd-input{flex:1;min-width:0;margin:0;}
+  .sam-save .wd-btn{flex:none;padding:13px 16px;}
+  .sam-empty{color:var(--muted);font-size:12px;line-height:1.5;}
+  .sam-top{display:flex;gap:8px;}
+  .sam-zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;z-index:3;}
+  .sam-zoom button{width:42px;height:38px;border-radius:12px;border:1px solid var(--line);background:rgba(20,20,24,.85);color:#fff;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;}
+  .sam-zoom button#sam-zfit{font-size:12px;}
+  .sam-panel.testing .sam-chips,.sam-panel.testing .sam-sel,.sam-panel.testing .sam-save{display:none !important;}
 </style>
 </head>
 <body>
@@ -2190,7 +2250,7 @@
         <span>Home</span>
       </button>
 
-      <button class="nav-plus" aria-label="Create" onclick="showPage('page-create')">
+      <button class="nav-plus" aria-label="Create" onclick="window.saEndCreate&&window.saEndCreate();showPage('page-create')">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
       </button>
 
@@ -2203,11 +2263,120 @@
     <div class="drawer-scrim" id="drawer-scrim"></div>
     <div class="drawer" id="drawer">
       <div class="drawer-title">DG Dynamics</div>
+      <button class="drawer-item" data-go="page-sa">SA mode</button>
       <button class="drawer-item" data-go="page-settings">Settings</button>
       <button class="drawer-item" data-go="page-update">Update <span class="upd-dot" id="upd-dot" hidden></span></button>
     </div>
 
   </div>
+
+
+  <!-- ================= SA MODE (simple animation) ================= -->
+  <div class="page" id="page-sa">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Back" id="sa-back"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="logo">SA mode</div>
+      <div class="sa-actions">
+        <button class="icon-btn" id="sa-add" aria-label="New SA project"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+        <button class="icon-btn" id="sa-more" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+      </div>
+    </div>
+    <div class="sa-body" id="sa-body"></div>
+    <div class="sa-menu" id="sa-menu"><button type="button" id="sa-menu-char">Character mode</button></div>
+  </div>
+
+  <div class="page" id="page-sa-chars">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Back" id="sac-back"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="logo">Characters</div>
+      <button class="icon-btn" id="sac-add" aria-label="Add character"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="sa-body" id="sac-body"></div>
+    <div class="wd-modal" id="sa-new-char">
+      <div class="wd-card">
+        <h3>Add character</h3>
+        <input class="wd-input" id="sa-char-name" type="text" maxlength="40" placeholder="Character name">
+        <p class="wd-lab">Canvas size for each body piece</p>
+        <div class="wd-chips" id="sa-size-chips"></div>
+        <p class="wd-hint">Square for head, neck, body, hand and foot. Arms and legs get a tall canvas at half the width.</p>
+        <div class="wd-row">
+          <button class="wd-btn" id="sa-char-cancel">Cancel</button>
+          <button class="wd-btn primary" id="sa-char-create">Add character</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-sa-views">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Back" id="sav-back"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="logo" id="sav-title">Character</div>
+      <span style="width:27px"></span>
+    </div>
+    <div class="sa-body" id="sav-body"></div>
+  </div>
+
+  <div class="page" id="page-sa-parts">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Back" id="sap-back"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="logo" id="sap-title">View</div>
+      <span style="width:27px"></span>
+    </div>
+    <div class="sa-body" id="sap-body"></div>
+    <div class="wd-modal" id="sa-new-eq">
+      <div class="wd-card">
+        <h3>Add equipment</h3>
+        <input class="wd-input" id="sa-eq-name" type="text" maxlength="40" placeholder="Name (hair, hat, sword...)">
+        <p class="wd-hint">Choose how to add it. Then place its two skeleton dots (bones). It will be available in Merge full body.</p>
+        <div class="wd-row">
+          <button class="wd-btn" id="sa-eq-import">Import</button>
+          <button class="wd-btn primary" id="sa-eq-create">Draw</button>
+        </div>
+        <div class="wd-row" style="margin-top:8px">
+          <button class="wd-btn" id="sa-eq-cancel" style="width:100%">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-sa-dots">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Back" id="sad-back"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="logo" id="sad-title">Skeleton dots</div>
+      <button class="icon-btn" id="sad-done" style="font-weight:700;font-size:14px;color:var(--accent-1);padding:4px 6px">Done</button>
+    </div>
+    <div class="sad-stage" id="sad-stage"><canvas id="sad-cv"></canvas></div>
+    <div class="sad-hint" id="sad-hint"></div>
+  </div>
+
+  <div class="page" id="page-sa-merge">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Back" id="sam-back"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="logo" id="sam-title">Merge parts</div>
+      <span style="width:27px"></span>
+    </div>
+    <div class="sam-stage" id="sam-stage"><canvas id="sam-cv"></canvas><div class="sam-zoom"><button type="button" id="sam-zin" aria-label="Zoom in">+</button><button type="button" id="sam-zout" aria-label="Zoom out">−</button><button type="button" id="sam-zfit">Fit</button></div></div>
+    <div class="sam-panel" id="sam-panel">
+      <div class="sam-top"><button type="button" class="sa-mini" id="sam-skel">View skeleton</button><button type="button" class="sa-mini" id="sam-test">Test</button><button type="button" class="sa-mini" id="sam-reset" style="display:none">Reset pose</button></div>
+      <div class="sam-empty" id="sam-hint"></div>
+      <div class="sam-chips" id="sam-chips"></div>
+      <div class="sam-sel" id="sam-sel">
+        <div class="sam-rng"><span>Size</span><input type="range" id="sam-size" min="10" max="300" value="100"><b id="sam-size-v">100%</b></div>
+        <div class="sam-rng"><span>Rotate</span><input type="range" id="sam-rot" min="-180" max="180" value="0"><b id="sam-rot-v">0°</b></div>
+        <div class="sam-btns">
+          <button type="button" class="sa-mini" id="sam-flip">Flip</button>
+          <button type="button" class="sa-mini" id="sam-fwd">Forward</button>
+          <button type="button" class="sa-mini" id="sam-bwd">Backward</button>
+          <button type="button" class="sa-mini" id="sam-del">Remove</button>
+        </div>
+      </div>
+      <div class="sam-save">
+        <input class="wd-input" id="sam-name" type="text" maxlength="40" placeholder="Name for this body part">
+        <button class="wd-btn primary" id="sam-save">Save as body part</button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="sa-file" accept="image/*" hidden>
 
   <!-- ================= WORK DIRECTORY ================= -->
   <div class="page" id="page-workdir">
@@ -2361,7 +2530,7 @@
   <div class="page" id="page-create">
 
     <div class="create-header">
-      <button class="icon-btn" aria-label="Close" onclick="showPage('page-home')">
+      <button class="icon-btn" aria-label="Close" onclick="window.saCloseCreate?window.saCloseCreate():showPage('page-home')">
         <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
       </button>
     </div>
@@ -2495,6 +2664,7 @@
         <button class="tool-btn" aria-label="Select"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c0-5 4-9 9-9s7 3 7 6-3 4-6 4 1 4-2 4-2-2-4-2-4 0-4-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="17.5" r="1.4" stroke="currentColor" stroke-width="1.6"/></svg></button>
         <button class="tool-btn" aria-label="Fill"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13l7-7 7 7-7 7-7-7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="17.5" cy="17.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg></button>
         <button class="tool-btn" aria-label="Text"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <button class="tool-btn" aria-label="Skeleton"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="5.5" r="2.2" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="13" r="2.2" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M7.4 7.5l3.2 3.6M13.5 14.8l3.1 2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
         <button class="tool-btn" aria-label="More"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="6" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="18" r="1.6" fill="currentColor"/></svg></button>
       </div>
 
@@ -2508,6 +2678,7 @@
         <button class="tool-btn" aria-label="Select"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13c0-5 4-9 9-9s7 3 7 6-3 4-6 4 1 4-2 4-2-2-4-2-4 0-4-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="17.5" r="1.4" stroke="currentColor" stroke-width="1.6"/></svg></button>
         <button class="tool-btn" aria-label="Fill"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13l7-7 7 7-7 7-7-7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="17.5" cy="17.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg></button>
         <button class="tool-btn" aria-label="Text"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <button class="tool-btn" aria-label="Skeleton"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="5.5" r="2.2" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="13" r="2.2" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M7.4 7.5l3.2 3.6M13.5 14.8l3.1 2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
         <button class="tool-btn" aria-label="More"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="18" cy="12" r="1.6" fill="currentColor"/></svg></button>
       </div>
 
@@ -2778,6 +2949,10 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
             <span class="more-row-label">Work directory</span>
           </button>
+          <button class="more-row" data-item="import-character">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="6" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 9v6M12 11l-4.5 3M12 11l4.5 3M12 15l-3 5M12 15l3 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span class="more-row-label">Import character</span>
+          </button>
           <button class="more-row" data-item="add-video">
             <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M19 9l3-2v10l-3-2" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
             <span class="more-row-label">Add video</span>
@@ -2969,6 +3144,19 @@
       <div class="picker-title">Magic Cut Images</div>
     </div>
     <div class="mci-grid" id="mci-grid"></div>
+  </div>
+
+  <!-- ============ IMPORT CHARACTER (merged full bodies from SA mode) ============ -->
+  <div class="sheet-backdrop" id="chi-backdrop"></div>
+  <div class="more-sheet" id="chi-sheet" role="region" aria-label="Import character">
+    <div class="more-handle" id="chi-handle" aria-label="Close"><span></span></div>
+    <div class="picker-header">
+      <button class="icon-btn" id="chi-back-btn" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="picker-title">Import character</div>
+    </div>
+    <div class="chi-list" id="chi-list"></div>
   </div>
 
 </div>
@@ -3359,6 +3547,7 @@
     if(!grid) return;
     let metas = [];
     try{ metas = await idbGetAllMeta(); }catch(_){ metas = []; }
+    metas = metas.filter(m => String(m.id).indexOf('sa_') !== 0);   // SA mode body-piece drawings stay out of the Home list
     _thumbUrls.forEach(u => URL.revokeObjectURL(u));
     _thumbUrls = [];
     grid.innerHTML = '';
@@ -3669,8 +3858,13 @@
       if(videoPlaceState) commitVideoPlacement();
     }catch(e){ console.warn(e); }
     await flushSave();
+    const saId = currentProject && currentProject.id;
+    const isSa = !!(saId && String(saId).indexOf('sa_') === 0);
+    if(isSa && typeof window.saPieceClosed === 'function'){
+      try{ const r = await window.dgRenderProjectFrame(0); await window.saPieceClosed(saId, r.canvas); }catch(e){ console.warn(e); }
+    }
     currentProject = null;
-    showPage('page-home');
+    showPage(isSa && window.saReturn ? window.saReturn : 'page-home');
   }
 
   // Leaving the app (home button, app switcher, screen off) — save right now.
@@ -3692,6 +3886,8 @@
     window.scrollTo(0,0);
     if(id === 'page-home' && typeof refreshProjectList === 'function') refreshProjectList();
     if(id === 'page-workdir' && typeof window.wdRefreshList === 'function') window.wdRefreshList();
+    if(id !== 'page-editor') document.getElementById('page-editor').classList.remove('sa-piece');
+    if(id.indexOf('page-sa') === 0 && typeof window.saRefresh === 'function') window.saRefresh(id);
   }
 
   function onNameInput(){
@@ -3702,6 +3898,7 @@
 
   document.getElementById('create-btn').addEventListener('click', () => {
     const selected = canvasPresets.find(p => p.selected) || canvasPresets[1];
+    if(window.saCreating){ window.saCreateFromForm({ w: selected.w, h: selected.h, fps: selectedFps }); return; }
     currentCanvasSize = { w: selected.w, h: selected.h };
     const nameInput = document.getElementById('project-name');
     const projectName = nameInput.value.trim() || 'Untitled';
@@ -4984,6 +5181,126 @@
     setMoreSheet(false);
     openProjectSettings();
   });
+
+  // ---- Import character: list every full body merged in SA mode, tap Import to drop it on a NEW layer ----
+  const chiSheetEl = document.getElementById('chi-sheet');
+  const chiBackdropEl = document.getElementById('chi-backdrop');
+  const chiListEl = document.getElementById('chi-list');
+  let _chiUrls = [];
+  function setChiSheet(open){
+    chiSheetEl.classList.toggle('open', open);
+    chiBackdropEl.classList.toggle('open', open);
+    if(!open){ _chiUrls.forEach(u => URL.revokeObjectURL(u)); _chiUrls = []; }
+  }
+  async function renderChiList(){
+    _chiUrls.forEach(u => URL.revokeObjectURL(u)); _chiUrls = [];
+    chiListEl.innerHTML = '<p class="chi-empty">Loading…</p>';
+    let chars = [];
+    try{ const d = JSON.parse(localStorage.getItem('dg_sa_v2')); if(d && d.chars) chars = d.chars; }catch(_){}
+    const VN = { 'front': 'Front', 'semi-left': 'Semi-side left', 'side-left': 'Side left', 'back': 'Back' };
+    const rows = [];
+    for(const c of chars){
+      for(const md of (c.merged || [])){
+        let it = null; try{ it = await window.dgWork.get('sam_' + c.id + '_' + md.id); }catch(_){}
+        if(it && it.png) rows.push({ c, md, it });
+      }
+    }
+    chiListEl.innerHTML = '';
+    if(!rows.length){
+      chiListEl.innerHTML = '<p class="chi-empty">No merged characters yet.<br>In SA mode, open a character, choose a view, arrange the parts in Merge full body and tap Save as body part.</p>';
+      return;
+    }
+    rows.forEach(({ c, md, it }) => {
+      const row = document.createElement('div'); row.className = 'sa-row'; row.style.cursor = 'default';
+      row.innerHTML = '<div class="sa-th"></div><div class="sa-txt"><b></b><small></small></div>';
+      row.querySelector('b').textContent = md.name;
+      row.querySelector('small').textContent = c.name + ' · ' + (VN[md.v] || md.v);
+      if(it.thumb){ const u = URL.createObjectURL(it.thumb); _chiUrls.push(u); const im = document.createElement('img'); im.alt = ''; im.src = u; row.querySelector('.sa-th').appendChild(im); }
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sa-mini'; b.textContent = 'Import';
+      b.addEventListener('click', () => importCharacterToLayer(c, md, it));
+      row.appendChild(b);
+      chiListEl.appendChild(row);
+    });
+  }
+  function addLayerNamed(name){
+    const f = currentFrame();
+    const newSeq = f.layerSeq + 1;
+    const sharedId = ++layerUid;
+    frames.forEach(fr => {
+      if(!fr.layers) return;
+      if(frameIsLoaded(fr)) fr.layers.push(makeLayer(name, sharedId));
+      else { const nl = makeLayer(name, sharedId, true); nl._blobP = Promise.resolve(null); fr.layers.push(nl); }
+      fr.layerSeq = newSeq;
+    });
+    if(pasteState) commitPasteTransform();
+    clearHistoryForLayerId(f.activeLayerId);
+    f.activeLayerId = sharedId;
+    renderLayers();
+  }
+  function skelToast(msg){
+    let t = document.getElementById('skel-toast');
+    if(!t){ t = document.createElement('div'); t.id = 'skel-toast'; t.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);max-width:86vw;background:rgba(20,20,24,.92);color:#fff;font:600 13px system-ui,sans-serif;padding:10px 14px;border-radius:12px;z-index:99999;text-align:center;pointer-events:none;transition:opacity .2s'; document.body.appendChild(t); }
+    t.textContent = msg; t.style.opacity = '1';
+    clearTimeout(skelToast._t); skelToast._t = setTimeout(() => { t.style.opacity = '0'; }, 2600);
+  }
+  // Load the real body parts (picture + 2 skeleton dots each) behind a merged character, so it can be posed part by part.
+  async function loadRigParts(c, md){
+    const cache = {}, out = [];
+    for(const r of md.rig){
+      const pid = r.k.indexOf('eq:') === 0 ? r.k.slice(3) : r.k;
+      if(!(r.k in cache)){
+        let src = null;
+        try{
+          const pi = await window.dgWork.get('sa_' + c.id + '_' + md.v + '_' + pid);
+          if(pi && pi.png){
+            const d = (pi.dots && pi.dots.length === 2 ? pi.dots : [{ x: .5, y: .1 }, { x: .5, y: .9 }]).map(q => Array.isArray(q) ? { x: q[0], y: q[1] } : { x: q.x, y: q.y });
+            src = { bmp: await createImageBitmap(pi.png), dots: d };
+          }
+        }catch(_){ src = null; }
+        cache[r.k] = src;
+      }
+      const src = cache[r.k];
+      out.push(src ? { src: src, key: r.k, x: r.x * c.size, y: r.y * c.size * 1.5, rot: r.rot || 0, m: r.m || 1, base: 0.36, flip: !!r.flip, p: (r.p == null ? -1 : r.p) } : null);
+    }
+    return out;
+  }
+  async function importCharacterToLayer(c, md, it){
+    if(md.rig && md.rig.length){
+      let parts = [];
+      try{ parts = await loadRigParts(c, md); }catch(_){ parts = []; }
+      if(parts.some(Boolean)){
+        setChiSheet(false);
+        if(isPlaying) stopPlayback();
+        addLayerNamed(c.name + ' · ' + md.name);
+        const layer = getActiveLayer(), cw = layer.canvas.width, ch = layer.canvas.height;
+        const W = c.size, H = Math.round(c.size * 1.5), f = Math.min(cw * 0.8 / W, ch * 0.8 / H);
+        pushUndoSnapshot(layer);
+        layer.rig = { parts: parts, W: W, H: H, f: f, ox: (cw - W * f) / 2, oy: (ch - H * f) / 2, sig: null, sel: -1 };
+        skelPaint(layer);
+        refreshThumbnails(); markProjectChanged();
+        setActiveTool('Skeleton');
+        skelToast('Skeleton mode on. Drag a part to move or bend it. Tap the Skeleton tool again to finish.');
+        return;
+      }
+    }
+    let bmp;
+    try{ bmp = await createImageBitmap(it.png); }catch(_){ alert('Could not read that character.'); return; }
+    const off = document.createElement('canvas'); off.width = bmp.width; off.height = bmp.height;
+    off.getContext('2d').drawImage(bmp, 0, 0);
+    if(bmp.close) try{ bmp.close(); }catch(_){}
+    setChiSheet(false);
+    if(isPlaying) stopPlayback();
+    addLayerNamed(c.name + ' · ' + md.name);
+    startPasteTransform({ canvas: off, w: off.width, h: off.height });   // movable + resizable, tick to place it on the new layer
+  }
+  document.querySelector('.more-row[data-item="import-character"]').addEventListener('click', () => {
+    setMoreSheet(false);
+    setChiSheet(true);
+    renderChiList();
+  });
+  document.getElementById('chi-back-btn').addEventListener('click', () => setChiSheet(false));
+  document.getElementById('chi-handle').addEventListener('click', () => setChiSheet(false));
+  chiBackdropEl.addEventListener('click', () => setChiSheet(false));
 
   // ---- Magic Cut: pick a photo, strip its background, drop the result into a NEW frame ----
   // 1) It looks at the photo's edge, guesses the background colour, and erases everything
@@ -6475,6 +6792,27 @@
     ctx.globalAlpha = 1;
   }
 
+  // SA mode bridge: a body piece is an ordinary one-frame project (full brushes and layers), hidden from Home.
+  window.saOpenPieceProject = async function(id, name, w, h, seed){
+    let meta = null;
+    try{ meta = await idbGet('meta', id); }catch(_){}
+    document.getElementById('page-editor').classList.add('sa-piece');   // checkerboard = transparent
+    if(meta && !seed){ await openProject(id); return; }
+    if(meta && seed){ try{ await idbDeleteProject(id); }catch(_){} }
+    currentCanvasSize = { w: w, h: h };
+    projectLoading = true;
+    currentProject = null;
+    resetLayers();
+    resetBrushUI();
+    if(seed){ try{ const l0 = frames[0].layers[0]; l0.canvas.getContext('2d').drawImage(seed, 0, 0, l0.canvas.width, l0.canvas.height); }catch(e){ console.warn(e); } }
+    projectLoading = false;
+    currentProject = { id: id, name: name, created: Date.now() };
+    flushSave();
+    showPage('page-editor');
+    requestAnimationFrame(fitCanvasSurface);
+  };
+  window.saDeleteProject = function(id){ return idbDeleteProject(id); };
+
   // Work directory bridge: expose numbered project frames and render all visible layers
   // together into a transferable image without changing the existing gallery import.
   window.dgListProjectFrames = function(){
@@ -7713,6 +8051,7 @@
   function setActiveTool(label){
     if(typeof pasteState !== 'undefined' && pasteState) commitPasteTransform();   // switching tools bakes any floating paste in place
     if(label !== 'Select' && typeof clearLassoSelection === 'function') clearLassoSelection();   // leaving Select drops the old marquee so it can't linger over other tools
+    const wasSkel = activeTool === 'Skeleton';
     activeTool = label;
     syncSizeUI();
     const isFx = (label === 'Smudge' || label === 'Blur');
@@ -7722,6 +8061,7 @@
     });
     document.querySelectorAll('.fx-btn').forEach(b => b.classList.toggle('active', b.getAttribute('aria-label') === label));
     if(!isFx) setFxPanel(false);
+    if(label === 'Skeleton') skelOverlay(); else if(wasSkel) skelClearOverlay();
   }
   // the Size box shows the size of whichever tool is active (eraser has its own)
   function syncSizeUI(){
@@ -8406,6 +8746,7 @@
     if(popsOpen()){ closePops(); e.preventDefault(); return; }         // first tap only closes the size / colour box
     if(curveMode && activeTool === 'Brush'){ curveDown(e); return; }
     if(activeTool === 'Select'){ e.preventDefault(); beginLasso(e); return; }
+    if(activeTool === 'Skeleton'){ e.preventDefault(); skelDown(e); return; }
     if(activeTool === 'Fill'){ e.preventDefault(); doFloodFill(e); return; }
     if(activeTool === 'Picker'){ e.preventDefault(); doEyedropper(e); return; }
     if(e.pointerType === 'touch'){
@@ -8818,6 +9159,121 @@
       zoomAround(e.clientX, e.clientY, stageScale * (1 - e.deltaY * 0.01));
     }, { passive:false });
   })();
+
+  // ---- Skeleton tool: pose an imported character part by part ----
+  // The imported layer keeps its body parts (layer.rig). While this tool is on, bones are shown; dragging a part
+  // bends it from its joint (parts attached to it follow), dragging the root part moves the whole figure. The layer
+  // is repainted from the parts after each move. Switching to another tool leaves the pose as the layer's pixels.
+  function skelSig(cv){
+    const t = document.createElement('canvas'); t.width = 24; t.height = 24;
+    const x = t.getContext('2d', { willReadFrequently: true }); x.drawImage(cv, 0, 0, 24, 24);
+    const d = x.getImageData(0, 0, 24, 24).data; let s = 0;
+    for(let i = 0; i < d.length; i++) s = (s * 31 + d[i]) >>> 0;
+    return s;
+  }
+  function skelPaint(layer){
+    const R = layer.rig, ctx = layer.canvas.getContext('2d');
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+    R.parts.forEach(it => {
+      if(!it) return;
+      const s = it.base * it.m * R.f, b = it.src.bmp, p0 = it.src.dots[0];
+      ctx.save(); ctx.translate(R.ox + it.x * R.f, R.oy + it.y * R.f); ctx.rotate(it.rot * Math.PI / 180); ctx.scale((it.flip ? -1 : 1) * s, s);
+      ctx.drawImage(b, -p0.x * b.width, -p0.y * b.height); ctx.restore();
+    });
+    ctx.restore();
+    R.sig = skelSig(layer.canvas);
+  }
+  function skelPt(it, k){
+    const b = it.src.bmp, d = it.src.dots[k], p0 = it.src.dots[0];
+    const lx = (d.x - p0.x) * b.width * (it.flip ? -1 : 1), ly = (d.y - p0.y) * b.height, s = it.base * it.m, a = it.rot * Math.PI / 180;
+    return { x: it.x + s * (lx * Math.cos(a) - ly * Math.sin(a)), y: it.y + s * (lx * Math.sin(a) + ly * Math.cos(a)) };
+  }
+  function skelKids(R, i){
+    const out = [];
+    const walk = pi => R.parts.forEach((q, j) => { if(q && q.p === pi){ out.push(q); walk(j); } });
+    walk(i); return out;
+  }
+  const skelHit = document.createElement('canvas'); skelHit.width = skelHit.height = 1;
+  const skelHitCtx = skelHit.getContext('2d', { willReadFrequently: true });
+  function skelPick(R, lx, ly){
+    for(let i = R.parts.length - 1; i >= 0; i--){
+      const it = R.parts[i]; if(!it) continue;
+      const s = it.base * it.m, a = -it.rot * Math.PI / 180, p0 = it.src.dots[0], dx = lx - it.x, dy = ly - it.y;
+      let ux = (dx * Math.cos(a) - dy * Math.sin(a)) / s; const uy = (dx * Math.sin(a) + dy * Math.cos(a)) / s;
+      if(it.flip) ux = -ux;
+      const bw = it.src.bmp.width, bh = it.src.bmp.height, px = Math.floor(ux + p0.x * bw), py = Math.floor(uy + p0.y * bh);
+      if(px < 0 || py < 0 || px >= bw || py >= bh) continue;
+      try{ skelHitCtx.clearRect(0, 0, 1, 1); skelHitCtx.drawImage(it.src.bmp, px, py, 1, 1, 0, 0, 1, 1); if(skelHitCtx.getImageData(0, 0, 1, 1).data[3] > 20) return i; }
+      catch(_){ return i; }
+    }
+    let best = -1, bd = R.W * 0.06;
+    R.parts.forEach((it, i) => { if(!it) return; const b = skelPt(it, 1), d = Math.hypot(b.x - lx, b.y - ly); if(d < bd){ bd = d; best = i; } });
+    return best;
+  }
+  function skelClearOverlay(){ lassoOverlay.getContext('2d').clearRect(0, 0, lassoOverlay.width, lassoOverlay.height); }
+  function skelOverlay(){
+    skelClearOverlay();
+    const layer = getActiveLayer(); if(!layer || !layer.rig) return;
+    const R = layer.rig, ctx = lassoOverlay.getContext('2d'), k = lassoOverlay.width / layer.canvas.width;
+    const X = x => (R.ox + x * R.f) * k, Y = y => (R.oy + y * R.f) * k, lw = Math.max(1, lassoOverlay.width / 400);
+    ctx.save(); ctx.lineCap = 'round';
+    R.parts.forEach((it, i) => {
+      if(!it) return;
+      const a = skelPt(it, 0), b = skelPt(it, 1), on = i === R.sel;
+      [['rgba(0,0,0,.65)', 5 * lw], [on ? '#ff4f8b' : '#ffffff', 2.4 * lw]].forEach(([col, w]) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(X(a.x), Y(a.y)); ctx.lineTo(X(b.x), Y(b.y)); ctx.stroke(); });
+      ctx.beginPath(); ctx.arc(X(a.x), Y(a.y), (on ? 7 : 5) * lw, 0, Math.PI * 2); ctx.fillStyle = on ? '#ff4f8b' : '#3b8cff'; ctx.fill(); ctx.lineWidth = 2 * lw; ctx.strokeStyle = '#000'; ctx.stroke();
+    });
+    ctx.restore();
+  }
+  let skelDrag = null;
+  function skelDown(e){
+    const layer = getActiveLayer();
+    if(!layer || !layer.rig){ skelToast('No skeleton on this layer. Import a character (More menu) onto a new layer first.'); return; }
+    if(layer.locked){ skelToast('This layer is locked.'); return; }
+    const R = layer.rig;
+    if(R.sig !== skelSig(layer.canvas)){ layer.rig = null; skelClearOverlay(); skelToast('This layer was changed, so its skeleton was released.'); return; }
+    const cp = canvasPointFromEvent(e, layer.canvas.width, layer.canvas.height);
+    const q = { x: (cp.x - R.ox) / R.f, y: (cp.y - R.oy) / R.f };
+    const i = skelPick(R, q.x, q.y);
+    R.sel = i; skelOverlay();
+    if(i < 0) return;
+    const it = R.parts[i];
+    skelDrag = { id: e.pointerId, i: i, layer: layer, moved: false, mode: it.p >= 0 && R.parts[it.p] ? 'rot' : 'move', lx: q.x, ly: q.y, a: Math.atan2(q.y - it.y, q.x - it.x) };
+    try{ drawSurface.setPointerCapture(e.pointerId); }catch(_){}
+  }
+  window.addEventListener('pointermove', e => {
+    const D = skelDrag; if(!D || e.pointerId !== D.id) return;
+    const layer = D.layer, R = layer.rig; if(!R){ skelDrag = null; return; }
+    const cp = canvasPointFromEvent(e, layer.canvas.width, layer.canvas.height);
+    const q = { x: (cp.x - R.ox) / R.f, y: (cp.y - R.oy) / R.f }, it = R.parts[D.i];
+    if(!D.moved){ if(Math.hypot(q.x - D.lx, q.y - D.ly) < 1.5) return; D.moved = true; pushUndoSnapshot(layer); }
+    const set = [it].concat(skelKids(R, D.i));
+    if(D.mode === 'rot'){
+      const a = Math.atan2(q.y - it.y, q.x - it.x); let da = a - D.a; da = Math.atan2(Math.sin(da), Math.cos(da)); D.a = a;
+      const ca = Math.cos(da), sa = Math.sin(da);
+      set.forEach(o => { if(o !== it){ const dx = o.x - it.x, dy = o.y - it.y; o.x = it.x + dx * ca - dy * sa; o.y = it.y + dx * sa + dy * ca; } o.rot += da * 180 / Math.PI; });
+    } else {
+      const dx = q.x - D.lx, dy = q.y - D.ly; D.lx = q.x; D.ly = q.y;
+      set.forEach(o => { o.x += dx; o.y += dy; });
+    }
+    skelPaint(layer); skelOverlay(); throttledRefreshThumbnails();
+  });
+  const skelEnd = e => {
+    const D = skelDrag; if(!D || e.pointerId !== D.id) return;
+    skelDrag = null;
+    if(D.moved){ refreshThumbnails(); markProjectChanged(); }
+  };
+  window.addEventListener('pointerup', skelEnd); window.addEventListener('pointercancel', skelEnd);
+  document.querySelectorAll('.tool-btn[aria-label="Skeleton"]').forEach(b => {
+    b.addEventListener('click', () => {
+      closePops(); setBrushPanel(false);
+      if(activeTool === 'Skeleton'){ setActiveTool('Brush'); updateBrushPanelForTool(); skelToast('Skeleton mode off. Pose kept.'); return; }
+      setActiveTool('Skeleton');
+      const l = getActiveLayer();
+      toast(l && l.rig ? 'Skeleton mode on. Drag a part to move or bend it.' : 'Skeleton mode: select the layer of an imported character.');
+    });
+  });
 
   // ---- Select tool ----
   document.querySelectorAll('.tool-btn[aria-label="Select"]').forEach(b => {
@@ -9772,6 +10228,7 @@
     const grid = $('wd-grid'), empty = $('wd-empty'), content = $('wd-content');
     let items = [];
     try{ items = await dbAll(); }catch(_){ items = []; }
+    items = items.filter(m => !m.sa);   // SA piece pictures are stored here but listed only in SA mode
     thumbUrls.forEach(u => URL.revokeObjectURL(u)); thumbUrls = [];
     grid.innerHTML = '';
     if(!items.length){ content.classList.remove('has-projects'); empty.style.display = ''; grid.style.display = 'none'; return; }
@@ -10861,7 +11318,831 @@
     ecScreen.classList.remove('open');toast('Cutout applied to drawing');
   });
   $('ws-easycut').addEventListener('click',openEasyCut);
+  window.dgWork = { get: dbGet, put: dbPut, del: dbDel };
+  window.dgPickImage = pickImage;
 })();
+
+
+/* ================= SA MODE =================
+   SA mode -> (three dots) Character mode -> character -> view -> body piece.
+   Metadata (projects, characters, which pieces are drawn / have dots) lives in localStorage "dg_sa_v2".
+   A body piece is drawn in the app's main editor as a hidden one-frame project (id "sa_<char>_<view>_<piece>").
+   When the editor closes, the flattened picture is saved to the Work directory database (flagged sa)
+   and the two skeleton dots are placed on it. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const rid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36);
+  const KEY = 'dg_sa_v2';
+
+  const VIEWS = [
+    { id: 'front',     label: 'Front',           sub: 'Facing down' },
+    { id: 'semi-left', label: 'Semi-side left',  sub: 'Facing down-left' },
+    { id: 'side-left', label: 'Side left',       sub: 'Facing left' },
+    { id: 'back',      label: 'Back',            sub: 'Facing up' }
+  ];
+  const MIRRORS = [
+    { label: 'Semi-side right', sub: 'Mirror of Semi-side left' },
+    { label: 'Side right',      sub: 'Mirror of Side left' }
+  ];
+  // each piece: one bone = two dots. def = default dot spots (0..1 of the canvas)
+  const PIECES = [
+    { id: 'head',      label: 'Head',      tall: false, dots: ['Neck end (bottom)', 'Top of head'], def: [[.5,.9],[.5,.1]] },
+    { id: 'neck',      label: 'Neck',      tall: false, dots: ['Bottom', 'Top'],                   def: [[.5,.9],[.5,.1]] },
+    { id: 'body',      label: 'Body',      tall: false, dots: ['Neck (top)', 'Hips (bottom)'],     def: [[.5,.1],[.5,.9]] },
+    { id: 'upper-arm', label: 'Upper arm', tall: true,  dots: ['Shoulder', 'Elbow'],               def: [[.5,.1],[.5,.9]], hint: 'Shoulder to elbow' },
+    { id: 'lower-arm', label: 'Lower arm', tall: true,  dots: ['Elbow', 'Wrist'],                  def: [[.5,.1],[.5,.9]], hint: 'Elbow to wrist' },
+    { id: 'hand',      label: 'Hand',      tall: false, dots: ['Wrist', 'Fingertip'],              def: [[.5,.1],[.5,.9]], hint: 'Draw the fingers here' },
+    { id: 'thigh',     label: 'Thigh',     tall: true,  dots: ['Hip', 'Knee'],                     def: [[.5,.1],[.5,.9]], hint: 'Hip to knee' },
+    { id: 'shin',      label: 'Shin',      tall: true,  dots: ['Knee', 'Ankle'],                   def: [[.5,.1],[.5,.9]], hint: 'Knee to ankle' },
+    { id: 'foot',      label: 'Foot',      tall: false, dots: ['Ankle', 'Toes'],                   def: [[.3,.25],[.8,.75]] }
+  ];
+  const FULL = { id: 'full', label: 'Full body reference (optional)', tall: false, hint: 'Draw or import the whole body to trace from', noDots: true };
+  const ALL = PIECES.concat([FULL]);
+  const SIZES = [512, 768, 1024, 1536];
+
+  let data = { projects: [], chars: [] };
+  try{ const d = JSON.parse(localStorage.getItem(KEY)); if(d && d.projects && d.chars) data = d; }catch(_){}
+  const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(_){} };
+
+  let curCharId = null, curViewId = null, saCur = null, newSize = 1024;
+  const curChar = () => data.chars.find(c => c.id === curCharId);
+  const viewDef = id => VIEWS.find(v => v.id === id);
+  const pieceDef = id => ALL.find(p => p.id === id);
+  const equipOf = (c, id) => (c.equip || []).find(e => e.id === id);
+  const pdefAny = (c, id) => { const p = pieceDef(id); if(p) return p; const e = equipOf(c, id); return e ? { id: e.id, label: e.name, tall: false, dots: ['Start (bone base)', 'End (bone tip)'], def: [[.5, .15], [.5, .85]] } : null; };
+  const curPdef = id => { const c = data.chars.find(x => x.id === saCur.c); return pieceDef(id) || (c && pdefAny(c, id)); };
+  const itemId = (c, v, p) => 'sa_' + c + '_' + v + '_' + p;
+  const mergedId = (c, m) => 'sam_' + c + '_' + m;
+  const pk = (v, p) => v + '/' + p;
+  const meta = (c, v, p) => c.parts[pk(v, p)] || {};
+  const sizeOf = (c, p) => p.tall ? { w: Math.round(c.size / 2), h: c.size } : { w: c.size, h: c.size };
+  const blobOf = (cv, type) => new Promise(r => cv.toBlob(r, type || 'image/png'));
+
+  // ---- thumbnails ----
+  let urls = [];
+  const freeUrls = () => { urls.forEach(u => URL.revokeObjectURL(u)); urls = []; };
+  async function thumbInto(el, id){
+    try{
+      const it = await window.dgWork.get(id);
+      if(it && it.thumb && el.isConnected){
+        const u = URL.createObjectURL(it.thumb); urls.push(u);
+        const im = document.createElement('img'); im.alt = ''; im.src = u; el.appendChild(im);
+      }
+    }catch(_){}
+  }
+  function row(title, sub, onclick, opts){
+    opts = opts || {};
+    const d = document.createElement('div'); d.className = 'sa-row' + (opts.done ? ' done' : '') + (opts.stat ? ' static' : '');
+    d.setAttribute('role', 'button');
+    d.innerHTML = '<div class="sa-th"></div><div class="sa-txt"><b></b><small></small></div>';
+    d.querySelector('b').textContent = title;
+    d.querySelector('small').textContent = sub;
+    if(opts.extra) d.appendChild(opts.extra);
+    const end = document.createElement('span');
+    if(opts.done){ end.className = 'sa-tick'; end.textContent = '✓'; }
+    else if(!opts.stat){ end.className = 'sa-chev'; end.textContent = '›'; }
+    d.appendChild(end);
+    if(!opts.stat) d.addEventListener('click', onclick);
+    return d;
+  }
+
+  // ---- SA mode home ----
+  function renderHome(){
+    const body = $('sa-body'); body.innerHTML = '';
+    if(!data.projects.length){
+      const e = document.createElement('div'); e.className = 'sa-empty';
+      e.innerHTML = 'No SA projects yet.<br>Tap + to create one. Use the three dots for Character mode.';
+      body.appendChild(e); return;
+    }
+    const grid = document.createElement('div'); grid.className = 'proj-grid';
+    data.projects.slice().sort((a, b) => b.created - a.created).forEach(p => {
+      const card = document.createElement('div'); card.className = 'proj-card';
+      card.innerHTML = '<div class="proj-thumb"></div><div class="proj-info"><div class="proj-name"></div><div class="proj-meta"></div></div>';
+      card.querySelector('.proj-name').textContent = p.name;
+      card.querySelector('.proj-meta').textContent = p.w + ' × ' + p.h + ' · ' + p.fps + ' FPS';
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'proj-del'; del.setAttribute('aria-label', 'Delete');
+      del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      del.addEventListener('click', e => {
+        e.stopPropagation();
+        if(!confirm('Delete "' + p.name + '"? This cannot be undone.')) return;
+        data.projects = data.projects.filter(x => x.id !== p.id); save(); renderHome();
+      });
+      card.appendChild(del);
+      card.addEventListener('click', () => alert('The SA animation canvas is a later part. For now, use the three dots and Character mode to build your characters.'));
+      grid.appendChild(card);
+    });
+    body.appendChild(grid);
+  }
+
+  // ---- create flow reuses the app's Create page ----
+  window.saCreating = false;
+  window.saEndCreate = function(){ window.saCreating = false; $('create-btn').textContent = 'Create project'; };
+  window.saCloseCreate = function(){ const back = window.saCreating ? 'page-sa' : 'page-home'; window.saEndCreate(); showPage(back); };
+  window.saCreateFromForm = function(o){
+    const nameEl = document.getElementById('project-name');
+    data.projects.push({ id: rid(), name: nameEl.value.trim() || 'SA project', w: o.w, h: o.h, fps: o.fps, created: Date.now() });
+    save();
+    nameEl.value = ''; if(typeof onNameInput === 'function') onNameInput();
+    window.saEndCreate();
+    showPage('page-sa');
+  };
+  $('sa-add').addEventListener('click', () => { window.saCreating = true; $('create-btn').textContent = 'Create SA project'; showPage('page-create'); });
+  $('sa-back').addEventListener('click', () => showPage('page-home'));
+
+  const menu = $('sa-menu');
+  $('sa-more').addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
+  document.addEventListener('click', () => menu.classList.remove('open'));
+  $('sa-menu-char').addEventListener('click', () => { menu.classList.remove('open'); showPage('page-sa-chars'); });
+
+  // ---- characters ----
+  const doneCount = (c, v) => PIECES.filter(p => meta(c, v, p.id).k).length;
+  function renderChars(){
+    freeUrls();
+    const body = $('sac-body'); body.innerHTML = '';
+    if(!data.chars.length){
+      const e = document.createElement('div'); e.className = 'sa-empty';
+      e.innerHTML = 'No characters yet.<br>Tap + to add a character.';
+      body.appendChild(e); return;
+    }
+    const list = document.createElement('div'); list.className = 'sa-list';
+    data.chars.slice().sort((a, b) => b.created - a.created).forEach(c => {
+      const started = VIEWS.filter(v => ALL.some(p => meta(c, v.id, p.id).d)).length;
+      const r = row(c.name, started + ' of ' + VIEWS.length + ' views started', () => { curCharId = c.id; showPage('page-sa-views'); });
+      const f = ['full', 'body', 'head'].find(p => meta(c, 'front', p).d);
+      if(f) thumbInto(r.querySelector('.sa-th'), itemId(c.id, 'front', f));
+      list.appendChild(r);
+    });
+    body.appendChild(list);
+  }
+  function renderSizeChips(){
+    const box = $('sa-size-chips'); box.innerHTML = '';
+    SIZES.forEach(s => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'wd-chip' + (s === newSize ? ' sel' : '');
+      b.textContent = s + ' px'; b.onclick = () => { newSize = s; renderSizeChips(); };
+      box.appendChild(b);
+    });
+  }
+  $('sac-add').addEventListener('click', () => {
+    $('sa-char-name').value = 'Character ' + (data.chars.length + 1);
+    newSize = 1024; renderSizeChips();
+    $('sa-new-char').classList.add('open');
+  });
+  const closeNew = () => $('sa-new-char').classList.remove('open');
+  $('sa-char-cancel').addEventListener('click', closeNew);
+  $('sa-new-char').addEventListener('click', e => { if(e.target === $('sa-new-char')) closeNew(); });
+  $('sa-char-create').addEventListener('click', () => {
+    const c = { id: rid(), name: ($('sa-char-name').value || '').trim() || 'Character', size: newSize, created: Date.now(), parts: {} };
+    data.chars.push(c); save(); closeNew();
+    curCharId = c.id; showPage('page-sa-views');
+  });
+  $('sac-back').addEventListener('click', () => showPage('page-sa'));
+
+  // ---- views ----
+  function renderViews(){
+    freeUrls();
+    const c = curChar(); if(!c){ showPage('page-sa-chars'); return; }
+    $('sav-title').textContent = c.name;
+    const body = $('sav-body'); body.innerHTML = '';
+    const note = document.createElement('p'); note.className = 'sa-note';
+    note.textContent = 'Draw these 4 views. The right-facing views are flipped copies of the left ones, so you never draw them.';
+    body.appendChild(note);
+    const h1 = document.createElement('div'); h1.className = 'sa-h'; h1.textContent = 'You draw'; body.appendChild(h1);
+    const list = document.createElement('div'); list.className = 'sa-list';
+    VIEWS.forEach(v => {
+      const n = doneCount(c, v.id);
+      const r = row(v.label, v.sub + ' · ' + n + ' of ' + PIECES.length + ' pieces done', () => { curViewId = v.id; showPage('page-sa-parts'); }, { done: n === PIECES.length });
+      const f = ['full', 'body', 'head'].find(p => meta(c, v.id, p).d);
+      if(f) thumbInto(r.querySelector('.sa-th'), itemId(c.id, v.id, f));
+      list.appendChild(r);
+    });
+    body.appendChild(list);
+    const h2 = document.createElement('div'); h2.className = 'sa-h'; h2.textContent = 'Made for you (flipped)'; body.appendChild(h2);
+    const list2 = document.createElement('div'); list2.className = 'sa-list';
+    MIRRORS.forEach(m => list2.appendChild(row(m.label, m.sub, null, { stat: true })));
+    body.appendChild(list2);
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'wd-btn sa-del'; del.textContent = 'Delete character';
+    del.addEventListener('click', async () => {
+      if(!confirm('Delete "' + c.name + '" and all its drawings? This cannot be undone.')) return;
+      for(const v of VIEWS) for(const p of ALL){
+        const id = itemId(c.id, v.id, p.id);
+        try{ await window.dgWork.del(id); }catch(_){}
+        try{ await window.saDeleteProject(id); }catch(_){}
+      }
+      for(const e of (c.equip || [])){ const id = itemId(c.id, e.v, e.id); try{ await window.dgWork.del(id); }catch(_){} try{ await window.saDeleteProject(id); }catch(_){} }
+      for(const md of (c.merged || [])){ try{ await window.dgWork.del(mergedId(c.id, md.id)); }catch(_){} }
+      data.chars = data.chars.filter(x => x.id !== c.id); save();
+      showPage('page-sa-chars');
+    });
+    body.appendChild(del);
+  }
+  $('sav-back').addEventListener('click', () => showPage('page-sa-chars'));
+
+  // ---- pieces of one view ----
+  function renderParts(){
+    freeUrls();
+    const c = curChar(), v = viewDef(curViewId); if(!c || !v){ showPage('page-sa-views'); return; }
+    $('sap-title').textContent = c.name + ' · ' + v.label;
+    const body = $('sap-body'); body.innerHTML = '';
+    const note = document.createElement('p'); note.className = 'sa-note';
+    note.textContent = 'Tap a piece to draw it in the full drawing canvas (all brushes and layers). The background stays transparent. Use Import to bring in a picture, such as a head. When you close a piece, you place its two skeleton dots. A green mark means the piece is done. One arm and one leg are drawn per view and flipped for the other side.';
+    body.appendChild(note);
+    const list = document.createElement('div'); list.className = 'sa-list';
+    PIECES.forEach(p => list.appendChild(partRow(c, v, p)));
+    body.appendChild(list);
+    const h = document.createElement('div'); h.className = 'sa-h'; h.textContent = 'Extra'; body.appendChild(h);
+    const l2 = document.createElement('div'); l2.className = 'sa-list'; l2.appendChild(partRow(c, v, FULL)); body.appendChild(l2);
+    const eh = document.createElement('div'); eh.className = 'sa-h'; eh.textContent = 'Equipment'; body.appendChild(eh);
+    const en = document.createElement('p'); en.className = 'sa-note'; en.textContent = 'Things that are not body parts, like hair, hats or weapons. Draw or import them, then add them in Merge full body.'; body.appendChild(en);
+    const el = document.createElement('div'); el.className = 'sa-list';
+    (c.equip || []).filter(e => e.v === v.id).forEach(e => el.appendChild(equipRow(c, v, e)));
+    body.appendChild(el);
+    const ea = document.createElement('button'); ea.type = 'button'; ea.className = 'wd-btn'; ea.style.cssText = 'width:100%;margin-top:10px'; ea.textContent = '+ Add equipment';
+    ea.addEventListener('click', () => { $('sa-eq-name').value = ''; $('sa-new-eq').classList.add('open'); });
+    body.appendChild(ea);
+    const mer = (c.merged || []).filter(x => x.v === v.id);
+    const have = PIECES.filter(p => meta(c, v.id, p.id).k).length;
+    const mb = document.createElement('button'); mb.type = 'button'; mb.className = 'wd-btn primary sa-merge'; mb.disabled = have < 2;
+    mb.textContent = have < 2 ? 'Merge full body (finish at least 2 parts first)' : 'Merge full body';
+    mb.addEventListener('click', () => { mgState = null; mgEditId = null; mgRestore = null; showPage('page-sa-merge'); });
+    body.appendChild(mb);
+    if(mer.length){
+      const h3 = document.createElement('div'); h3.className = 'sa-h'; h3.textContent = 'Saved full bodies'; body.appendChild(h3);
+      const l3 = document.createElement('div'); l3.className = 'sa-list';
+      mer.forEach(md => {
+        const del = document.createElement('button'); del.type = 'button'; del.className = 'sa-mini'; del.textContent = 'Delete';
+        del.addEventListener('click', async e => {
+          e.stopPropagation();
+          if(!confirm('Delete "' + md.name + '"?')) return;
+          try{ await window.dgWork.del(mergedId(c.id, md.id)); }catch(_){}
+          c.merged = c.merged.filter(x => x.id !== md.id); save(); renderParts();
+        });
+        const r = row(md.name, md.rig ? 'Tap to open, arrange or test' : 'Merged body', () => { mgState = null; mgEditId = md.id; mgRestore = md.rig || null; showPage('page-sa-merge'); }, { extra: del });
+        thumbInto(r.querySelector('.sa-th'), mergedId(c.id, md.id));
+        l3.appendChild(r);
+      });
+      body.appendChild(l3);
+    }
+  }
+  function equipRow(c, v, e){
+    const m = meta(c, v.id, e.id);
+    const extra = document.createElement('span'); extra.className = 'sa-acts';
+    const imp = document.createElement('button'); imp.type = 'button'; imp.className = 'sa-mini'; imp.textContent = 'Import';
+    imp.addEventListener('click', ev => { ev.stopPropagation(); importPart(e.id); });
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'sa-mini'; del.textContent = 'Delete';
+    del.addEventListener('click', async ev => {
+      ev.stopPropagation();
+      if(!confirm('Delete "' + e.name + '"?')) return;
+      const id = itemId(c.id, v.id, e.id);
+      try{ await window.dgWork.del(id); }catch(_){}
+      try{ await window.saDeleteProject(id); }catch(_){}
+      c.equip = c.equip.filter(x => x.id !== e.id); delete c.parts[pk(v.id, e.id)]; save(); renderParts();
+    });
+    extra.appendChild(imp); extra.appendChild(del);
+    if(m.d){
+      const db = document.createElement('button'); db.type = 'button'; db.className = 'sa-mini'; db.textContent = 'Dots';
+      db.addEventListener('click', ev => { ev.stopPropagation(); openDots(e.id); });
+      extra.insertBefore(db, del);
+    }
+    const r = row(e.name, m.k ? 'Done · ready to merge' : (m.d ? 'Drawn · set the dots' : 'Empty · tap to draw'), () => openEquip(e), { done: !!m.k, extra });
+    if(m.d) thumbInto(r.querySelector('.sa-th'), itemId(c.id, v.id, e.id));
+    return r;
+  }
+  async function openEquip(e){
+    const c = curChar(), v = viewDef(curViewId); if(!c || !v) return;
+    saCur = { c: c.id, v: v.id, p: e.id };
+    window.saReturn = 'page-sa-parts';
+    await window.saOpenPieceProject(itemId(c.id, v.id, e.id), c.name + ' · ' + v.label + ' · ' + e.name, c.size, c.size);
+  }
+  const closeEq = () => $('sa-new-eq').classList.remove('open');
+  $('sa-eq-cancel').addEventListener('click', closeEq);
+  $('sa-new-eq').addEventListener('click', ev => { if(ev.target === $('sa-new-eq')) closeEq(); });
+  function newEquip(){
+    const c = curChar(), v = viewDef(curViewId); if(!c || !v) return null;
+    const e = { id: 'eq' + rid(), name: ($('sa-eq-name').value || '').trim() || 'Equipment ' + (((c.equip || []).filter(x => x.v === v.id).length) + 1), v: v.id };
+    c.equip = c.equip || []; c.equip.push(e); save(); closeEq();
+    return e;
+  }
+  $('sa-eq-create').addEventListener('click', () => { const e = newEquip(); if(e) openEquip(e); });
+  $('sa-eq-import').addEventListener('click', () => { const e = newEquip(); if(e) importPart(e.id); });
+  function partRow(c, v, p){
+    const m = meta(c, v.id, p.id);
+    let status;
+    if(p.noDots) status = m.d ? 'Drawn' : 'Empty';
+    else status = m.k ? 'Done' : (m.d ? 'Drawn · set the dots' : 'Not drawn');
+    const extra = document.createElement('span'); extra.className = 'sa-acts';
+    const imp = document.createElement('button'); imp.type = 'button'; imp.className = 'sa-mini'; imp.textContent = 'Import';
+    imp.addEventListener('click', e => { e.stopPropagation(); importPart(p.id); });
+    extra.appendChild(imp);
+    if(m.d && !p.noDots){
+      const db = document.createElement('button'); db.type = 'button'; db.className = 'sa-mini'; db.textContent = 'Dots';
+      db.addEventListener('click', e => { e.stopPropagation(); openDots(p.id); });
+      extra.appendChild(db);
+    }
+    const r = row(p.label, status + (p.hint ? ' · ' + p.hint : ''), () => openPart(p.id), { done: !!m.k && !p.noDots, extra });
+    if(m.d) thumbInto(r.querySelector('.sa-th'), itemId(c.id, v.id, p.id));
+    return r;
+  }
+  $('sap-back').addEventListener('click', () => showPage('page-sa-views'));
+
+  // ---- open one piece in the main drawing editor ----
+  async function openPart(pieceId){
+    const c = curChar(), v = viewDef(curViewId), p = pieceDef(pieceId); if(!c || !v || !p) return;
+    saCur = { c: c.id, v: v.id, p: p.id };
+    window.saReturn = 'page-sa-parts';
+    const sz = sizeOf(c, p);
+    await window.saOpenPieceProject(itemId(c.id, v.id, p.id), c.name + ' · ' + v.label + ' · ' + p.label, sz.w, sz.h);
+  }
+
+  // ---- the editor just closed: keep the flattened picture, then go set the dots ----
+  window.saPieceClosed = async function(id, canvas){
+    const m = /^sa_([^_]+)_([^_]+(?:-[^_]+)?)_(.+)$/.exec(id);
+    let c = null, vid = null, pid = null;
+    if(saCur && itemId(saCur.c, saCur.v, saCur.p) === id){ c = data.chars.find(x => x.id === saCur.c); vid = saCur.v; pid = saCur.p; }
+    else if(m){ c = data.chars.find(x => x.id === m[1]); vid = m[2]; pid = m[3]; }
+    if(!c) return;
+    let drawn = false;
+    try{
+      const s = Math.min(1, 128 / Math.max(canvas.width, canvas.height));
+      const t = document.createElement('canvas'); t.width = Math.max(1, Math.round(canvas.width * s)); t.height = Math.max(1, Math.round(canvas.height * s));
+      const x = t.getContext('2d'); x.drawImage(canvas, 0, 0, t.width, t.height);
+      const d = x.getImageData(0, 0, t.width, t.height).data;
+      for(let i = 3; i < d.length; i += 4){ if(d[i] > 8){ drawn = true; break; } }
+    }catch(_){ drawn = true; }
+    let item = null;
+    try{ item = await window.dgWork.get(id); }catch(_){}
+    const ts = 240 / Math.max(canvas.width, canvas.height);
+    const th = document.createElement('canvas'); th.width = Math.max(1, Math.round(canvas.width * ts)); th.height = Math.max(1, Math.round(canvas.height * ts));
+    th.getContext('2d').drawImage(canvas, 0, 0, th.width, th.height);
+    const rec = { id, name: id, w: canvas.width, h: canvas.height, updated: Date.now(), sa: true,
+                  png: drawn ? await blobOf(canvas) : null, thumb: drawn ? await blobOf(th) : null,
+                  dots: item && item.dots ? item.dots : null };
+    try{ await window.dgWork.put(rec); }catch(e){ console.warn(e); }
+    const old = meta(c, vid, pid);
+    c.parts[pk(vid, pid)] = { d: drawn ? 1 : 0, k: drawn ? (old.k ? 1 : 0) : 0 };
+    save();
+    const p = pieceDef(pid) || pdefAny(c, pid);
+    window.saReturn = (drawn && p && !p.noDots && !old.k) ? 'page-sa-dots' : 'page-sa-parts';
+  };
+
+  // ---- skeleton dots screen ----
+  let dotsBmp = null, dotsArr = [], dotsView = null, dragIdx = -1;
+  function openDots(pieceId){
+    const c = curChar(); if(!c) return;
+    saCur = { c: c.id, v: curViewId, p: pieceId };
+    showPage('page-sa-dots');
+  }
+  async function renderDots(){
+    if(!saCur) { showPage('page-sa-parts'); return; }
+    const c = data.chars.find(x => x.id === saCur.c), v = viewDef(saCur.v), p = pieceDef(saCur.p) || (c && pdefAny(c, saCur.p));
+    let item = null;
+    try{ item = await window.dgWork.get(itemId(saCur.c, saCur.v, saCur.p)); }catch(_){}
+    if(!item || !item.png || !p){ showPage('page-sa-parts'); return; }
+    $('sad-title').textContent = p.label + ' · dots';
+    dotsArr = (item.dots && item.dots.length === 2 ? item.dots : p.def).map(q => Array.isArray(q) ? { x: q[0], y: q[1] } : { x: q.x, y: q.y });
+    try{ if(dotsBmp && dotsBmp.close) dotsBmp.close(); dotsBmp = await createImageBitmap(item.png); }catch(_){ dotsBmp = null; }
+    $('sad-hint').innerHTML = '<i style="background:#ff4f8b"></i>' + p.dots[0] + ' &nbsp; <i style="background:#3b8cff"></i>' + p.dots[1] + '<small>Tap or drag to move the nearest dot. Press Done when both sit on your drawing.</small>';
+    requestAnimationFrame(drawDots);
+  }
+  function drawDots(){
+    const cv = $('sad-cv'), st = $('sad-stage'), r = st.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+    cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
+    const c = cv.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, r.width, r.height);
+    if(!dotsBmp) return;
+    const k = Math.min(r.width / dotsBmp.width, r.height / dotsBmp.height) * 0.94;
+    const iw = dotsBmp.width * k, ih = dotsBmp.height * k, ox = (r.width - iw) / 2, oy = (r.height - ih) / 2;
+    dotsView = { ox, oy, iw, ih };
+    c.save(); c.beginPath(); c.rect(ox, oy, iw, ih); c.clip();
+    const s = 14;
+    for(let y = 0; y < ih; y += s) for(let x = 0; x < iw; x += s){ c.fillStyle = ((x / s + y / s) % 2 < 1) ? '#e9e7e2' : '#f7f6f3'; c.fillRect(ox + x, oy + y, s, s); }
+    c.restore();
+    c.drawImage(dotsBmp, ox, oy, iw, ih);
+    const P = dotsArr.map(q => ({ x: ox + q.x * iw, y: oy + q.y * ih }));
+    c.lineCap = 'round';
+    [['rgba(0,0,0,.65)', 7], ['#ffffff', 3.5]].forEach(([col, w]) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(P[0].x, P[0].y); c.lineTo(P[1].x, P[1].y); c.stroke(); });
+    ['#ff4f8b', '#3b8cff'].forEach((col, i) => { c.beginPath(); c.arc(P[i].x, P[i].y, 11, 0, Math.PI * 2); c.fillStyle = col; c.fill(); c.lineWidth = 2.5; c.strokeStyle = '#000'; c.stroke(); });
+  }
+  function dotsPoint(e){
+    const r = $('sad-cv').getBoundingClientRect(), V = dotsView; if(!V) return null;
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    return { px, py, x: Math.max(0, Math.min(1, (px - V.ox) / V.iw)), y: Math.max(0, Math.min(1, (py - V.oy) / V.ih)) };
+  }
+  const dcv = $('sad-cv');
+  dcv.addEventListener('pointerdown', e => {
+    const q = dotsPoint(e); if(!q || !dotsView) return;
+    const V = dotsView;
+    let best = 0, bd = 1e9;
+    dotsArr.forEach((o, i) => { const d = Math.hypot(V.ox + o.x * V.iw - q.px, V.oy + o.y * V.ih - q.py); if(d < bd){ bd = d; best = i; } });
+    dragIdx = best; dotsArr[best] = { x: q.x, y: q.y };
+    try{ dcv.setPointerCapture(e.pointerId); }catch(_){}
+    drawDots(); e.preventDefault();
+  });
+  dcv.addEventListener('pointermove', e => { if(dragIdx < 0) return; const q = dotsPoint(e); if(!q) return; dotsArr[dragIdx] = { x: q.x, y: q.y }; drawDots(); });
+  const endDrag = () => { dragIdx = -1; };
+  dcv.addEventListener('pointerup', endDrag); dcv.addEventListener('pointercancel', endDrag);
+  window.addEventListener('resize', () => { if(document.getElementById('page-sa-dots').classList.contains('active')) drawDots(); });
+  $('sad-back').addEventListener('click', () => showPage('page-sa-parts'));
+  $('sad-done').addEventListener('click', async () => {
+    if(!saCur) return;
+    const id = itemId(saCur.c, saCur.v, saCur.p), c = data.chars.find(x => x.id === saCur.c);
+    try{
+      const item = await window.dgWork.get(id);
+      if(item){ item.dots = dotsArr.map(q => ({ x: +q.x.toFixed(4), y: +q.y.toFixed(4) })); item.updated = Date.now(); await window.dgWork.put(item); }
+    }catch(e){ console.warn(e); }
+    if(c){ const o = meta(c, saCur.v, saCur.p); c.parts[pk(saCur.v, saCur.p)] = { d: 1, k: 1 }; save(); }
+    showPage('page-sa-parts');
+  });
+
+  // ---- import a picture (e.g. a head) as a body piece ----
+  let importPieceId = null;
+  async function importPart(pieceId){
+    const c = curChar(), v = viewDef(curViewId), p = c && pdefAny(c, pieceId); if(!c || !v || !p) return;
+    if(meta(c, v.id, p.id).d && !confirm('Replace your current ' + p.label + ' drawing with an imported picture?')) return;
+    let file = null;
+    try{ file = typeof window.dgPickImage === 'function' ? await window.dgPickImage() : null; }catch(_){ file = null; }
+    if(!file){
+      importPieceId = pieceId;
+      const inp = $('sa-file'); inp.value = ''; inp.click();
+      return;
+    }
+    await finishImport(pieceId, file);
+  }
+  $('sa-file').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if(f && importPieceId) await finishImport(importPieceId, f);
+  });
+  async function decodeAny(file){
+    try{ return await createImageBitmap(file); }
+    catch(_){
+      return await new Promise((res, rej) => {
+        const u = URL.createObjectURL(file), im = new Image();
+        im.onload = () => { URL.revokeObjectURL(u); res(im); };
+        im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Could not read that image')); };
+        im.src = u;
+      });
+    }
+  }
+  // If the picture has a plain solid background, make it transparent (flood fill from the edges).
+  function clearFlatBackground(cv){
+    const w = cv.width, h = cv.height, x = cv.getContext('2d', { willReadFrequently: true });
+    const img = x.getImageData(0, 0, w, h), d = img.data;
+    const at = (px, py) => (py * w + px) * 4;
+    const corners = [at(0, 0), at(w - 1, 0), at(0, h - 1), at(w - 1, h - 1)];
+    if(corners.some(i => d[i + 3] < 250)) return;                 // already has transparency
+    const bg = [0, 1, 2].map(k => corners.reduce((a, i) => a + d[i + k], 0) / 4);
+    if(corners.some(i => Math.max(Math.abs(d[i] - bg[0]), Math.abs(d[i + 1] - bg[1]), Math.abs(d[i + 2] - bg[2])) > 40)) return;   // not a flat background
+    const tol = 40, seen = new Uint8Array(w * h), stack = [];
+    const ok = i => Math.abs(d[i] - bg[0]) <= tol && Math.abs(d[i + 1] - bg[1]) <= tol && Math.abs(d[i + 2] - bg[2]) <= tol;
+    const push = (px, py) => { const k = py * w + px; if(!seen[k] && ok(k * 4)){ seen[k] = 1; stack.push(k); } };
+    for(let i = 0; i < w; i++){ push(i, 0); push(i, h - 1); }
+    for(let j = 0; j < h; j++){ push(0, j); push(w - 1, j); }
+    while(stack.length){
+      const k = stack.pop(), px = k % w, py = (k / w) | 0;
+      d[k * 4 + 3] = 0;
+      if(px > 0) push(px - 1, py); if(px < w - 1) push(px + 1, py);
+      if(py > 0) push(px, py - 1); if(py < h - 1) push(px, py + 1);
+    }
+    x.putImageData(img, 0, 0);
+  }
+  async function finishImport(pieceId, file){
+    const c = curChar(), v = viewDef(curViewId), p = c && pdefAny(c, pieceId); if(!c || !v || !p) return;
+    let bmp;
+    try{ bmp = await decodeAny(file); }catch(e){ alert('Could not read that picture.'); return; }
+    const sz = sizeOf(c, p), cv = document.createElement('canvas'); cv.width = sz.w; cv.height = sz.h;
+    const k = Math.min(sz.w / bmp.width, sz.h / bmp.height) * 0.94, dw = bmp.width * k, dh = bmp.height * k;
+    const x = cv.getContext('2d'); x.clearRect(0, 0, sz.w, sz.h);
+    x.drawImage(bmp, (sz.w - dw) / 2, (sz.h - dh) / 2, dw, dh);
+    if(bmp.close) try{ bmp.close(); }catch(_){}
+    try{ clearFlatBackground(cv); }catch(e){ console.warn(e); }
+    saCur = { c: c.id, v: v.id, p: p.id };
+    window.saReturn = 'page-sa-parts';
+    await window.saOpenPieceProject(itemId(c.id, v.id, p.id), c.name + ' · ' + v.label + ' · ' + p.label, sz.w, sz.h, cv);
+  }
+
+  // ---- merge screen: parts snap together on their skeleton dots; every part can still be moved/rotated on its own ----
+  // PARENT[piece] = [parent piece, index of the parent's dot it hangs from]
+  const PARENT = { 'neck': ['body', 0], 'head': ['neck', 1], 'upper-arm': ['body', 0], 'lower-arm': ['upper-arm', 1], 'hand': ['lower-arm', 1],
+                   'thigh': ['body', 1], 'shin': ['thigh', 1], 'foot': ['shin', 1] };
+  const LIMBS = ['upper-arm', 'lower-arm', 'hand', 'thigh', 'shin', 'foot'];
+  const ZLIST = ['thigh1', 'shin1', 'foot1', 'upper-arm1', 'lower-arm1', 'hand1', 'thigh0', 'shin0', 'foot0', 'body0', 'neck0', 'upper-arm0', 'lower-arm0', 'hand0', 'head0'];
+  const BUILD = [['body', 0], ['neck', 0], ['head', 0], ['upper-arm', 0], ['lower-arm', 0], ['hand', 0], ['upper-arm', 1], ['lower-arm', 1], ['hand', 1],
+                 ['thigh', 0], ['shin', 0], ['foot', 0], ['thigh', 1], ['shin', 1], ['foot', 1]];
+  const PSCALE = 0.36;
+  const mgZ = { z: 1, px: 0, py: 0 };
+  let mgState = null, mgView = null, mgDrag = null, mgEditId = null, mgRestore = null, mgFollow = false, mgUid = 1, mgSkel = false, mgTest = false, mgSnap = null;
+  const mgCv = $('sam-cv');
+
+  async function renderMerge(){
+    const c = curChar(), v = viewDef(curViewId); if(!c || !v){ showPage('page-sa-parts'); return; }
+    if(mgState){ mgFit(); return; }
+    mgZ.z = 1; mgZ.px = 0; mgZ.py = 0;
+    const st = mgState = { c, v, W: c.size, H: Math.round(c.size * 1.5), srcs: [], items: [], sel: -1 };
+    const editing = mgEditId ? (c.merged || []).find(x => x.id === mgEditId) : null;
+    $('sam-title').textContent = c.name + ' · merge';
+    $('sam-name').value = editing ? editing.name : 'Merged ' + (((c.merged || []).length) + 1);
+    $('sam-chips').innerHTML = '<span class="sam-empty">Loading parts…</span>';
+    $('sam-sel').classList.remove('on');
+    mgSetMode(false);
+    const add = async (key, label, id, dots) => {
+      try{
+        const it = await window.dgWork.get(id);
+        if(it && it.png) st.srcs.push({ key, label, bmp: await createImageBitmap(it.png), dots: dots || [{ x: .5, y: .5 }, { x: .5, y: .5 }] });
+      }catch(_){}
+    };
+    for(const p of PIECES){
+      if(!meta(c, v.id, p.id).k) continue;
+      let it = null; try{ it = await window.dgWork.get(itemId(c.id, v.id, p.id)); }catch(_){}
+      const dd = (it && it.dots && it.dots.length === 2 ? it.dots : p.def).map(q => Array.isArray(q) ? { x: q[0], y: q[1] } : { x: q.x, y: q.y });
+      await add(p.id, p.label, itemId(c.id, v.id, p.id), dd);
+    }
+    for(const e of (c.equip || []).filter(x => x.v === v.id)){
+      if(!meta(c, v.id, e.id).d) continue;
+      let it = null; try{ it = await window.dgWork.get(itemId(c.id, v.id, e.id)); }catch(_){}
+      const ed = pdefAny(c, e.id);
+      const dd = (it && it.dots && it.dots.length === 2 ? it.dots : ed.def).map(q => Array.isArray(q) ? { x: q[0], y: q[1] } : { x: q.x, y: q.y });
+      await add('eq:' + e.id, e.name, itemId(c.id, v.id, e.id), dd);
+    }
+    if(mgState !== st) return;
+    const chips = $('sam-chips'); chips.innerHTML = '';
+    if(!st.srcs.length){ chips.innerHTML = '<span class="sam-empty">No finished parts yet. Draw a part and set its dots first.</span>'; }
+    else {
+      st.srcs.forEach(s => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'wd-chip'; b.textContent = (s.key.indexOf('eq:') === 0 ? '✦ ' : '') + s.label;
+        b.addEventListener('click', () => mgAdd(s));
+        chips.appendChild(b);
+      });
+    }
+    if(mgRestore && mgRestore.length){
+      const made = [];
+      mgRestore.forEach((r, i) => {
+        const src = st.srcs.find(q => q.key === r.k); if(!src){ made.push(null); return; }
+        const it = { id: mgUid++, src, x: r.x * st.W, y: r.y * st.H, rot: r.rot, m: r.m, base: PSCALE, flip: !!r.flip, side: r.side || 0, parent: null, _p: r.p };
+        if(src.key.indexOf('m:') === 0) it.base = .6 * st.H / src.bmp.height;
+        made.push(it); st.items.push(it);
+      });
+      st.items.forEach(it => { if(it._p != null && it._p >= 0 && made[it._p]) it.parent = made[it._p].id; delete it._p; });
+    }
+    mgSync(); mgFit();
+  }
+  function ptOf(it, k){
+    const b = it.src.bmp, d = it.src.dots[k], p0 = it.src.dots[0];
+    const lx = (d.x - p0.x) * b.width * (it.flip ? -1 : 1), ly = (d.y - p0.y) * b.height, s = it.base * it.m, a = it.rot * Math.PI / 180;
+    return { x: it.x + s * (lx * Math.cos(a) - ly * Math.sin(a)), y: it.y + s * (lx * Math.sin(a) + ly * Math.cos(a)) };
+  }
+  function mgAdd(src){
+    const st = mgState; if(!st) return null;
+    const n = st.items.length;
+    const it = { id: mgUid++, src, x: st.W / 2 + (n % 3 - 1) * st.W * .06, y: st.H * .3 + (n % 4) * st.H * .06, rot: 0, m: 1, base: PSCALE, flip: false, side: 0, parent: null };
+    st.items.push(it);
+    st.sel = st.items.length - 1; mgSync(); mgDraw();
+    return it;
+  }
+  function mgBuildAll(){
+    const st = mgState; if(!st) return;
+    if(st.items.length && !confirm('Rebuild the skeleton? This replaces the parts now on the canvas.')) return;
+    st.items = []; st.sel = -1;
+    BUILD.forEach(([k, side]) => { const s = st.srcs.find(q => q.key === k); if(s) mgAdd(s, side); });
+    const z = it => { const i = ZLIST.indexOf(it.src.key + it.side); return i < 0 ? 99 : i; };
+    st.items.sort((a, b) => z(a) - z(b));
+    st.sel = -1; mgSync(); mgDraw();
+  }
+  function mgKids(st, id){
+    const out = [];
+    const walk = pid => st.items.forEach(q => { if(q.parent === pid){ out.push(q); walk(q.id); } });
+    walk(id); return out;
+  }
+  function mgPaint(ctx, st, k){
+    st.items.forEach(it => {
+      const s = it.base * it.m, p0 = it.src.dots[0], b = it.src.bmp;
+      ctx.save(); ctx.translate(it.x * k, it.y * k); ctx.rotate(it.rot * Math.PI / 180); ctx.scale((it.flip ? -1 : 1) * s * k, s * k);
+      ctx.drawImage(b, -p0.x * b.width, -p0.y * b.height);
+      ctx.restore();
+    });
+  }
+  function mgFit(){ requestAnimationFrame(mgDraw); }
+  function mgDraw(){
+    const st = mgState; if(!st) return;
+    const stage = $('sam-stage'), r = stage.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    if(!r.width || !r.height) return;
+    mgCv.width = Math.round(r.width * d); mgCv.height = Math.round(r.height * d);
+    mgCv.style.width = r.width + 'px'; mgCv.style.height = r.height + 'px';
+    const c = mgCv.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, r.width, r.height);
+    const kfit = Math.min(r.width / st.W, r.height / st.H) * 0.96, k = kfit * mgZ.z, iw = st.W * k, ih = st.H * k;
+    const ox = (r.width - iw) / 2 + mgZ.px, oy = (r.height - ih) / 2 + mgZ.py;
+    mgView = { ox, oy, k, kfit };
+    c.save(); c.beginPath(); c.rect(ox, oy, iw, ih); c.clip();
+    const sq = 14;
+    for(let y = Math.max(0, Math.floor(-oy / sq) * sq); y < Math.min(ih, r.height - oy); y += sq) for(let x = Math.max(0, Math.floor(-ox / sq) * sq); x < Math.min(iw, r.width - ox); x += sq){ c.fillStyle = ((x / sq + y / sq) % 2 < 1) ? '#e9e7e2' : '#f7f6f3'; c.fillRect(ox + x, oy + y, sq, sq); }
+    c.translate(ox, oy); mgPaint(c, st, k);
+    c.restore();
+    // skeleton bones and joints on top
+    st.items.forEach((it, i) => {
+      if(!(mgSkel || mgTest)) return;
+      const a = ptOf(it, 0), b = ptOf(it, 1), on = i === st.sel;
+      c.lineCap = 'round';
+      [['rgba(0,0,0,.6)', 5], [on ? '#ff4f8b' : '#ffffff', 2.4]].forEach(([col, w]) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(ox + a.x * k, oy + a.y * k); c.lineTo(ox + b.x * k, oy + b.y * k); c.stroke(); });
+      c.beginPath(); c.arc(ox + a.x * k, oy + a.y * k, on ? 7 : 5, 0, Math.PI * 2); c.fillStyle = on ? '#ff4f8b' : '#3b8cff'; c.fill(); c.lineWidth = 2; c.strokeStyle = '#000'; c.stroke();
+    });
+  }
+  function mgSync(){
+    const st = mgState; if(!st) return;
+    const it = st.items[st.sel], box = $('sam-sel');
+    box.classList.toggle('on', !!it);
+    if(!it) return;
+    $('sam-size').value = Math.round(it.m * 100); $('sam-size-v').textContent = Math.round(it.m * 100) + '%';
+    const rr = ((Math.round(it.rot) + 180) % 360 + 360) % 360 - 180;
+    $('sam-rot').value = rr; $('sam-rot-v').textContent = rr + '°';
+  }
+  const hitCv = document.createElement('canvas'); hitCv.width = hitCv.height = 1;
+  const hitCtx = hitCv.getContext('2d', { willReadFrequently: true });
+  function mgPick(lx, ly){
+    const st = mgState;
+    for(let i = st.items.length - 1; i >= 0; i--){
+      const it = st.items[i], s = it.base * it.m, a = -it.rot * Math.PI / 180, p0 = it.src.dots[0];
+      const dx = lx - it.x, dy = ly - it.y;
+      let ux = (dx * Math.cos(a) - dy * Math.sin(a)) / s, uy = (dx * Math.sin(a) + dy * Math.cos(a)) / s;
+      if(it.flip) ux = -ux;
+      const bw = it.src.bmp.width, bh = it.src.bmp.height, px = Math.floor(ux + p0.x * bw), py = Math.floor(uy + p0.y * bh);
+      if(px < 0 || py < 0 || px >= bw || py >= bh) continue;
+      try{ hitCtx.clearRect(0, 0, 1, 1); hitCtx.drawImage(it.src.bmp, px, py, 1, 1, 0, 0, 1, 1); if(hitCtx.getImageData(0, 0, 1, 1).data[3] > 20) return i; }
+      catch(_){ return i; }
+    }
+    return -1;
+  }
+  function mgLogical(e){
+    const r = mgCv.getBoundingClientRect(), V = mgView; if(!V) return null;
+    return { x: (e.clientX - r.left - V.ox) / V.k, y: (e.clientY - r.top - V.oy) / V.k };
+  }
+  const PARENT_LINKS = PARENT;
+  function mgLinks(){
+    const st = mgState; if(!st) return;
+    st.items.forEach(it => {
+      it.parent = null;
+      if(it.src.key.indexOf('eq:') === 0){
+        let bq = null, bdd = 1e9;
+        st.items.forEach(q => { if(q.src.key.indexOf('eq:') === 0) return; const a = ptOf(q, 0), b = ptOf(q, 1); let dd = 1e9; for(let t = 0; t <= 1; t += .25) dd = Math.min(dd, Math.hypot(a.x + (b.x - a.x) * t - it.x, a.y + (b.y - a.y) * t - it.y)); if(dd < bdd){ bdd = dd; bq = q; } });
+        if(bq && bdd < st.c.size * .5) it.parent = bq.id;
+        return;
+      }
+      const pr = PARENT_LINKS[it.src.key]; if(!pr) return;
+      let best = null, bd = 1e9;
+      st.items.forEach(q => { if(q === it || q.src.key !== pr[0]) return; const pt = ptOf(q, pr[1]), dd = Math.hypot(pt.x - it.x, pt.y - it.y); if(dd < bd){ bd = dd; best = q; } });
+      if(best && bd < st.c.size * .35) it.parent = best.id;
+    });
+  }
+  function mgRotateSubtree(it, rad){
+    const st = mgState, ca = Math.cos(rad), sa = Math.sin(rad);
+    [it].concat(mgKids(st, it.id)).forEach(o => {
+      if(o !== it){ const dx = o.x - it.x, dy = o.y - it.y; o.x = it.x + dx * ca - dy * sa; o.y = it.y + dx * sa + dy * ca; }
+      o.rot += rad * 180 / Math.PI;
+    });
+  }
+  function mgSetMode(test){
+    mgTest = test;
+    $('sam-panel').classList.toggle('testing', test);
+    $('sam-test').textContent = test ? 'Stop test' : 'Test';
+    $('sam-reset').style.display = test ? '' : 'none';
+    $('sam-skel').textContent = mgSkel ? 'Hide skeleton' : 'View skeleton';
+    $('sam-hint').textContent = test ? 'Drag a part to bend it from its joint. Parts attached to it follow. Dragging the body moves everything. Pinch to zoom.' : 'Tap a part to put it on the canvas, then drag it into place. Tap a part on the canvas to size or rotate it. Pinch or use + / − to zoom, drag empty space to move the view.';
+  }
+  const mgPtrs = new Map(); let mgPinch = null;
+  function mgZoomAt(mx, my, nz){
+    const st = mgState, V = mgView; if(!st || !V) return;
+    nz = Math.max(.5, Math.min(8, nz));
+    const lx = (mx - V.ox) / V.k, ly = (my - V.oy) / V.k, k2 = V.kfit * nz, r = $('sam-stage').getBoundingClientRect();
+    mgZ.z = nz; mgZ.px = (mx - lx * k2) - (r.width - st.W * k2) / 2; mgZ.py = (my - ly * k2) - (r.height - st.H * k2) / 2;
+    mgDraw();
+  }
+  mgCv.addEventListener('pointerdown', e => {
+    const st = mgState; if(!st) return;
+    mgPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try{ mgCv.setPointerCapture(e.pointerId); }catch(_){}
+    if(mgPtrs.size === 2){
+      const v2 = [...mgPtrs.values()], a = v2[0], b = v2[1];
+      mgDrag = null; mgPinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: mgZ.z, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+      e.preventDefault(); return;
+    }
+    const q = mgLogical(e); if(!q) return;
+    let i = mgPick(q.x, q.y);
+    if(i < 0 && mgTest){
+      let bd = 1e9; st.items.forEach((it, j) => { const b = ptOf(it, 1), dd = Math.hypot(b.x - q.x, b.y - q.y); if(dd < bd){ bd = dd; i = j; } });
+      if(bd > st.W * .08) i = -1;
+    }
+    st.sel = i; mgSync(); mgDraw();
+    if(i >= 0){
+      const it = st.items[i];
+      if(mgTest) mgDrag = it.parent == null ? { mode: 'move', lx: q.x, ly: q.y } : { mode: 'rot', a: Math.atan2(q.y - it.y, q.x - it.x) };
+      else mgDrag = { mode: 'move1', lx: q.x, ly: q.y };
+    } else mgDrag = { mode: 'pan', cx: e.clientX, cy: e.clientY };
+    e.preventDefault();
+  });
+  mgCv.addEventListener('pointermove', e => {
+    const st = mgState; if(!st) return;
+    if(mgPtrs.has(e.pointerId)) mgPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if(mgPinch && mgPtrs.size >= 2){
+      const v2 = [...mgPtrs.values()], a = v2[0], b = v2[1], r = mgCv.getBoundingClientRect();
+      const d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      mgZoomAt(mx - r.left, my - r.top, mgPinch.z * d / mgPinch.d);
+      mgZ.px += mx - mgPinch.mx; mgZ.py += my - mgPinch.my; mgPinch.mx = mx; mgPinch.my = my; mgDraw();
+      return;
+    }
+    if(!mgDrag) return;
+    if(mgDrag.mode === 'pan'){ mgZ.px += e.clientX - mgDrag.cx; mgZ.py += e.clientY - mgDrag.cy; mgDrag.cx = e.clientX; mgDrag.cy = e.clientY; mgDraw(); return; }
+    const it = st.items[st.sel], q = mgLogical(e); if(!it || !q) return;
+    if(mgDrag.mode === 'rot'){
+      const a = Math.atan2(q.y - it.y, q.x - it.x); let da = a - mgDrag.a; da = Math.atan2(Math.sin(da), Math.cos(da)); mgDrag.a = a;
+      mgRotateSubtree(it, da);
+    } else {
+      const dx = q.x - mgDrag.lx, dy = q.y - mgDrag.ly; mgDrag.lx = q.x; mgDrag.ly = q.y;
+      (mgDrag.mode === 'move' ? [it].concat(mgKids(st, it.id)) : [it]).forEach(o => { o.x += dx; o.y += dy; });
+    }
+    mgDraw();
+  });
+  mgCv.addEventListener('wheel', e => { e.preventDefault(); const r = mgCv.getBoundingClientRect(); mgZoomAt(e.clientX - r.left, e.clientY - r.top, mgZ.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); }, { passive: false });
+  const zoomCenter = f => { const r = $('sam-stage').getBoundingClientRect(); mgZoomAt(r.width / 2, r.height / 2, mgZ.z * f); };
+  $('sam-zin').addEventListener('click', () => zoomCenter(1.35));
+  $('sam-zout').addEventListener('click', () => zoomCenter(1 / 1.35));
+  $('sam-zfit').addEventListener('click', () => { mgZ.z = 1; mgZ.px = 0; mgZ.py = 0; mgDraw(); });
+  $('sam-skel').addEventListener('click', () => { mgSkel = !mgSkel; $('sam-skel').textContent = mgSkel ? 'Hide skeleton' : 'View skeleton'; mgDraw(); });
+  const snapPose = () => mgState.items.map(o => ({ id: o.id, x: o.x, y: o.y, rot: o.rot, m: o.m, flip: o.flip }));
+  const restorePose = () => { if(!mgSnap || !mgState) return; mgSnap.forEach(r => { const o = mgState.items.find(q => q.id === r.id); if(o){ o.x = r.x; o.y = r.y; o.rot = r.rot; o.m = r.m; o.flip = r.flip; } }); };
+  $('sam-test').addEventListener('click', () => {
+    const st = mgState; if(!st) return;
+    if(!mgTest){
+      if(st.items.length < 2){ alert('Put at least two parts on the canvas first.'); return; }
+      mgLinks(); mgSnap = snapPose(); mgSkel = true; mgSetMode(true);
+    } else { restorePose(); mgSetMode(false); }
+    st.sel = -1; mgSync(); mgDraw();
+  });
+  $('sam-reset').addEventListener('click', () => { restorePose(); mgDraw(); });
+  const mgEnd = e => { if(e) mgPtrs.delete(e.pointerId); if(mgPtrs.size < 2) mgPinch = null; mgDrag = null; };
+  mgCv.addEventListener('pointerup', mgEnd); mgCv.addEventListener('pointercancel', mgEnd);
+  window.addEventListener('resize', () => { if(document.getElementById('page-sa-merge').classList.contains('active')) mgFit(); });
+  const selItem = () => mgState && mgState.items[mgState.sel];
+  $('sam-size').addEventListener('input', e => {
+    const it = selItem(); if(!it) return; const f = ((+e.target.value) / 100) / it.m; if(!isFinite(f) || f <= 0) return;
+    const set = mgFollow ? [it].concat(mgKids(mgState, it.id)) : [it];
+    set.forEach(o => { if(o !== it){ o.x = it.x + (o.x - it.x) * f; o.y = it.y + (o.y - it.y) * f; } o.m *= f; });
+    $('sam-size-v').textContent = e.target.value + '%'; mgDraw();
+  });
+  $('sam-rot').addEventListener('input', e => {
+    const it = selItem(); if(!it) return; const dr = (+e.target.value) - ((((it.rot + 180) % 360) + 360) % 360 - 180); if(!dr) return;
+    const set = mgFollow ? [it].concat(mgKids(mgState, it.id)) : [it], a = dr * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    set.forEach(o => { if(o !== it){ const dx = o.x - it.x, dy = o.y - it.y; o.x = it.x + dx * ca - dy * sa; o.y = it.y + dx * sa + dy * ca; } o.rot += dr; });
+    $('sam-rot-v').textContent = e.target.value + '°'; mgDraw();
+  });
+  $('sam-flip').addEventListener('click', () => { const it = selItem(); if(!it) return; it.flip = !it.flip; mgDraw(); });
+  $('sam-fwd').addEventListener('click', () => { const st = mgState, i = st && st.sel; if(!st || i < 0 || i >= st.items.length - 1) return; [st.items[i], st.items[i + 1]] = [st.items[i + 1], st.items[i]]; st.sel = i + 1; mgDraw(); });
+  $('sam-bwd').addEventListener('click', () => { const st = mgState, i = st && st.sel; if(!st || i <= 0) return; [st.items[i], st.items[i - 1]] = [st.items[i - 1], st.items[i]]; st.sel = i - 1; mgDraw(); });
+  $('sam-del').addEventListener('click', () => {
+    const st = mgState; if(!st || st.sel < 0) return;
+    const gone = st.items[st.sel]; st.items.forEach(q => { if(q.parent === gone.id) q.parent = null; });
+    st.items.splice(st.sel, 1); st.sel = -1; mgSync(); mgDraw();
+  });
+  function mgLeave(){
+    if(mgState){ mgState.srcs.forEach(s => { try{ s.bmp.close(); }catch(_){} }); }
+    mgState = null; mgDrag = null; mgEditId = null; mgRestore = null; mgTest = false; mgSkel = false; mgSnap = null; mgPtrs.clear(); mgPinch = null; showPage('page-sa-parts');
+  }
+  $('sam-back').addEventListener('click', () => {
+    if(mgState && mgState.items.length && !confirm('Leave without saving this merge?')) return;
+    mgLeave();
+  });
+  $('sam-save').addEventListener('click', async () => {
+    const st = mgState; if(!st) return;
+    if(!st.items.length){ alert('Add at least one part first.'); return; }
+    const out = document.createElement('canvas'); out.width = st.W; out.height = st.H;
+    const ox = out.getContext('2d'); ox.clearRect(0, 0, st.W, st.H); mgPaint(ox, st, 1);
+    const dd = ox.getImageData(0, 0, st.W, st.H).data;
+    let x0 = st.W, y0 = st.H, x1 = -1, y1 = -1;
+    for(let y = 0; y < st.H; y++) for(let x = 0; x < st.W; x++){ if(dd[(y * st.W + x) * 4 + 3] > 8){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; } }
+    if(x1 < 0){ alert('Nothing to save yet. Move the parts onto the canvas.'); return; }
+    const cw = x1 - x0 + 1, ch = y1 - y0 + 1, crop = document.createElement('canvas'); crop.width = cw; crop.height = ch;
+    crop.getContext('2d').drawImage(out, x0, y0, cw, ch, 0, 0, cw, ch);
+    const ts = 240 / Math.max(cw, ch), th = document.createElement('canvas'); th.width = Math.max(1, Math.round(cw * ts)); th.height = Math.max(1, Math.round(ch * ts));
+    th.getContext('2d').drawImage(crop, 0, 0, th.width, th.height);
+    const mid = mgEditId || rid(), name = ($('sam-name').value || '').trim() || 'Merged part';
+    mgLinks();
+    const idx = id => st.items.findIndex(q => q.id === id);
+    const rig = st.items.map(it => ({ k: it.src.key, x: +(it.x / st.W).toFixed(4), y: +(it.y / st.H).toFixed(4), rot: +it.rot.toFixed(2), m: +it.m.toFixed(4), flip: it.flip ? 1 : 0, side: it.side, p: it.parent == null ? -1 : idx(it.parent) }));
+    try{
+      await window.dgWork.put({ id: mergedId(st.c.id, mid), name, w: cw, h: ch, updated: Date.now(), sa: true, png: await blobOf(crop), thumb: await blobOf(th), dots: null });
+    }catch(e){ alert('Could not save the merged part.'); console.warn(e); return; }
+    st.c.merged = st.c.merged || [];
+    const ex = st.c.merged.find(x => x.id === mid);
+    if(ex){ ex.name = name; ex.rig = rig; } else st.c.merged.push({ id: mid, name, v: st.v.id, created: Date.now(), rig });
+    save();
+    mgLeave();
+  });
+
+  window.saRefresh = function(id){
+    if(id === 'page-sa') renderHome();
+    else if(id === 'page-sa-chars') renderChars();
+    else if(id === 'page-sa-views') renderViews();
+    else if(id === 'page-sa-parts') renderParts();
+    else if(id === 'page-sa-dots') renderDots();
+    else if(id === 'page-sa-merge') renderMerge();
+  };
+})();
+
 </script>
 
 </body>
